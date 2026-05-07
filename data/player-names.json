@@ -1,0 +1,122 @@
+{
+  "firstNames": {
+    "common": [
+      "Aaron", "Adam", "Alex", "André", "Antoine", "Barry", "Ben", "Blake",
+      "Brad", "Brandon", "Brett", "Brian", "Calvin", "Chad", "Chris", "Cody",
+      "Cole", "Connor", "Craig", "Curtis", "Dale", "Dan", "Dave", "Derek",
+      "Dylan", "Eric", "Evan", "Frank", "Gary", "Glen", "Grant", "Greg",
+      "Hunter", "Ivan", "Jack", "Jake", "Jamie", "Jason", "Jeff", "Jesse",
+      "Joel", "John", "Jordan", "Josh", "Justin", "Kevin", "Kyle", "Lance",
+      "Luke", "Mark", "Matt", "Mike", "Nathan", "Nick", "Pat", "Paul",
+      "Pete", "Phil", "Ray", "Rick", "Rob", "Ross", "Ryan", "Sam",
+      "Scott", "Sean", "Shane", "Steve", "Tim", "Todd", "Tom", "Travis",
+      "Trevor", "Troy", "Tyler", "Wade", "Wayne", "Zach"
+    ],
+    "french": [
+      "Benoît", "Claude", "Denis", "Éric", "Étienne", "François",
+      "Gilles", "Guy", "Jacques", "Jean", "Jean-Marc", "Jean-Philippe",
+      "Luc", "Marc", "Martin", "Michel", "Pascal", "Patrick",
+      "Philippe", "Pierre", "René", "Simon", "Sylvain", "Yannick"
+    ],
+    "scandinavian": [
+      "Anders", "Erik", "Gunnar", "Henrik", "Jens", "Lars", "Mikael",
+      "Niklas", "Olaf", "Pekka", "Sven", "Tomas", "Viktor"
+    ],
+    "eastern_european": [
+      "Aleksei", "Boris", "Dmitri", "Ivan", "Marek", "Mikhail",
+      "Pavel", "Sergei", "Stanislav", "Vladislav", "Yuri"
+    ],
+    "funny": [
+      "Clancy", "Gordie", "Gump", "Howie", "Moose", "Shorty",
+      "Turk", "Bucky", "Butch", "Chip", "Duke", "Flash", "Gus",
+      "Hank", "Lefty", "Slapshot", "Tex", "Tiny"
+    ]
+  },
+  "lastNames": {
+    "common": [
+      "Anderson", "Baker", "Campbell", "Carter", "Clark", "Collins",
+      "Cook", "Cooper", "Davis", "Edwards", "Evans", "Fisher",
+      "Foster", "Gibson", "Grant", "Green", "Hall", "Harris",
+      "Harrison", "Henderson", "Hill", "Holmes", "Hughes", "Jackson",
+      "Johnson", "Jones", "Kelly", "Kennedy", "King", "Lewis",
+      "MacDonald", "Marshall", "Martin", "Mitchell", "Moore", "Morgan",
+      "Morrison", "Murphy", "Murray", "Nelson", "Parker", "Patterson",
+      "Peters", "Phillips", "Price", "Richards", "Richardson", "Riley",
+      "Robinson", "Rogers", "Ross", "Russell", "Scott", "Shaw",
+      "Simpson", "Smith", "Stewart", "Taylor", "Thomas", "Thompson",
+      "Turner", "Walker", "Ward", "Watson", "White", "Williams",
+      "Wilson", "Wood", "Wright", "Young"
+    ],
+    "french_canadian": [
+      "Beauchamp", "Beaumont", "Belisle", "Béliveau", "Bouchard", "Boudreau",
+      "Brodeur", "Carbonneau", "Chartrand", "Côté", "Demers",
+      "Desrosiers", "Dion", "Dubé", "Dufour", "Dupont", "Fortin",
+      "Gagnon", "Gauthier", "Girard", "Gonthier", "Gosselin",
+      "Hébert", "Lacroix", "Lafleur", "Laforge", "Lalande",
+      "Langlois", "Lapointe", "Lavallee", "Leblanc", "Leclair",
+      "Lefebvre", "Lemieux", "Lessard", "Marchand", "Morin",
+      "Nadeau", "Ouellette", "Paquette", "Parent", "Pelletier",
+      "Perron", "Picard", "Poirier", "Rivard", "Roy", "Savard",
+      "Tessier", "Thibault", "Tremblay", "Vachon", "Vienneau"
+    ],
+    "scandinavian": [
+      "Bergstrom", "Eriksson", "Gustafsson", "Hanninen", "Johansson",
+      "Karlsson", "Koivu", "Lindstrom", "Lundqvist", "Makinen",
+      "Niskanen", "Olofsson", "Pekkarinen", "Rinne", "Salminen",
+      "Selanne", "Svensson", "Tikkanen", "Virtanen"
+    ],
+    "eastern_european": [
+      "Boisvert", "Borowski", "Czaplicki", "Dvorak", "Federov",
+      "Kovalchuk", "Kozlov", "Malkin", "Ovechkin", "Petrov",
+      "Probert", "Semin", "Stastny", "Yashin", "Yablonski"
+    ],
+    "ukrainian_canadian": [
+      "Babiuk", "Chayka", "Fedoruk", "Greshko", "Havryluk",
+      "Kowalski", "Lesiuk", "Melnyck", "Mysko", "Petrenko",
+      "Savchuk", "Semeniuk", "Shewchuk", "Starchuk", "Wasylyshyn"
+    ],
+    "northern_ontario": [
+      "Brulé", "Corbe", "Corbett", "Desjardins", "Entwistle",
+      "Feschuk", "Hazel", "Ingram", "Koss", "Lalande",
+      "Lauzon", "Mackay", "Pekkola", "Spratt", "Stang"
+    ]
+  },
+  "traits": [
+    "glass jaw",
+    "lunch-pail guy",
+    "playoff beard god",
+    "hothead",
+    "clutch",
+    "locker room cancer",
+    "locker room glue",
+    "fights his own shadow",
+    "soft hands",
+    "puck hog",
+    "two-way stud",
+    "garbage-time hero",
+    "fan favourite",
+    "wildly overpaid",
+    "wildly underpaid",
+    "chronically injured",
+    "slow but physical",
+    "fast but flimsy",
+    "dark horse",
+    "leadership vacuum",
+    "oddly chatty with referees",
+    "superstitious",
+    "eats pasta before every game",
+    "hates shootouts",
+    "loves shootouts",
+    "terrified of Sudbury",
+    "never played outdoors",
+    "only plays well in cold arenas"
+  ],
+  "nationalities": [
+    { "code": "CAN", "label": "Canadian", "weight": 65 },
+    { "code": "USA", "label": "American", "weight": 20 },
+    { "code": "SWE", "label": "Swedish", "weight": 5 },
+    { "code": "FIN", "label": "Finnish", "weight": 4 },
+    { "code": "RUS", "label": "Russian", "weight": 4 },
+    { "code": "CZE", "label": "Czech", "weight": 2 }
+  ]
+}

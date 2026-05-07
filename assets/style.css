@@ -1,0 +1,978 @@
+/* ═══════════════════════════════════════════════════
+   Hockey GM — Global Styles
+   Fonts: Syne (display) + Space Mono (data/body)
+   Theme: dark industrial + neon carnage (Mutant League vibes)
+═══════════════════════════════════════════════════ */
+
+/* ─── Variables ─────────────────────────────────── */
+:root {
+  --bg:         #0a0a0c;
+  --bg-2:       #141416;
+  --bg-3:       #1e1e21;
+  --border:     #2a2a2e;
+  --border-2:   #3a3a3f;
+
+  --text:       #eae8e2;
+  --text-2:     #9a9893;
+  --text-3:     #5a5955;
+
+  --accent:     #ff1e3c;   /* hot neon red */
+  --accent-2:   #ff6b35;   /* warning orange */
+  --ice:        #a8d8f0;   /* electric ice */
+  --gold:       #f0c030;   /* championship gold — brighter */
+
+  --neon-green: #39ff14;   /* stat elite */
+  --neon-red:   #ff1e3c;   /* stat danger */
+  --neon-blue:  #00d4ff;   /* electric ice accent */
+
+  --glow-red:   0 0 10px rgba(255, 30, 60, 0.55);
+  --glow-ice:   0 0 10px rgba(0, 212, 255, 0.4);
+  --glow-gold:  0 0 10px rgba(240, 192, 48, 0.45);
+  --glow-green: 0 0 10px rgba(57, 255, 20, 0.4);
+
+  --phl-color:  #9B7FFF;   /* PHL purple — more electric */
+  --cd-color:   #3dcc8f;   /* CD teal-green */
+  --rc-color:   #ff7733;   /* RC orange */
+
+  --font-display: 'Syne', sans-serif;
+  --font-mono:    'Space Mono', monospace;
+
+  --radius:     4px;
+  --radius-lg:  8px;
+}
+
+/* ─── Reset ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Screen system ─────────────────────────────── */
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: block; }
+
+.screen-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+.screen-inner.centered { max-width: 700px; }
+
+/* ─── App header ────────────────────────────────── */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-team-name {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ice);
+  letter-spacing: -0.02em;
+}
+
+.league-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--phl-color);
+  color: #fff;
+}
+.league-badge.cd { background: var(--cd-color); }
+.league-badge.rc { background: var(--rc-color); }
+
+.header-nav { display: flex; gap: 4px; margin-left: auto; }
+.header-nav button {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.header-nav button:hover {
+  border-color: var(--border-2);
+  color: var(--text);
+  background: var(--bg-3);
+}
+
+.header-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 11px;
+  color: var(--text-2);
+  gap: 1px;
+}
+
+/* ─── Dashboard layout ──────────────────────────── */
+.dashboard-main {
+  display: grid;
+  grid-template-columns: 280px 1fr 300px;
+  gap: 1px;
+  height: calc(100vh - 48px);
+  background: var(--border);
+}
+
+.panel {
+  background: var(--bg);
+  overflow-y: auto;
+  padding: 1.25rem;
+}
+
+.panel-section { margin-bottom: 1.5rem; }
+.panel-label {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+  margin-bottom: 0.75rem;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ─── Sim controls ──────────────────────────────── */
+.sim-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px 20px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: box-shadow 0.15s, opacity 0.15s;
+  width: 100%;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+.btn-primary:hover {
+  opacity: 0.92;
+  box-shadow: var(--glow-red);
+}
+
+.btn-secondary {
+  background: var(--bg-3);
+  color: var(--text-2);
+  border: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 8px 20px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s;
+  width: 100%;
+}
+.btn-secondary:hover { border-color: var(--border-2); color: var(--text); }
+
+/* ─── Tables ────────────────────────────────────── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+th {
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-2);
+}
+tr:hover td { background: var(--bg-2); }
+.td-name { color: var(--text); font-weight: 700; }
+.td-pos {
+  font-size: 10px;
+  color: var(--text-3);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+.td-ovr { color: var(--ice); font-weight: 700; }
+.td-player-row-highlight td { color: var(--text); }
+
+/* ─── News feed ─────────────────────────────────── */
+.news-feed { display: flex; flex-direction: column; gap: 1px; }
+
+.news-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.news-headline {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+  line-height: 1.3;
+}
+.news-report {
+  font-size: 11px;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+.news-meta {
+  font-size: 10px;
+  color: var(--text-3);
+  margin-top: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.news-type-event .news-headline,
+.news-type-event_static .news-headline { color: var(--accent-2); }
+.news-type-commissioner .news-headline,
+.news-type-retirement .news-headline   { color: var(--gold); }
+.news-type-trade_offer .news-headline,
+.news-type-trade_complete .news-headline { color: var(--phl-color); }
+.news-headline--event { font-style: italic; }
+
+.news-game-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.news-score {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ice);
+  letter-spacing: 0.04em;
+}
+.news-meta-row {
+  font-size: 11px;
+  margin: 3px 0;
+}
+.news-commissioner-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  margin-bottom: 3px;
+}
+.trade-status { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+.trade-status-pending { color: var(--accent-2); }
+.trade-status-resolved { color: var(--text-3); }
+.btn-inline-link {
+  background: none;
+  border: none;
+  color: var(--accent-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+.news-empty { padding: 1rem; color: var(--text-3); }
+
+/* ─── News filter buttons ──────────────────────── */
+.news-filters {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.filter-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: all 0.15s;
+}
+.filter-btn:hover {
+  border-color: var(--border-2);
+  color: var(--text-2);
+}
+.filter-btn.active {
+  background: var(--bg-3);
+  border-color: var(--border-2);
+  color: var(--text);
+}
+
+/* ─── Trade layout ─────────────────────────────── */
+.trade-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  min-height: calc(100vh - 56px);
+}
+.trade-layout > section {
+  background: var(--bg);
+  padding: 1.25rem;
+  overflow-y: auto;
+}
+
+.trade-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  margin-bottom: 12px;
+}
+.trade-card-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.trade-gm-name {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+.trade-team-name { font-size: 12px; }
+.trade-week { font-size: 11px; margin-left: auto; }
+
+.trade-offer-text {
+  color: var(--text-2);
+  font-size: 12px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.trade-players-layout {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+.trade-side { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.trade-side-label {
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+  margin-bottom: 2px;
+}
+.trade-arrow {
+  font-size: 20px;
+  color: var(--border-2);
+  padding-top: 18px;
+  flex-shrink: 0;
+}
+
+.trade-player-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 5px 8px;
+  font-size: 12px;
+}
+.trade-player-chip--offered { border-color: #2a4a2a; }
+.trade-player-chip--wanted  { border-color: #4a2a2a; }
+.trade-player-name { flex: 1; color: var(--text); font-weight: 600; }
+.trade-player-ovr  { font-weight: 700; }
+.trade-player-salary { font-size: 11px; }
+
+.trade-pick-chip {
+  font-size: 11px;
+  padding: 3px 6px;
+  background: var(--bg-3);
+  border: 1px dashed var(--border-2);
+  border-radius: var(--radius);
+}
+
+.trade-gm-quote {
+  font-style: italic;
+  color: var(--text-3);
+  font-size: 11px;
+  margin-bottom: 10px;
+  border-left: 2px solid var(--border-2);
+  padding-left: 8px;
+  line-height: 1.5;
+}
+
+.trade-value { font-size: 11px; font-weight: 700; margin-bottom: 12px; letter-spacing: 0.03em; }
+
+.trade-status-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 2px 6px;
+  border-radius: 2px;
+  margin-left: auto;
+}
+.trade-status-badge--accepted  { background: #1a3a1a; color: #5aaa5a; }
+.trade-status-badge--declined  { background: var(--bg-3); color: var(--text-3); }
+.trade-status-badge--pending   { background: #3a2a00; color: var(--gold); }
+
+.trade-empty { padding: 0.5rem 0; }
+
+/* ─── Trade card ────────────────────────────────── */
+.trade-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  margin-bottom: 12px;
+}
+.trade-gm-name {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.trade-offer-text { color: var(--text-2); margin-bottom: 8px; font-size: 12px; }
+.trade-gm-quote {
+  font-style: italic;
+  color: var(--text-3);
+  font-size: 11px;
+  margin-bottom: 12px;
+  border-left: 2px solid var(--border-2);
+  padding-left: 8px;
+}
+.trade-value { font-size: 11px; margin-bottom: 12px; }
+.value-good { color: #5aaa5a; }
+.value-bad  { color: var(--accent); }
+.value-fair { color: var(--text-2); }
+.value-robbery { color: var(--accent); font-weight: 700; }
+
+.trade-actions { display: flex; gap: 8px; }
+.btn-accept {
+  background: #2a5a2a;
+  color: #7aba7a;
+  border: 1px solid #3a7a3a;
+  padding: 6px 16px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  transition: all 0.15s;
+}
+.btn-accept:hover { background: #346834; }
+.btn-decline {
+  background: none;
+  color: var(--text-3);
+  border: 1px solid var(--border);
+  padding: 6px 16px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  transition: all 0.15s;
+}
+.btn-decline:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ─── Draft screen ─────────────────────────────── */
+.draft-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 1px;
+  background: var(--border);
+  min-height: calc(100vh - 56px);
+}
+.draft-layout > div {
+  background: var(--bg);
+  overflow-y: auto;
+  padding: 1rem 1.25rem;
+}
+
+/* Clock banner */
+.draft-clock {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+}
+.draft-clock--player {
+  background: rgba(255, 30, 60, 0.12);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  box-shadow: var(--glow-red);
+  animation: pulse-border 1.5s ease-in-out infinite;
+}
+.draft-clock--cpu {
+  background: var(--bg-3);
+  border: 1px solid var(--border-2);
+  color: var(--text-3);
+}
+@keyframes pulse-border {
+  0%, 100% { box-shadow: var(--glow-red); }
+  50%       { box-shadow: 0 0 20px rgba(255,30,60,0.8); }
+}
+
+/* Board controls */
+.draft-board-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.draft-filter-group { display: flex; gap: 4px; }
+
+/* Board table */
+.draft-board-table .draft-prospect-name { color: var(--text); font-weight: 600; }
+.draft-prospect-selected td { background: rgba(168, 216, 240, 0.07) !important; }
+.draft-prospect-row { cursor: pointer; }
+
+/* Round badge */
+.draft-round-badge {
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.rd-1 { background: rgba(240,192,48,0.15); color: var(--gold); border: 1px solid rgba(240,192,48,0.3); }
+.rd-2 { background: rgba(155,127,255,0.12); color: var(--phl-color); border: 1px solid rgba(155,127,255,0.3); }
+.rd-3 { background: var(--bg-3); color: var(--text-3); border: 1px solid var(--border); }
+
+/* Lobby */
+.draft-lobby {
+  max-width: 480px;
+  margin: 3rem auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+.draft-lobby-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--ice);
+  text-shadow: var(--glow-ice);
+}
+.draft-lobby-sub  { color: var(--text-2); font-size: 13px; }
+.draft-lobby-hint { font-size: 12px; line-height: 1.6; }
+.draft-start-btn  { max-width: 280px; }
+.draft-recap-btn  { max-width: 280px; }
+
+/* Prospect card (detail panel) */
+.draft-prospect-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+.draft-card-pos-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.pos-badge--lg {
+  font-size: 11px;
+  padding: 3px 8px;
+}
+.draft-card-meta { font-size: 12px; margin-bottom: 12px; }
+
+.draft-stats-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.draft-stat {}
+.draft-stat-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+  margin-bottom: 2px;
+}
+.draft-stat-value {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.draft-pick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+.draft-detail-empty {
+  padding: 1rem;
+  color: var(--text-3);
+  text-align: center;
+}
+.draft-history-snippet { margin-top: 8px; }
+.draft-recap { padding: 0; }
+.draft-recap-title { margin-bottom: 8px; }
+
+/* Round indicator in header */
+#draft-round-indicator {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-left: auto;
+}
+.prospect-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+}
+.prospect-name {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ice);
+}
+.prospect-blurb { color: var(--text-2); font-size: 12px; margin: 8px 0; }
+.prospect-weird { font-size: 11px; color: var(--text-3); font-style: italic; }
+
+/* ─── Cap bar ───────────────────────────────────── */
+.cap-bar-track {
+  height: 6px;
+  background: var(--bg-3);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 6px 0;
+}
+.cap-bar-fill {
+  height: 100%;
+  background: var(--ice);
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+.cap-bar-fill.over-cap { background: var(--accent); }
+.cap-bar-numbers {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+/* ─── Standings table ───────────────────────────── */
+.standings-league-title {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+  padding: 6px 0;
+}
+.standings-league-title.phl { color: var(--phl-color); }
+.standings-league-title.cd  { color: var(--cd-color); }
+.standings-league-title.rc  { color: var(--rc-color); }
+
+.standings-relegate-line td { border-top: 2px solid var(--accent) !important; box-shadow: var(--glow-red); }
+.standings-promote-line td  { border-bottom: 2px dashed var(--gold) !important; }
+.standings-playoff-line td  { border-top: 1px dashed var(--gold) !important; opacity: 0.6; }
+.standings-player-row td    { font-weight: 700; color: var(--ice) !important; }
+.standings-danger-zone td   { color: #c07070 !important; }
+.standings-playoff-zone td  { color: var(--text) !important; }
+
+/* ─── Overall rating tiers ──────────────────────── */
+.ovr-elite  { color: var(--neon-green) !important; font-weight: 700; text-shadow: 0 0 6px rgba(57,255,20,0.5); }
+.ovr-good   { color: var(--neon-blue)  !important; font-weight: 700; }
+.ovr-avg    { color: var(--text-2)     !important; }
+.ovr-poor   { color: var(--text-3)     !important; }
+.ovr-bust   { color: #804040          !important; }
+
+/* ─── Position badge ────────────────────────────── */
+.pos-badge {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 1px 5px;
+  border-radius: 2px;
+  background: var(--bg-3);
+  border: 1px solid var(--border-2);
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+.pos-badge.fwd { border-color: var(--accent-2); color: var(--accent-2); }
+.pos-badge.def { border-color: var(--neon-blue); color: var(--neon-blue); }
+.pos-badge.goal { border-color: var(--gold); color: var(--gold); }
+
+/* ─── Roster group header ───────────────────────── */
+.roster-group-header {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--text-3);
+  padding: 12px 8px 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ─── Release button ────────────────────────────── */
+.btn-release {
+  background: none;
+  border: 1px solid #5a2020;
+  color: #804040;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-release:hover {
+  background: rgba(255, 30, 60, 0.12);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: var(--glow-red);
+}
+
+/* ─── Trait chip ────────────────────────────────── */
+.trait-chip {
+  font-size: 10px;
+  color: var(--text-3);
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+/* ─── Screen header ─────────────────────────────── */
+.screen-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-2);
+}
+.screen-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+}
+.back-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.back-btn:hover { color: var(--text); border-color: var(--border-2); }
+
+/* ─── Team select screen ────────────────────────── */
+.title-block { text-align: center; margin-bottom: 2.5rem; padding-top: 3rem; }
+.game-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6vw, 4rem);
+  font-weight: 800;
+  color: var(--ice);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  text-shadow: 0 0 24px rgba(168, 216, 240, 0.5),
+               0 0 60px rgba(168, 216, 240, 0.2),
+               0 3px 0 rgba(0, 0, 0, 0.9);
+}
+.game-subtitle {
+  font-size: 13px;
+  color: var(--text-3);
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+.loading-hint { color: var(--text-3); text-align: center; margin-top: 1rem; }
+
+.team-select-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.league-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+}
+.team-select-tier-desc {
+  font-size: 11px;
+  font-style: italic;
+  margin-bottom: 14px;
+}
+.team-select-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+.team-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  width: 100%;
+}
+.team-card:hover {
+  border-color: var(--ice);
+  background: var(--bg-3);
+  box-shadow: var(--glow-ice);
+}
+.team-card--selected {
+  border-color: var(--accent);
+  box-shadow: var(--glow-red);
+}
+.team-card-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.team-card-abbrev {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ice);
+  letter-spacing: -0.02em;
+}
+.team-card-city { font-size: 11px; color: var(--text-3); }
+.team-card-name {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+.team-card-arena { font-size: 10px; color: var(--text-3); margin-bottom: 6px; }
+.team-card-gm {
+  font-size: 11px;
+  color: var(--text-2);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.team-card-personality {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+.team-card-flavour {
+  font-size: 11px;
+  color: var(--text-3);
+  font-style: italic;
+  line-height: 1.4;
+  margin-top: 4px;
+  border-top: 1px solid var(--border);
+  padding-top: 6px;
+}
+
+/* ─── Utility ───────────────────────────────────── */
+.monospace { font-family: var(--font-mono); }
+.text-2 { color: var(--text-2); }
+.text-3 { color: var(--text-3); }
+.text-ice { color: var(--ice); }
+.text-accent { color: var(--accent); }
+.text-gold { color: var(--gold); }
+
+/* ─── Save indicator ────────────────────────────── */
+.save-indicator { font-size: 10px; letter-spacing: 0.05em; min-width: 60px; text-align: right; transition: opacity 0.3s; }
+.save-ok   { color: #5aaa5a; }
+.save-fail { color: var(--accent); font-weight: 700; }
+
+/* ─── End season button ─────────────────────────── */
+#btn-end-season {
+  background: var(--gold);
+  color: #0a0800;
+  text-shadow: none;
+  border: none;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  width: 100%;
+  margin-top: 8px;
+  transition: opacity 0.15s;
+}
+#btn-end-season:hover { opacity: 0.92; box-shadow: var(--glow-gold); }
+
+/* ─── Save indicator ────────────────────────────── */
+.save-indicator {
+  font-size: 11px;
+  color: var(--text-3);
+  text-align: center;
+  height: 16px;
+  margin-top: 4px;
+  transition: opacity 0.3s;
+}
+.save-indicator.save-ok   { color: var(--cd-color); }
+.save-indicator.save-fail { color: var(--accent); font-weight: 700; }

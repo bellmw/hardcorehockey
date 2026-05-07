@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hockey GM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SCREEN: Team Select (new game)
+  ════════════════════════════════════════════════════════ -->
+  <div id="screen-team-select" class="screen active">
+    <div class="screen-inner centered">
+      <div class="title-block">
+        <h1 class="game-title">Hockey GM</h1>
+        <p class="game-subtitle">Three leagues. 36 cities. One impossible job.</p>
+      </div>
+      <div id="team-select-leagues">
+        <!-- Populated by JS: league tabs + team grid -->
+        <p class="loading-hint">Loading teams...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SCREEN: Dashboard (main hub)
+  ════════════════════════════════════════════════════════ -->
+  <div id="screen-dashboard" class="screen">
+    <header class="app-header">
+      <div class="header-team">
+        <span id="hdr-team-name" class="header-team-name">—</span>
+        <span id="hdr-league-badge" class="league-badge">—</span>
+      </div>
+      <nav class="header-nav">
+        <button onclick="hockeyGM.showScreen('roster')">Roster</button>
+        <button onclick="hockeyGM.showScreen('standings')">Standings</button>
+        <button onclick="hockeyGM.showScreen('trade')">Trades</button>
+        <button onclick="hockeyGM.showScreen('draft')">Draft</button>
+        <button onclick="hockeyGM.showScreen('news')">News</button>
+      </nav>
+      <div class="header-meta">
+      <span id="hdr-record">0-0-0</span>
+      <span id="hdr-year">Year 1</span>
+      <span id="save-indicator" class="save-indicator"></span>
+    </div>
+    </header>
+
+    <main class="dashboard-main">
+      <!-- Left panel: team summary + standings snippet -->
+      <section class="panel panel-left">
+        <div class="panel-section">
+          <h2 class="panel-label">Your team</h2>
+          <div id="dash-team-summary"><!-- JS renders --></div>
+        </div>
+        <div class="panel-section">
+          <h2 class="panel-label">League standings</h2>
+          <div id="dash-standings-snippet"><!-- JS renders --></div>
+        </div>
+        <div class="panel-section">
+          <h2 class="panel-label">Salary cap</h2>
+          <div id="dash-cap-bar"><!-- JS renders --></div>
+        </div>
+      </section>
+
+      <!-- Centre panel: sim controls + next games -->
+      <section class="panel panel-centre">
+        <div class="sim-controls">
+          <button id="btn-sim-next" class="btn-primary" onclick="hockeyGM.simNextGame()">
+            Sim next game
+          </button>
+          <button id="btn-sim-week" class="btn-secondary" onclick="simWeek()">
+            Sim 5 games
+          </button>
+          <button id="btn-sim-playoffs" class="btn-secondary" onclick="hockeyGM.simToPlayoffs()">
+            Sim to playoffs
+          </button>
+          <button id="btn-end-season" class="btn-secondary" onclick="hockeyGM.endSeason()" style="display:none">
+            End season →
+          </button>
+        </div>
+        <div id="dash-schedule"><!-- JS renders next 5 games --></div>
+      </section>
+
+      <!-- Right panel: news feed -->
+      <section class="panel panel-right">
+        <h2 class="panel-label">News feed</h2>
+        <div id="dash-news" class="news-feed"><!-- JS renders --></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SCREEN: Roster
+  ════════════════════════════════════════════════════════ -->
+  <div id="screen-roster" class="screen">
+    <div class="screen-header">
+      <button class="back-btn" onclick="hockeyGM.showScreen('dashboard')">← Dashboard</button>
+      <h1 class="screen-title">Roster</h1>
+      <div id="roster-cap-summary" class="cap-summary"><!-- JS renders --></div>
+    </div>
+    <div id="roster-table-container"><!-- JS renders player table --></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SCREEN: Standings
+  ════════════════════════════════════════════════════════ -->
+  <div id="screen-standings" class="screen">
+    <div class="screen-header">
+      <button class="back-btn" onclick="hockeyGM.showScreen('dashboard')">← Dashboard</button>
+      <h1 class="screen-title">Standings</h1>
+    </div>
+    <div id="standings-all-leagues"><!-- JS renders all 3 leagues --></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SCREEN: Trade Desk
+  ════════════════════════════════════════════════════════ -->
+  <div id="screen-trade" class="screen">
+    <div class="screen-header">
+      <button class="back-btn" onclick="hockeyGM.showScreen('dashboard')">← Dashboard</button>
+      <h1 class="screen-title">Trade desk</h1>
+    </div>
+    <div class="trade-layout">
+      <section id="trade-pending">
+        <h2 class="panel-label">Pending offers</h2>
+        <div id="trade-offers-list"><!-- JS renders --></div>
+      </section>
+      <section id="trade-history-panel">
+        <h2 class="panel-label">Trade history</h2>
+        <div id="trade-history-list"><!-- JS renders --></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SCREEN: Draft
+  ════════════════════════════════════════════════════════ -->
+  <div id="screen-draft" class="screen">
+    <div class="screen-header">
+      <button class="back-btn" onclick="hockeyGM.showScreen('dashboard')">← Dashboard</button>
+      <h1 class="screen-title">Draft day</h1>
+      <span id="draft-round-indicator">Round 1</span>
+    </div>
+    <div class="draft-layout">
+      <div id="draft-board"><!-- JS renders prospect list --></div>
+      <div id="draft-pick-detail"><!-- JS renders selected prospect card --></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SCREEN: News Feed (full)
+  ════════════════════════════════════════════════════════ -->
+  <div id="screen-news" class="screen">
+    <div class="screen-header">
+      <button class="back-btn" onclick="hockeyGM.showScreen('dashboard')">← Dashboard</button>
+      <h1 class="screen-title">News</h1>
+      <div class="news-filters">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="game">Games</button>
+        <button class="filter-btn" data-filter="trade">Trades</button>
+        <button class="filter-btn" data-filter="event">Events</button>
+        <button class="filter-btn" data-filter="commissioner">League</button>
+      </div>
+    </div>
+    <div id="news-full-feed" class="news-feed"><!-- JS renders --></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       Scripts
+  ════════════════════════════════════════════════════════ -->
+  <script type="module" src="src/main.js"></script>
+  <script type="module" src="src/ui/dashboard.js"></script>
+  <script type="module" src="src/ui/teamSelect.js"></script>
+  <script type="module" src="src/ui/standings.js"></script>
+  <script type="module" src="src/ui/roster.js"></script>
+  <script type="module" src="src/ui/news.js"></script>
+  <script type="module" src="src/ui/trade.js"></script>
+  <script type="module" src="src/ui/draft.js"></script>
+  <script>
+    // simWeek helper — available globally after main.js boots
+    async function simWeek() {
+      for (let i = 0; i < 5; i++) {
+        await hockeyGM.simNextGame();
+      }
+    }
+  </script>
+</body>
+</html>

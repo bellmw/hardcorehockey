@@ -1,0 +1,212 @@
+[
+  {
+    "id": "evt_001",
+    "type": "funny",
+    "text": "{player} was spotted at a late-night curling tournament in Kapuskasing. He returned with a bronze medal and a suspicious attitude.",
+    "effect": "none",
+    "tags": ["player"]
+  },
+  {
+    "id": "evt_002",
+    "type": "roster",
+    "text": "{player} pulled a hamstring at team bowling night. He insists it was {opponent_player}'s fault for throwing a strike at the wrong moment.",
+    "effect": { "type": "injury", "games": 2 },
+    "tags": ["player"]
+  },
+  {
+    "id": "evt_003",
+    "type": "arena",
+    "text": "The zamboni at {arena} broke down mid-game last night. The ice was resurfaced using two brooms and a garden hose. Your next home game may be affected.",
+    "effect": { "type": "home_ice", "change": -2, "games": 1 },
+    "tags": ["arena"]
+  },
+  {
+    "id": "evt_004",
+    "type": "league",
+    "text": "The league has banned visor decorations following an unexplained incident in Moncton. Teams have until Thursday to comply. Nobody is sure what happened in Moncton.",
+    "effect": "none",
+    "tags": ["league"]
+  },
+  {
+    "id": "evt_005",
+    "type": "funny",
+    "text": "{player} gave an interview this week claiming he 'invented a new skating technique.' Video review suggests he tripped and recovered unusually gracefully.",
+    "effect": "none",
+    "tags": ["player"]
+  },
+  {
+    "id": "evt_006",
+    "type": "roster",
+    "text": "{player} reported late to practice this morning citing a 'beef with a moose on Highway 11.' The moose was unavailable for comment.",
+    "effect": { "type": "morale", "change": -1, "games": 3 },
+    "tags": ["player"]
+  },
+  {
+    "id": "evt_007",
+    "type": "league",
+    "text": "The Regional Circuit arena in Smooth Rock Falls temporarily lost power last night. The game was completed by smartphone flashlight. League officials called it 'fine, technically.'",
+    "effect": "none",
+    "tags": ["league"]
+  },
+  {
+    "id": "evt_008",
+    "type": "funny",
+    "text": "Your backup goalie {goalie} has developed a pre-game ritual that involves humming the full national anthem backwards. The team is supportive. Mostly.",
+    "effect": "none",
+    "tags": ["goalie"]
+  },
+  {
+    "id": "evt_009",
+    "type": "roster",
+    "text": "{player} got into a fight with the building's automated parking system before last night's game. He is fine. The machine did not apologize.",
+    "effect": { "type": "injury", "games": 1 },
+    "tags": ["player"]
+  },
+  {
+    "id": "evt_010",
+    "type": "league",
+    "text": "The Commissioner has announced a 'Spirit of the Game' initiative. Nobody is sure what it means. A pamphlet is expected by spring.",
+    "effect": "none",
+    "tags": ["league"]
+  },
+  {
+    "id": "evt_011",
+    "type": "funny",
+    "text": "{player} was named player of the week by a regional newspaper that publishes once a month. He framed the article.",
+    "effect": { "type": "morale", "change": 2, "games": 2 },
+    "tags": ["player"]
+  },
+  {
+    "id": "evt_012",
+    "type": "arena",
+    "text": "The roof at {arena} is leaking again. Tonight's home game will have a tarp over one corner of the ice. Players have been warned to avoid the tarp.",
+    "effect": { "type": "home_ice", "change": -1, "games": 1 },
+    "tags": ["arena"]
+  },
+  {
+    "id": "evt_013",
+    "type": "funny",
+    "text": "A seagull entered {arena} during warmups. It sat on the net for eleven minutes. Officials declared it a 'guest' and waited it out.",
+    "effect": "none",
+    "tags": ["arena"]
+  },
+  {
+    "id": "evt_014",
+    "type": "roster",
+    "text": "{player} was suspended one game for arguing with a referee about a call that happened in a different game, on a different night, involving a different team.",
+    "effect": { "type": "suspension", "games": 1 },
+    "tags": ["player"]
+  },
+  {
+    "id": "evt_015",
+    "type": "league",
+    "text": "Three teams in the RC played their road games this week on a rink that was slightly too small. Results will stand. The league apologizes.",
+    "effect": "none",
+    "tags": ["league"]
+  },
+  {
+    "id": "evt_016",
+    "type": "funny",
+    "text": "{player} has started signing autographs as '{player} (The Legend).' His teammates have not commented. His agent is unaware.",
+    "effect": "none",
+    "tags": ["player"]
+  },
+  {
+    "id": "evt_017",
+    "type": "roster",
+    "text": "{player} reported what he described as a 'spiritual injury' ahead of this week's games. The team doctor assessed him and found nothing physically wrong. He sat out anyway.",
+    "effect": { "type": "injury", "games": 1 },
+    "tags": ["player"]
+  },
+  {
+    "id": "evt_018",
+    "type": "league",
+    "text": "The Cochrane Chickens have requested a team name change. The league denied it, citing 'contractual fun obligations.' The Chickens remain.",
+    "effect": "none",
+    "tags": ["league"]
+  },
+  {
+    "id": "evt_019",
+    "type": "funny",
+    "text": "Your team bus broke down 40km outside of Wawa. Players arrived by a combination of taxi, hitchhiking, and one snowmobile. You won.",
+    "effect": { "type": "morale", "change": 3, "games": 3 },
+    "tags": ["team"]
+  },
+  {
+    "id": "evt_020",
+    "type": "arena",
+    "text": "Local television covered a Smooth Rock Falls Smoothies game last night and accidentally aired 45 minutes of the Zamboni garage instead. Ratings were apparently fine.",
+    "effect": "none",
+    "tags": ["league"]
+  },
+  {
+    "id": "evt_021",
+    "type": "roster",
+    "text": "{player} is going through 'something.' His performance may be affected. The team is rallying around him in the way hockey players do, which is to say silently and with occasional light shoving.",
+    "effect": { "type": "morale", "change": -2, "games": 4 },
+    "tags": ["player"]
+  },
+  {
+    "id": "evt_022",
+    "type": "funny",
+    "text": "The Moose Jaw Antlers' GM Darcy Spratt reportedly offered a player a contract written on a Tim Hortons napkin. The player declined but kept the napkin.",
+    "effect": "none",
+    "tags": ["league"]
+  },
+  {
+    "id": "evt_023",
+    "type": "roster",
+    "text": "{player} had a hat trick last week and has not stopped mentioning it. Morale in the locker room is complicated.",
+    "effect": { "type": "morale", "change": 1, "games": 2 },
+    "tags": ["player"]
+  },
+  {
+    "id": "evt_024",
+    "type": "league",
+    "text": "The league's official puck supplier has changed. Players report the new pucks feel 'slightly different.' Officials say they are identical. The debate continues.",
+    "effect": "none",
+    "tags": ["league"]
+  },
+  {
+    "id": "evt_025",
+    "type": "funny",
+    "text": "{player} was named team captain by accident when the announcement email had a typo. He has taken the role very seriously. The actual intended captain has not said anything.",
+    "effect": { "type": "morale", "change": 2, "games": 5 },
+    "tags": ["player"]
+  },
+  {
+    "id": "evt_026",
+    "type": "arena",
+    "text": "Your arena's scoreboard is stuck displaying a score from a 2014 pre-season game. It will be fixed by the next home game. Probably.",
+    "effect": "none",
+    "tags": ["arena"]
+  },
+  {
+    "id": "evt_027",
+    "type": "roster",
+    "text": "{player} challenged the opposing team's enforcer to a fight, lost, and then challenged him again immediately. He lost again. The crowd in Hearst gave him a standing ovation.",
+    "effect": { "type": "morale", "change": 4, "games": 3 },
+    "tags": ["player"]
+  },
+  {
+    "id": "evt_028",
+    "type": "funny",
+    "text": "The Elliot Lake Atoms have installed a uranium-themed night at their arena. Tickets come with a small glow-in-the-dark pin. The league has questions.",
+    "effect": "none",
+    "tags": ["league"]
+  },
+  {
+    "id": "evt_029",
+    "type": "roster",
+    "text": "{player} missed the team photo because he thought it was optional. It was not optional. He has been quietly fined.",
+    "effect": "none",
+    "tags": ["player"]
+  },
+  {
+    "id": "evt_030",
+    "type": "league",
+    "text": "The Commissioner announced a new rule: all overtime goals must be celebrated 'with restraint.' Players and coaches have expressed confusion. Restraint begins next week.",
+    "effect": "none",
+    "tags": ["league"]
+  }
+]

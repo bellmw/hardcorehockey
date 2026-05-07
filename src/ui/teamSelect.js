@@ -1,0 +1,130 @@
+/**
+ * teamSelect.js
+ * Renders the team selection screen.
+ * Triggered by 'render-screen' CustomEvent with detail.screen === 'team-select'.
+ *
+ * Container: #team-select-leagues
+ * On team click → calls window.hockeyGM.newGame(teamId)
+ */
+
+const LEAGUES = [
+  { id: 'phl', name: 'Premier Hockey League', shortName: 'PHL', tier: 1 },
+  { id: 'cd',  name: 'Continental Division',  shortName: 'CD',  tier: 2 },
+  { id: 'rc',  name: 'Regional Circuit',      shortName: 'RC',  tier: 3 },
+];
+
+const TIER_DESC = {
+  1: 'Top flight. Forty teams dream of this. Fourteen survive.',
+  2: 'Mid-tier. Promotion is everything. Relegation is the nightmare.',
+  3: 'The bottom rung. Character builds here. Champions sometimes too.',
+};
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+
+function renderTeamSelect(state) {
+  // state may be null on first load — that's fine, we don't need it here
+  const container = document.getElementById('team-select-leagues');
+  if (!container) return;
+
+  // We read team data from window.hockeyGM indirectly via TEAMS_DATA,
+  // which isn't exposed. Instead we fetch it ourselves (it was already
+  // fetched by boot(), but we can't access NAME_DATA/TEAMS_DATA directly).
+  // Re-fetch is safe — browser will use the cached response.
+  fetch('./data/teams.json')
+    .then(r => r.json())
+    .then(data => buildScreen(container, data))
+    .catch(() => {
+      container.innerHTML = '<p class="text-accent">Failed to load teams. Is live-server running?</p>';
+    });
+}
+
+function buildScreen(container, data) {
+  let activeLeague = 'phl';
+
+  function render() {
+    const league     = LEAGUES.find(l => l.id === activeLeague);
+    const teamsData  = data.leagues[activeLeague]?.teams ?? [];
+
+    const tabs = LEAGUES.map(l => `
+      <button class="filter-btn league-tab${l.id === activeLeague ? ' active' : ''}" data-league="${l.id}">
+        <span class="league-badge ${l.id}">${l.shortName}</span>
+        ${l.name}
+      </button>
+    `).join('');
+
+    const cards = teamsData.map(team => `
+      <button class="team-card" data-team-id="${team.id}">
+        <div class="team-card-header">
+          <span class="team-card-abbrev">${team.abbrev}</span>
+          <span class="team-card-city">${team.city}</span>
+        </div>
+        <div class="team-card-name">${team.name}</div>
+        <div class="team-card-arena">${team.arena}</div>
+        <div class="team-card-gm">GM: ${team.gmName}
+          <span class="team-card-personality">${formatPersonality(team.gmPersonality)}</span>
+        </div>
+        <div class="team-card-flavour">${team.flavour}</div>
+      </button>
+    `).join('');
+
+    container.innerHTML = `
+      <div class="team-select-tabs">${tabs}</div>
+      <p class="team-select-tier-desc text-3">${TIER_DESC[league.tier]}</p>
+      <div class="team-select-grid">${cards}</div>
+    `;
+
+    // Tab clicks
+    container.querySelectorAll('.league-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeLeague = btn.dataset.league;
+        render();
+      });
+    });
+
+    // Team card clicks
+    container.querySelectorAll('.team-card').forEach(card => {
+      card.addEventListener('click', async () => {
+        const teamId = card.dataset.teamId;
+        // Visual feedback
+        card.classList.add('team-card--selected');
+        card.textContent = 'Loading…';
+        await window.hockeyGM.newGame(teamId);
+      });
+    });
+  }
+
+  render();
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatPersonality(p) {
+  const map = {
+    win_now:   'Win Now',
+    cheapskate: 'Cheapskate',
+    rebuilder:  'Rebuilder',
+    gambler:    'Gambler',
+    hoarder:    'Hoarder',
+    desperate:  'Desperate',
+  };
+  return map[p] ?? p ?? '';
+}
+
+// ─── Event listener ───────────────────────────────────────────────────────────
+
+document.addEventListener('render-screen', (e) => {
+  if (e.detail?.screen !== 'team-select') return;
+  renderTeamSelect(e.detail.state);
+});
+
+// Also trigger on DOMContentLoaded in case boot() fires before this module
+// registers its listener (module load order is not guaranteed in all browsers).
+// boot() calls showScreen('team-select') which fires render-screen — but if
+// this module wasn't ready yet, the event was missed. Re-check on load:
+document.addEventListener('DOMContentLoaded', () => {
+  // If the team-select screen is already active, render it now
+  const screen = document.getElementById('screen-team-select');
+  if (screen?.classList.contains('active')) {
+    renderTeamSelect(null);
+  }
+});
