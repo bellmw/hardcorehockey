@@ -17,6 +17,7 @@ const GROUPS = [
 function renderRoster(state) {
   renderCapSummary(state);
   renderPlayerTable(state);
+  renderFreeAgents(state);
 }
 
 // ─── Cap summary ──────────────────────────────────────────────────────────────
@@ -138,6 +139,79 @@ function playerRow(player, posClass) {
       </td>
     </tr>
   `;
+}
+
+// ─── Free agents ──────────────────────────────────────────────────────────────
+
+function renderFreeAgents(state) {
+  const container = document.getElementById('roster-free-agents');
+  if (!container) return;
+
+  const faIds = state.freeAgents || [];
+
+  if (faIds.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const fas = faIds
+    .map(id => state.allPlayers[id])
+    .filter(Boolean)
+    .sort((a, b) => b.overall - a.overall);
+
+  const team  = state.teams[state.playerTeamId];
+  const total = state.cap ?? 40_000_000;
+  const used  = (team?.rosterIds || [])
+    .map(id => state.allPlayers[id])
+    .filter(Boolean)
+    .reduce((sum, p) => sum + (p.salary || 0), 0);
+  const remaining = total - used;
+
+  const rows = fas.map(p => {
+    const ovrClass = overallClass(p.overall);
+    const posClass = p.position === 'G' ? 'goal' : ['LD','RD'].includes(p.position) ? 'def' : 'fwd';
+    const canSign  = (p.salary || 0) <= remaining;
+    return `
+      <tr>
+        <td><span class="pos-badge ${posClass}">${p.position}</span></td>
+        <td class="td-name">${p.fullName}</td>
+        <td>${p.age}</td>
+        <td class="${ovrClass}">${p.overall}</td>
+        <td>${formatMoney(p.salary ?? 0)}</td>
+        <td>${p.contractYears ?? 1}y</td>
+        <td><span class="trait-chip">${p.trait ?? '—'}</span></td>
+        <td>
+          <button class="btn-sign"
+            data-player-id="${p.id}"
+            ${canSign ? '' : 'disabled title="Not enough cap space"'}>
+            SIGN
+          </button>
+        </td>
+      </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    <h2 class="panel-label" style="margin-top:2rem">Free Agents
+      <span style="margin-left:.5rem;font-size:.75rem;color:var(--neon-green)">
+        $${(remaining / 1_000_000).toFixed(1)}M cap available
+      </span>
+    </h2>
+    <table class="standings-table roster-table">
+      <thead>
+        <tr>
+          <th>POS</th><th>Name</th><th>Age</th><th>OVR</th>
+          <th>Salary</th><th>Yrs</th><th>Trait</th><th></th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+
+  container.querySelectorAll('.btn-sign').forEach(btn => {
+    btn.addEventListener('click', () => {
+      window.hockeyGM.signFreeAgent(btn.dataset.playerId);
+      window.hockeyGM.showScreen('roster');
+    });
+  });
 }
 
 // ─── Release player ───────────────────────────────────────────────────────────

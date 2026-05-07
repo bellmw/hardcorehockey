@@ -193,19 +193,19 @@ function renderSimControls(phase) {
   }
 
   if (isPlayoffs) {
-    // Repurpose the btn-sim-playoffs button for simPlayoffs
+    // Only sim-playoffs visible — end-season must wait until playoffs are done
     if (btnSimPO) {
       btnSimPO.style.display = '';
       btnSimPO.textContent   = 'Sim playoffs →';
       btnSimPO.onclick       = () => window.hockeyGM.simPlayoffs();
     }
-    if (btnEnd) btnEnd.style.display = '';
   }
 
   if (isOffseason) {
     if (btnEnd) {
       btnEnd.style.display = '';
-      btnEnd.textContent   = 'End season →';
+      btnEnd.textContent   = 'Start new season →';
+      btnEnd.onclick       = () => window.hockeyGM.endSeason();
     }
   }
 }

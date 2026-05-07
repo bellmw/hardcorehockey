@@ -3,7 +3,7 @@
  * Game init, state machine, save/load, screen router.
  */
 
-import { generateRoster, generatePlayer, generateDraftClass, ageAllPlayers, getExpiringContracts } from './engine/playerGenerator.js';
+import { generateRoster, generatePlayer, generateDraftClass, ageAllPlayers, getExpiringContracts, formatSalary } from './engine/playerGenerator.js';
 import { generateSchedule, updateStandings, sortStandings, createStandingsEntry,
          buildPlayoffBracket, determineRelegation, getSalaryCap, getTeamCapUsed } from './engine/leagueManager.js';
 import { simulateGame } from './engine/gameEngine.js';
@@ -392,6 +392,43 @@ export function declineTrade(tradeId) {
   saveGame();
 }
 
+// ─── Free Agency ──────────────────────────────────────────────────────────────
+
+/**
+ * Signs a free agent to the player's team.
+ * @param {string} playerId
+ */
+export function signFreeAgent(playerId) {
+  const state = GAME_STATE;
+  const team  = state.teams[state.playerTeamId];
+  const player = state.allPlayers[playerId];
+  if (!team || !player) return;
+
+  // Cap check
+  const used = (team.rosterIds || [])
+    .map(id => state.allPlayers[id])
+    .filter(Boolean)
+    .reduce((sum, p) => sum + (p.salary || 0), 0);
+
+  if (used + (player.salary || 0) > state.cap) {
+    alert(`Cannot sign ${player.fullName} — not enough cap space.`);
+    return;
+  }
+
+  // Add to roster, remove from free agents
+  if (!team.rosterIds) team.rosterIds = [];
+  team.rosterIds.push(playerId);
+  state.freeAgents = state.freeAgents.filter(id => id !== playerId);
+
+  addNews({
+    type: 'league',
+    text: `Signed: ${player.fullName} (${player.position}, ${formatSalary(player.salary)}/yr)`,
+    week: state.week,
+  });
+
+  saveGame();
+}
+
 // ─── News Feed ────────────────────────────────────────────────────────────────
 
 function addNews(item) {
@@ -459,8 +496,8 @@ function setSaveIndicator(status) {
  */
 export async function endSeason() {
   const state = GAME_STATE;
-  if (state.phase !== 'playoffs') {
-    console.warn('endSeason() called outside playoff phase — ignored.');
+  if (state.phase !== 'offseason') {
+    console.warn('endSeason() called outside offseason phase — ignored.');
     return;
   }
 
@@ -555,7 +592,7 @@ export async function endSeason() {
 
   // 5. Reset season state
   state.week = 0;
-  state.phase = 'preseason';
+  state.phase = 'season';
   state.pendingTrades = [];
 
   // Rebuild standings and schedules for new league compositions
@@ -660,7 +697,7 @@ export function makeDraftPick(prospectId) {
 
   const totalPicks = totalTeams * state.draftRounds;
   if (state.draftCurrentPick >= totalPicks || state.draftClass.length === 0) {
-    state.phase = 'preseason';
+    state.phase = 'offseason';
     addNews({
       type: 'commissioner',
       text: `Year ${state.year} draft complete. ${totalPicks} picks made across ${state.draftRounds} rounds.`,
@@ -772,6 +809,7 @@ window.hockeyGM = {
   endSeason,
   acceptTrade,
   declineTrade,
+  signFreeAgent,
   startDraft,
   makeDraftPick,
   advanceCPUPicks,

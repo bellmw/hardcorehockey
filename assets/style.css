@@ -781,6 +781,32 @@ tr:hover td { background: var(--bg-2); }
   box-shadow: var(--glow-red);
 }
 
+/* ─── Sign button (free agents) ─────────────────── */
+.btn-sign {
+  background: none;
+  border: 1px solid #1a5a20;
+  color: #3a804a;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-sign:hover:not(:disabled) {
+  background: rgba(0, 255, 100, 0.1);
+  border-color: var(--neon-green);
+  color: var(--neon-green);
+  box-shadow: var(--glow-green);
+}
+.btn-sign:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 /* ─── Trait chip ────────────────────────────────── */
 .trait-chip {
   font-size: 10px;
