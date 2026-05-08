@@ -20,12 +20,14 @@ import { generateSchedule, updateStandings, sortStandings, createStandingsEntry,
 import { simulateGame, generateGameStats } from './engine/gameEngine.js';
 import { generateHeadline, generateTradeOffer, generateCommissionerAnnouncement,
          generateRandomEvent, augmentDraftClass } from './api/claudeAgent.js';
+import { startGameWatch } from './ui/gameWatch.js';
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
 let GAME_STATE = null;
 let NAME_DATA  = null;
 let TEAMS_DATA = null;
+let PENDING_GAME_MODE = null;  // 'quick' or 'watch'
 
 const APP_VERSION = '1.2.3';
 const TRADE_DEADLINE_WEEK = 14;
@@ -280,9 +282,23 @@ export async function simNextGame(silent = false) {
       ? generatePostGameSocialFeed(state, home, away, result)
       : [];
     if (!silent && playerInvolved) {
-      document.dispatchEvent(new CustomEvent('game-result', {
-        detail: { result, home, away, allPlayers: state.allPlayers, socialFeed },
-      }));
+      // Check if user wants to watch period-by-period
+      if (PENDING_GAME_MODE === 'watch') {
+        PENDING_GAME_MODE = null;  // Reset after using
+        startGameWatch({
+          result,
+          home,
+          away,
+          allPlayers: state.allPlayers,
+          socialFeed,
+        });
+      } else {
+        // Quick sim — show result directly
+        PENDING_GAME_MODE = null;  // Reset after using
+        document.dispatchEvent(new CustomEvent('game-result', {
+          detail: { result, home, away, allPlayers: state.allPlayers, socialFeed },
+        }));
+      }
     }
 
     // Accumulate season stats for all players in this game
@@ -625,6 +641,20 @@ export async function simToMyNextGame() {
     return;
   }
 
+  // Show game mode selection modal
+  showGameModeModal();
+}
+
+/**
+ * Internal function to continue the simulation after mode is selected
+ */
+async function continueSimToMyNextGame() {
+  const state = GAME_STATE;
+  const playerTeamId  = state.playerTeamId;
+  const playerLeagueId = ['phl', 'cd', 'rc'].find(lid =>
+    state.leagues[lid].teamIds.includes(playerTeamId)
+  );
+
   // Sim silently until the player's game is the very next one in their league
   let safety = 300;
   while (safety-- > 0) {
@@ -634,7 +664,14 @@ export async function simToMyNextGame() {
 
     if (!nextInLeague) break;
 
-    if (nextInLeague.id === playerNextGame.id) {
+    // Need to find the player's target game
+    const playerTargetGame = state.leagues[playerLeagueId].schedule
+      .filter(g => !g.played && (g.homeTeamId === playerTeamId || g.awayTeamId === playerTeamId))
+      .sort((a, b) => a.week - b.week)[0];
+
+    if (!playerTargetGame) break;
+
+    if (nextInLeague.id === playerTargetGame.id) {
       // Player's game is next — sim with popup
       await simNextGame(false);
       break;
@@ -645,6 +682,31 @@ export async function simToMyNextGame() {
 
     if (state.phase !== 'season') break;
   }
+}
+
+// ─── Game Mode Selection ───────────────────────────────────────────────────────
+
+function showGameModeModal() {
+  const modal = document.getElementById('game-mode-overlay');
+  if (modal) {
+    modal.style.display = 'flex';
+  }
+}
+
+function closeGameModeModal() {
+  const modal = document.getElementById('game-mode-overlay');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+/**
+ * Called when player selects a game mode (Quick Sim or Watch Game)
+ */
+export async function setGameMode(mode) {
+  PENDING_GAME_MODE = mode;
+  closeGameModeModal();
+  await continueSimToMyNextGame();
 }
 
 // ─── Playoffs ─────────────────────────────────────────────────────────────────
@@ -2381,6 +2443,7 @@ window.hockeyGM = {
   saveGame,
   deleteSave,
   restartGame,
+  setGameMode,
   getState: () => GAME_STATE,
 };
 
