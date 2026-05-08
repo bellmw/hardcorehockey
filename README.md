@@ -1,6 +1,6 @@
 # Hockey GM — Personal Hockey Management Sim
 
-Current version: v1.2.4
+Current version: v1.2.5
 
 A stripped-down, goofy hockey GM game. You manage a team, sim seasons, survive
 relegation, and watch Claude-powered AI make absurd trade offers at you.
@@ -15,6 +15,20 @@ npx live-server .
 
 You will need a Claude API key for the in-game AI agents (trade offers, headlines,
 random events, draft classes). See **API Setup** below.
+
+---
+
+## Features (v1.2.5)
+
+- **Dual Simulation Modes** — Quick Sim (instant result) or Watch Game (period-by-period)
+- **Event System** — Random in-season events with chaos level (0-10)
+  - League-wide and team-specific events
+  - Morale, salary cap, and player stat effects
+  - Fires every 2 weeks during regular season
+- **36-Team League** — 3 tiers with promotion/relegation
+- **Salary Cap Management** — Trade, sign, or release players
+- **Claude AI Agents** — Trade offers, headlines, events
+- **LocalStorage Persistence** — Auto-save your game
 
 ---
 
@@ -53,7 +67,7 @@ hockey-gm/
 ├── data/
 │   ├── teams.json          ← All 36 teams (3 leagues × 12)
 │   ├── player-names.json   ← Name pools for player generation
-│   └── events.json         ← Random in-season events bank
+│   └── leagueEvents.json   ← Event bank (40+ events with effects)
 │
 ├── src/
 │   ├── main.js             ← Game init, screen router, save/load
@@ -61,21 +75,50 @@ hockey-gm/
 │   ├── engine/
 │   │   ├── gameEngine.js       ← Simulates individual games
 │   │   ├── leagueManager.js    ← Standings, schedule, relegation
-│   │   └── playerGenerator.js  ← Creates and ages players
+│   │   ├── playerGenerator.js  ← Creates and ages players
+│   │   └── eventEngine.js      ← Event selection, effects (v1.2.5)
 │   │
 │   ├── api/
 │   │   └── claudeAgent.js  ← All Claude API calls (4 agents)
 │   │
 │   └── ui/
-│       ├── dashboard.js    ← Main GM dashboard screen
-│       ├── roster.js       ← Roster management screen
-│       ├── trade.js        ← Trade desk screen
-│       ├── draft.js        ← Draft day screen
-│       └── news.js         ← Headlines and events feed
+│       ├── dashboard.js        ← Main GM dashboard screen
+│       ├── roster.js           ← Roster management screen
+│       ├── trade.js            ← Trade desk screen
+│       ├── draft.js            ← Draft day screen
+│       ├── news.js             ← Headlines and events feed
+│       ├── gameWatch.js        ← Period-by-period game viewer (v1.2.4)
+│       ├── teamIntro.js        ← Team intro with chaos selector (v1.2.5)
+│       └── eventModal.js       ← Event display modal (v1.2.5)
 │
 └── assets/
     └── style.css           ← Global styles
 ```
+
+---
+
+## Event System (v1.2.5)
+
+When you start a new game, you select a **Chaos Level** (0-10):
+
+- **0 = Benign** — Mostly positive, low-impact events
+- **5 = Balanced** — Mix of good and bad events
+- **10 = Chaotic** — Frequent high-impact events affecting rosters and morale
+
+Events fire automatically every 2 weeks during the regular season and pause the game
+with a modal until you acknowledge them. Effects include:
+
+- **Morale changes** — Team-wide or league-wide
+- **Salary cap adjustments** — Unexpected costs or refunds
+- **Player injuries/illness** — Random or targeted
+- **Game bonuses/penalties** — Win/loss modifications
+- **Revenue swings** — Economic impacts
+
+Examples:
+- "Commissioner Controversy" — All teams lose morale
+- "Major Storm Rescheduling" — Schedule disruptions
+- "Trade Deadline Panic" — Roster uncertainty effects
+- "Star Player Breakthrough" — Targeted player boost
 
 ---
 
@@ -88,7 +131,7 @@ All run through `src/api/claudeAgent.js`:
 | **Commissioner** | Season start / end | Announces cap increases, relegation, rule changes |
 | **Rival GMs** | Weekly during season | Proposes wacky trades based on their personality |
 | **Headline Bot** | After each game sim | Generates funny post-game news stories |
-| **Event Engine** | Random during season | Fires absurd one-off incidents |
+| **Event Engine** | Every 2 weeks (season) | Fires random chaos events based on chaos level |
 
 ---
 
@@ -110,11 +153,12 @@ Promotion / Relegation each season:
 ## Season Loop
 
 1. **Draft** — 3 rounds, pick rookies from Claude-generated class
-2. **Signings** — sign/release free agents within salary cap
-3. **Season** — sim 20 games; trades arrive, events fire, headlines generated
-4. **Playoffs** — top 4 in your league, sim bracket
-5. **Relegation** — bottom 2 drop, top 2 rise, 3rd vs 10th drama
-6. **Off-season** — cap rises $2M, repeat
+2. **Chaos Selection** — Choose chaos level (0-10) for event frequency
+3. **Signings** — Sign/release free agents within salary cap
+4. **Season** — Sim 20 games; trades arrive, events fire every 2 weeks, headlines generated
+5. **Playoffs** — Top 4 in your league, sim bracket
+6. **Relegation** — Bottom 2 drop, top 2 rise, 3rd vs 10th drama
+7. **Off-season** — Cap rises $2M, repeat
 
 ---
 
