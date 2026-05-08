@@ -1,6 +1,6 @@
 # Hockey GM — Personal Hockey Management Sim
 
-Current version: v1.2.6
+Current version: v1.2.7
 
 A stripped-down, goofy hockey GM game. You manage a team, sim seasons, survive
 relegation, and watch Claude-powered AI make absurd trade offers at you.
@@ -18,13 +18,13 @@ random events, draft classes). See **API Setup** below.
 
 ---
 
-## Features (v1.2.6)
+## Features (v1.2.7)
 
 - **Dual Simulation Modes** — Quick Sim (instant result) or Watch Game (period-by-period)
 - **Event System** — Random in-season events with chaos level (0-10)
   - League-wide and team-specific events
   - Morale, salary cap, and player stat effects
-  - Fires every 2 weeks during regular season
+  - Fires every 2 weeks during regular season (not during playoff sims)
   - **Event deduplication** — Each event fires only once per season
 - **Player Injuries** — Random injuries from events or game impacts
   - Duration: 1-3 weeks per injury
@@ -35,6 +35,10 @@ random events, draft classes). See **API Setup** below.
 - **8-Team Playoff Bracket** — Per league (24 teams total playoff)
   - First round: 1v8, 2v7, 3v6, 4v5 matchups
   - Semifinals and finals
+- **Season Summary Screen** — End-of-season report card
+  - Grades from A+ to F based on regular season + playoff performance
+  - Team stats and narrative summary
+  - "Start New Season" button for offseason progression
 - **36-Team League** — 3 tiers with promotion/relegation
 - **Salary Cap Management** — Trade, sign, or release players
 - **Claude AI Agents** — Trade offers, headlines, events
