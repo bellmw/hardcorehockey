@@ -2165,6 +2165,101 @@ tr:hover td { background: var(--bg-2); }
   text-shadow: 0 0 12px currentColor;
 }
 
+/* ─── League leaders section ────────────────────── */
+.dashboard-section-leaders {
+  padding: 1.5rem;
+  background: var(--bg-2);
+  border-top: 1px solid var(--border);
+}
+
+.leaders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.leaders-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.leaders-title {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ice);
+  padding: 10px 12px;
+  background: var(--bg-3);
+  border-bottom: 1px solid var(--border);
+  margin: 0;
+}
+
+.leaders-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.leaders-table tr {
+  border-bottom: 1px solid var(--border);
+}
+
+.leaders-table tr:last-child {
+  border-bottom: none;
+}
+
+.leaders-table tr:hover {
+  background: var(--bg-3);
+}
+
+.leaders-name {
+  padding: 8px 12px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.leaders-player {
+  color: var(--text);
+  font-weight: 600;
+  flex: 1;
+}
+
+.leaders-team-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding: 2px 6px;
+  background: var(--bg-3);
+  border-radius: 2px;
+}
+
+.leaders-stat {
+  padding: 8px 12px;
+  text-align: right;
+  color: var(--gold);
+  font-weight: 700;
+  font-family: var(--font-display);
+}
+
+.leaders-empty {
+  padding: 16px 12px;
+  text-align: center;
+  color: var(--text-3);
+  font-size: 12px;
+}
+}
+
 .po-league-title {
   font-family: var(--font-display);
   font-size: 13px;

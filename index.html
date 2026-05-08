@@ -44,7 +44,7 @@
     <div class="screen-inner centered">
       <div class="title-block">
         <h1 class="game-title">Hockey GM</h1>
-        <div id="title-app-version" class="title-version">v1.2.0</div>
+        <div id="title-app-version" class="title-version">v1.2.2</div>
         <p class="game-subtitle">Three leagues. 36 cities. One impossible job.</p>
       </div>
       <div id="team-select-leagues">
@@ -79,7 +79,7 @@
           <span class="record-label">RECORD</span>
           <span id="hdr-record" class="record-value">0-0-0</span>
         </div>
-        <span id="hdr-app-version" class="version-badge">v1.2.0</span>
+        <span id="hdr-app-version" class="version-badge">v1.2.2</span>
         <span id="hdr-year" class="year-badge">Year 1</span>
         <span id="save-indicator" class="save-indicator"></span>
         <button class="btn-restart" onclick="hockeyGM.restartGame()" title="Abandon save and start over">↺ New Game</button>
@@ -136,6 +136,12 @@
         <div id="dash-news" class="news-feed"><!-- JS renders --></div>
       </section>
     </main>
+
+    <!-- League leaders section (full-width below main panels) -->
+    <section class="dashboard-section-leaders">
+      <h2 class="panel-label">League leaders</h2>
+      <div id="dash-league-leaders"><!-- JS renders leaderboards --></div>
+    </section>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════

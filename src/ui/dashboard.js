@@ -31,6 +31,7 @@ function renderDashboard(state) {
   renderStandingsSnippet(state, leagueId, standings);
   renderCapBar(state, team);
   renderUpcomingGames(state, team);
+  renderLeagueLeaders(state, team);
   renderNews(state);
   renderSimControls(state.phase);
 
@@ -251,7 +252,128 @@ function renderUpcomingGames(state, team) {
 
   container.innerHTML = `<div class="sched-list">${rows}</div>`;
 }
+// ─── League leaders ──────────────────────────────────────────────────────────
 
+function renderLeagueLeaders(state, team) {
+  const container = el('dash-league-leaders');
+  if (!container) return;
+
+  const leagueId = team.leagueId;
+  
+  // Get all players in the league (from all teams in same league) and build teamId mapping
+  const allTeamsInLeague = Object.values(state.teams).filter(t => t.leagueId === leagueId);
+  const leaguePlayers = [];
+  const playerTeamMap = {};  // Map playerId -> teamId
+  
+  allTeamsInLeague.forEach(t => {
+    (t.rosterIds || []).forEach(playerId => {
+      const player = state.allPlayers[playerId];
+      if (player) {
+        leaguePlayers.push(player);
+        playerTeamMap[playerId] = t.id;  // Map this player to their team
+      }
+    });
+  });
+
+  // Separate skaters and goalies
+  const skaters = leaguePlayers.filter(p => ['C', 'LW', 'RW', 'LD', 'RD'].includes(p.position));
+  const goalies = leaguePlayers.filter(p => p.position === 'G');
+
+  // Compute leaderboards
+  const topPointScorers = [...skaters]
+    .sort((a, b) => (b.seasonStats?.pts ?? 0) - (a.seasonStats?.pts ?? 0))
+    .slice(0, 10);
+
+  const topGoalScorers = [...skaters]
+    .sort((a, b) => (b.seasonStats?.g ?? 0) - (a.seasonStats?.g ?? 0))
+    .slice(0, 10);
+
+  const gaaLeaders = [...goalies]
+    .filter(g => (g.seasonStats?.gp ?? 0) > 0)
+    .map(g => ({
+      ...g,
+      gaa: (g.seasonStats.ga ?? 0) / (g.seasonStats.gp ?? 1) * 3,
+    }))
+    .sort((a, b) => a.gaa - b.gaa)
+    .slice(0, 10);
+
+  const svpctLeaders = [...goalies]
+    .filter(g => (g.seasonStats?.sa ?? 0) > 0)
+    .map(g => ({
+      ...g,
+      svpct: ((g.seasonStats.sv ?? 0) / (g.seasonStats.sa ?? 1) * 100),
+    }))
+    .sort((a, b) => b.svpct - a.svpct)
+    .slice(0, 10);
+
+  // Helper to format table rows
+  const skaterRow = (p, stat) => {
+    const value = stat === 'pts' ? (p.seasonStats?.pts ?? 0) : (p.seasonStats?.g ?? 0);
+    const teamId = playerTeamMap[p.id];
+    const team = state.teams[teamId];
+    const teamBadge = team?.abbrev ?? '—';
+    return `
+      <tr>
+        <td class="leaders-name">
+          <span class="leaders-player">${p.fullName}</span>
+          <span class="leaders-team-badge">${teamBadge}</span>
+        </td>
+        <td class="leaders-stat">${value}</td>
+      </tr>`;
+  };
+
+  const goalieRow = (g, stat) => {
+    const value = stat === 'gaa' ? g.gaa.toFixed(2) : g.svpct.toFixed(1) + '%';
+    const teamId = playerTeamMap[g.id];
+    const team = state.teams[teamId];
+    const teamBadge = team?.abbrev ?? '—';
+    return `
+      <tr>
+        <td class="leaders-name">
+          <span class="leaders-player">${g.fullName}</span>
+          <span class="leaders-team-badge">${teamBadge}</span>
+        </td>
+        <td class="leaders-stat">${value}</td>
+      </tr>`;
+  };
+
+  const ptsHtml = topPointScorers.length
+    ? `<table class="leaders-table">${topPointScorers.map(p => skaterRow(p, 'pts')).join('')}</table>`
+    : '<p class="leaders-empty">No data yet</p>';
+
+  const goalHtml = topGoalScorers.length
+    ? `<table class="leaders-table">${topGoalScorers.map(p => skaterRow(p, 'g')).join('')}</table>`
+    : '<p class="leaders-empty">No data yet</p>';
+
+  const gaaHtml = gaaLeaders.length
+    ? `<table class="leaders-table">${gaaLeaders.map(g => goalieRow(g, 'gaa')).join('')}</table>`
+    : '<p class="leaders-empty">No data yet</p>';
+
+  const svpctHtml = svpctLeaders.length
+    ? `<table class="leaders-table">${svpctLeaders.map(g => goalieRow(g, 'svpct')).join('')}</table>`
+    : '<p class="leaders-empty">No data yet</p>';
+
+  container.innerHTML = `
+    <div class="leaders-grid">
+      <div class="leaders-card">
+        <h3 class="leaders-title">Points</h3>
+        ${ptsHtml}
+      </div>
+      <div class="leaders-card">
+        <h3 class="leaders-title">Goals</h3>
+        ${goalHtml}
+      </div>
+      <div class="leaders-card">
+        <h3 class="leaders-title">GAA</h3>
+        ${gaaHtml}
+      </div>
+      <div class="leaders-card">
+        <h3 class="leaders-title">Save %</h3>
+        ${svpctHtml}
+      </div>
+    </div>
+  `;
+}
 // ─── News feed ────────────────────────────────────────────────────────────────
 
 function renderNews(state) {
