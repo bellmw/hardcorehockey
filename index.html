@@ -11,6 +11,32 @@
 </head>
 <body>
 
+  <!-- Global team tooltip -->
+  <div id="team-tooltip" class="team-tooltip" aria-hidden="true"></div>
+
+  <!-- Game result modal -->
+  <div id="game-result-overlay" class="modal-overlay" style="display:none" role="dialog" aria-modal="true">
+    <div class="modal-box" id="game-result-modal">
+      <div id="game-result-content"><!-- JS renders --></div>
+    </div>
+  </div>
+
+  <!-- Playoff bracket modal -->
+  <div id="playoff-bracket-overlay" class="modal-overlay" style="display:none" role="dialog" aria-modal="true">
+    <div class="modal-box po-bracket-box">
+      <div class="gr-header">
+        <span class="gr-title">🏒 Playoffs</span>
+        <button class="gr-close" id="playoff-bracket-close" aria-label="Close">✕</button>
+      </div>
+      <div id="playoff-bracket-content"><!-- JS renders --></div>
+      <div class="gr-footer">
+        <button class="btn-primary po-start-btn" id="playoff-bracket-start" onclick="hockeyGM.closePlayoffBracket()">
+          Let's Play →
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ═══════════════════════════════════════════════════════
        SCREEN: Team Select (new game)
   ════════════════════════════════════════════════════════ -->
@@ -47,6 +73,7 @@
       <span id="hdr-record">0-0-0</span>
       <span id="hdr-year">Year 1</span>
       <span id="save-indicator" class="save-indicator"></span>
+      <button class="btn-restart" onclick="hockeyGM.restartGame()" title="Abandon save and start over">↺ New Game</button>
     </div>
     </header>
 
@@ -56,6 +83,10 @@
         <div class="panel-section">
           <h2 class="panel-label">Your team</h2>
           <div id="dash-team-summary"><!-- JS renders --></div>
+        </div>
+        <div class="panel-section">
+          <h2 class="panel-label">Roster breakdown</h2>
+          <div id="dash-roster-breakdown"><!-- JS renders --></div>
         </div>
         <div class="panel-section">
           <h2 class="panel-label">League standings</h2>
@@ -70,11 +101,14 @@
       <!-- Centre panel: sim controls + next games -->
       <section class="panel panel-centre">
         <div class="sim-controls">
-          <button id="btn-sim-next" class="btn-primary" onclick="hockeyGM.simNextGame()">
-            Sim next game
+          <button id="btn-sim-next" class="btn-primary" onclick="hockeyGM.simToMyNextGame()">
+            Sim my next game
           </button>
           <button id="btn-sim-week" class="btn-secondary" onclick="simWeek()">
             Sim 5 games
+          </button>
+          <button id="btn-sim-series" class="btn-secondary" style="display:none" onclick="hockeyGM.simPlayerSeries()">
+            Sim series
           </button>
           <button id="btn-sim-playoffs" class="btn-secondary" onclick="hockeyGM.simToPlayoffs()">
             Sim to playoffs
@@ -83,6 +117,7 @@
             End season →
           </button>
         </div>
+        <h2 class="panel-label" style="margin-top:16px">Upcoming games</h2>
         <div id="dash-schedule"><!-- JS renders next 5 games --></div>
       </section>
 
@@ -95,6 +130,15 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════════════
+       SCREEN: Team Intro / Scouting Report (shown after picking a team)
+  ════════════════════════════════════════════════════════ -->
+  <div id="screen-team-intro" class="screen">
+    <div class="screen-inner centered">
+      <div id="team-intro-content"><!-- JS renders --></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
        SCREEN: Roster
   ════════════════════════════════════════════════════════ -->
   <div id="screen-roster" class="screen">
@@ -103,7 +147,12 @@
       <h1 class="screen-title">Roster</h1>
       <div id="roster-cap-summary" class="cap-summary"><!-- JS renders --></div>
     </div>
+    <div class="roster-view-toggle">
+      <button id="roster-tab-roster" class="roster-tab active" onclick="rosterSetView('roster')">Roster</button>
+      <button id="roster-tab-stats"  class="roster-tab"        onclick="rosterSetView('stats')">Season Stats</button>
+    </div>
     <div id="roster-table-container"><!-- JS renders player table --></div>
+    <div id="roster-stats-container" style="display:none"><!-- JS renders stats --></div>
     <div id="roster-free-agents"><!-- JS renders free agents if offseason --></div>
   </div>
 
@@ -177,6 +226,8 @@
   <script type="module" src="src/main.js"></script>
   <script type="module" src="src/ui/dashboard.js"></script>
   <script type="module" src="src/ui/teamSelect.js"></script>
+  <script type="module" src="src/ui/teamIntro.js"></script>
+  <script type="module" src="src/ui/gameResult.js"></script>
   <script type="module" src="src/ui/standings.js"></script>
   <script type="module" src="src/ui/roster.js"></script>
   <script type="module" src="src/ui/news.js"></script>
@@ -187,6 +238,26 @@
     async function simWeek() {
       for (let i = 0; i < 5; i++) {
         await hockeyGM.simNextGame();
+      }
+    }
+
+    // Roster view toggle
+    function rosterSetView(view) {
+      const roster  = document.getElementById('roster-table-container');
+      const stats   = document.getElementById('roster-stats-container');
+      const tabR    = document.getElementById('roster-tab-roster');
+      const tabS    = document.getElementById('roster-tab-stats');
+      if (view === 'stats') {
+        roster.style.display = 'none';
+        stats.style.display  = '';
+        tabR.classList.remove('active');
+        tabS.classList.add('active');
+        if (window._renderRosterStats) window._renderRosterStats();
+      } else {
+        stats.style.display  = 'none';
+        roster.style.display = '';
+        tabS.classList.remove('active');
+        tabR.classList.add('active');
       }
     }
   </script>

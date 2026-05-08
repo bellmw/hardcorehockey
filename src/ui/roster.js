@@ -214,6 +214,98 @@ function renderFreeAgents(state) {
   });
 }
 
+// ─── Season stats view ────────────────────────────────────────────────────────
+
+function renderStatsView(state) {
+  const container = document.getElementById('roster-stats-container');
+  if (!container) return;
+
+  const team = state.teams[state.playerTeamId];
+  if (!team) { container.innerHTML = '<p class="text-3">No team loaded.</p>'; return; }
+
+  const roster = (team.rosterIds || [])
+    .map(id => state.allPlayers[id])
+    .filter(Boolean);
+
+  const skaters = roster.filter(p => p.position !== 'G')
+    .sort((a, b) => ((b.seasonStats?.pts ?? 0) - (a.seasonStats?.pts ?? 0)) || (b.overall - a.overall));
+
+  const goalies = roster.filter(p => p.position === 'G')
+    .sort((a, b) => {
+      const safeGAA = (p) => {
+        const s = p.seasonStats;
+        if (!s || !s.gp) return 99;
+        return (s.ga / s.gp) * 3; // goals per game × 3 periods ≈ GAA
+      };
+      return safeGAA(a) - safeGAA(b);
+    });
+
+  const skaterRows = skaters.map(p => {
+    const s = p.seasonStats || {};
+    const posClass = ['LD','RD'].includes(p.position) ? 'def' : 'fwd';
+    return `
+      <tr>
+        <td><span class="pos-badge ${posClass}">${p.position}</span></td>
+        <td class="td-name">${p.fullName}</td>
+        <td>${s.gp ?? 0}</td>
+        <td>${s.g  ?? 0}</td>
+        <td>${s.a  ?? 0}</td>
+        <td><strong>${s.pts ?? 0}</strong></td>
+        <td class="${(s.pm ?? 0) >= 0 ? 'stats-pm-pos' : 'stats-pm-neg'}">${(s.pm ?? 0) >= 0 ? '+' : ''}${s.pm ?? 0}</td>
+      </tr>`;
+  }).join('');
+
+  const goalieRows = goalies.map(p => {
+    const s = p.seasonStats || {};
+    const gaa = s.gp ? ((s.ga ?? 0) / s.gp * 3).toFixed(2) : '—';
+    const svPct = s.sa ? ((s.sv ?? 0) / s.sa).toFixed(3).replace('0.', '.') : '—';
+    return `
+      <tr>
+        <td><span class="pos-badge goal">G</span></td>
+        <td class="td-name">${p.fullName}</td>
+        <td>${s.gp ?? 0}</td>
+        <td>${s.w  ?? 0}</td>
+        <td>${s.ga ?? 0}</td>
+        <td>${s.sa ?? 0}</td>
+        <td>${svPct}</td>
+        <td>${gaa}</td>
+      </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    <table class="standings-table roster-table stats-table">
+      <thead>
+        <tr class="roster-group-header"><td colspan="7">SKATERS</td></tr>
+        <tr>
+          <th>POS</th><th>Name</th>
+          <th title="Games Played">GP</th>
+          <th title="Goals">G</th>
+          <th title="Assists">A</th>
+          <th title="Points">PTS</th>
+          <th title="Plus/Minus">+/-</th>
+        </tr>
+      </thead>
+      <tbody>${skaterRows || '<tr><td colspan="7" class="text-3" style="padding:.75rem">No games played yet.</td></tr>'}</tbody>
+    </table>
+    ${goalies.length ? `
+    <table class="standings-table roster-table stats-table" style="margin-top:1.5rem">
+      <thead>
+        <tr class="roster-group-header"><td colspan="8">GOALIES</td></tr>
+        <tr>
+          <th>POS</th><th>Name</th>
+          <th title="Games Played">GP</th>
+          <th title="Wins">W</th>
+          <th title="Goals Against">GA</th>
+          <th title="Shots Against">SA</th>
+          <th title="Save Percentage">SV%</th>
+          <th title="Goals Against Average">GAA</th>
+        </tr>
+      </thead>
+      <tbody>${goalieRows}</tbody>
+    </table>` : ''}
+  `;
+}
+
 // ─── Release player ───────────────────────────────────────────────────────────
 
 function releasePlayer(playerId, state) {
@@ -255,5 +347,15 @@ function escapeAttr(str) {
 
 document.addEventListener('render-screen', (e) => {
   if (e.detail?.screen !== 'roster') return;
-  renderRoster(e.detail.state);
+  const state = e.detail.state;
+  // Cache state for the stats renderer called by toggle
+  window._renderRosterStats = () => renderStatsView(state);
+  // Always default back to roster tab
+  const statsEl = document.getElementById('roster-stats-container');
+  const rosterEl = document.getElementById('roster-table-container');
+  if (statsEl) statsEl.style.display = 'none';
+  if (rosterEl) rosterEl.style.display = '';
+  document.getElementById('roster-tab-roster')?.classList.add('active');
+  document.getElementById('roster-tab-stats')?.classList.remove('active');
+  renderRoster(state);
 });

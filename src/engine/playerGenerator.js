@@ -172,7 +172,7 @@ export function generateDraftClass(nameData, year) {
       tier: 2,
       age: 18 + Math.floor(Math.random() * 3), // 18–20
     });
-    p.overall = randomInRange(52, 70);
+    p.overall = randomInRange(57, 77);
     p.potential = randomInRange(p.overall + 5, Math.min(95, p.overall + 20));
     p.draftRound = 1;
     p.draftYear = year;
@@ -187,7 +187,7 @@ export function generateDraftClass(nameData, year) {
       tier: 3,
       age: 18 + Math.floor(Math.random() * 3),
     });
-    p.overall = randomInRange(44, 60);
+    p.overall = randomInRange(48, 66);
     p.potential = randomInRange(p.overall + 3, Math.min(85, p.overall + 15));
     p.draftRound = 2;
     p.draftYear = year;
@@ -202,7 +202,7 @@ export function generateDraftClass(nameData, year) {
       tier: 3,
       age: 18 + Math.floor(Math.random() * 4),
     });
-    p.overall = randomInRange(38, 52);
+    p.overall = randomInRange(42, 57);
     p.potential = randomInRange(p.overall + 2, Math.min(78, p.overall + 12));
     p.draftRound = 3;
     p.draftYear = year;

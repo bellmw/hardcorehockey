@@ -24,6 +24,21 @@ function renderDraft(state) {
   const phase = state.phase;
   const hasClass = state.draftClass?.length > 0;
 
+  // Pre-season draft (new game flow)
+  if (phase === 'preseason_draft') {
+    if (hasClass) {
+      renderActiveDraft(state);
+      // Auto-advance CPU picks
+      const onClock = currentPickTeam(state);
+      if (onClock && onClock !== state.playerTeamId) {
+        setTimeout(() => window.hockeyGM.advanceCPUPicks(), 400);
+      }
+    } else {
+      renderPreseasonComplete(state);
+    }
+    return;
+  }
+
   if (phase !== 'draft' && !hasClass) {
     renderPreDraft(state);
     return;
@@ -43,6 +58,93 @@ function renderDraft(state) {
 
   // Draft complete — show recap
   renderPostDraft(state);
+}
+
+// ─── Pre-season draft complete ────────────────────────────────────────────────
+
+function renderPreseasonComplete(state) {
+  const board  = el('draft-board');
+  const detail = el('draft-pick-detail');
+
+  const myPicks = (state.draftHistory || []).filter(pick => pick.teamId === state.playerTeamId);
+  const playerTeam = state.teams[state.playerTeamId];
+
+  // ── Player's picks table ──────────────────────────────────────────────────
+  const rows = myPicks.map(pick => {
+    const p = state.allPlayers[pick.prospectId];
+    if (!p) return '';
+    const posClass = positionGroupClass(p.position);
+    const ovrClass = overallClass(p.overall);
+    return `
+      <tr>
+        <td class="text-3">Rd ${pick.round} #${pick.pick}</td>
+        <td><span class="pos-badge ${posClass}">${p.position}</span></td>
+        <td class="td-name">${p.fullName}</td>
+        <td class="${ovrClass}">${p.overall}</td>
+        <td class="${overallClass(p.potential)}">${p.potential}</td>
+        <td class="text-3">$700K · 3yr ELC</td>
+      </tr>`;
+  }).join('');
+
+  // ── Team OVR delta table (all teams) ────────────────────────────────────
+  const preDraft = state.preDraftOvr || {};
+  const allTeams = Object.values(state.teams).sort((a, b) => {
+    // Player's team first, then by current OVR desc
+    if (a.id === state.playerTeamId) return -1;
+    if (b.id === state.playerTeamId) return 1;
+    return 0;
+  });
+
+  const LINEUP_SIZE = 20; // matches ROSTER_TEMPLATE length — only top-20 make the lineup
+
+  const deltaRows = allTeams.map(team => {
+    const allRoster = (team.rosterIds || []).map(id => state.allPlayers[id]).filter(Boolean);
+    // Use only the top LINEUP_SIZE players by OVR — rookies below the cut don't move the needle
+    const lineup   = allRoster.slice().sort((a, b) => b.overall - a.overall).slice(0, LINEUP_SIZE);
+    const nowOvr   = lineup.length ? Math.round(lineup.reduce((s, p) => s + p.overall, 0) / lineup.length) : 0;
+    const wasOvr   = preDraft[team.id] ?? nowOvr;
+    const delta    = nowOvr - wasOvr;
+    const deltaStr = delta > 0 ? `<span class="draft-delta-up">+${delta}</span>`
+                   : delta < 0 ? `<span class="draft-delta-down">${delta}</span>`
+                   : '<span class="text-3">—</span>';
+    const isMe = team.id === state.playerTeamId;
+    const lgClass = team.leagueId ?? '';
+    return `<tr class="${isMe ? 'draft-delta-myrow' : ''}">
+      <td><span class="league-badge ${lgClass}">${lgClass.toUpperCase()}</span></td>
+      <td class="td-name">${team.fullName}${isMe ? ' <span class="text-3">(you)</span>' : ''}</td>
+      <td class="${overallClass(wasOvr)}">${wasOvr}</td>
+      <td class="${overallClass(nowOvr)}">${nowOvr}</td>
+      <td>${deltaStr}</td>
+    </tr>`;
+  }).join('');
+
+  if (board) board.innerHTML = `
+    <div class="draft-lobby">
+      <h2 class="draft-lobby-title">Pre-Season Draft Complete</h2>
+      <p class="draft-lobby-sub">Your rookies have signed entry-level contracts — $700K · 3 years.</p>
+      ${myPicks.length > 0 ? `
+        <table class="standings-table" style="margin: 1rem 0">
+          <thead><tr><th>Pick</th><th>POS</th><th>Name</th><th>OVR</th><th>POT</th><th>Contract</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>` : '<p class="text-3">You skipped all your picks.</p>'}
+
+      <h3 class="draft-delta-heading">Team Strength After Draft</h3>
+      <table class="standings-table draft-delta-table" style="margin: 0.5rem 0 1.5rem">
+        <thead><tr><th></th><th>Team</th><th>Before</th><th>After</th><th>Δ</th></tr></thead>
+        <tbody>${deltaRows}</tbody>
+      </table>
+
+      <button class="btn-primary" id="btn-begin-season" style="margin-top: 1rem">
+        Begin Season →
+      </button>
+    </div>
+  `;
+
+  if (detail) detail.innerHTML = '';
+
+  el('btn-begin-season')?.addEventListener('click', () => {
+    window.hockeyGM.beginSeason();
+  });
 }
 
 // ─── Pre-draft lobby ──────────────────────────────────────────────────────────
@@ -118,8 +220,10 @@ function renderDraftBoard(state) {
     return draftScore(b) - draftScore(a);
   });
 
+  const isPreseason  = state.phase === 'preseason_draft';
+
   const clockBanner = isPlayerTurn
-    ? `<div class="draft-clock draft-clock--player">🏒 YOUR PICK — Round ${round}, Pick ${pickInRound}</div>`
+    ? `<div class="draft-clock draft-clock--player">🏒 YOUR PICK — Round ${round}, Pick ${pickInRound} <span class="draft-pick-overall">#${pickIdx + 1} overall</span>${isPreseason ? ' · Pre-Season Draft' : ''}</div>`
     : `<div class="draft-clock draft-clock--cpu">⏳ ON THE CLOCK: ${onClockTeam?.fullName ?? onClockId} — Round ${round}, Pick ${pickInRound}</div>`;
 
   const filterBtns = ['all', '1', '2', '3'].map(f =>
@@ -147,7 +251,7 @@ function renderDraftBoard(state) {
         <td class="td-name draft-prospect-name">${p.fullName}</td>
         <td>${p.age}</td>
         <td class="${ovrClass}">${p.overall}</td>
-        <td class="ovr-good">${p.potential}</td>
+        <td class="${overallClass(p.potential)}">${p.potential}</td>
         <td><span class="trait-chip">${p.trait ?? '—'}</span></td>
         <td><span class="draft-round-badge rd-${p.draftRound}">Rd ${p.draftRound}</span></td>
       </tr>
@@ -204,6 +308,8 @@ function renderPickDetail(state) {
 
   const totalTeams  = (state.draftOrder || []).length;
   const pickIdx     = state.draftCurrentPick ?? 0;
+  const round       = Math.floor(pickIdx / totalTeams) + 1;
+  const pickInRound = (pickIdx % totalTeams) + 1;
   const onClockId   = currentPickTeam(state);
   const isPlayerTurn = onClockId === state.playerTeamId;
 
@@ -223,6 +329,7 @@ function renderPickDetail(state) {
 
   const posClass = positionGroupClass(p.position);
   const ovrClass = overallClass(p.overall);
+  const isPreseason = state.phase === 'preseason_draft';
 
   const pickBtn = isPlayerTurn
     ? `<button class="btn-primary draft-pick-btn" id="btn-draft-pick">Draft ${p.firstName} →</button>`
@@ -230,6 +337,14 @@ function renderPickDetail(state) {
 
   const autoBtn = isPlayerTurn
     ? `<button class="btn-secondary draft-auto-btn" id="btn-draft-auto">Auto-pick best available</button>`
+    : '';
+
+  const skipBtn = isPreseason && isPlayerTurn
+    ? `<button class="btn-secondary" id="btn-draft-skip">Skip this pick</button>`
+    : '';
+
+  const salaryLine = isPreseason
+    ? `<p class="prospect-blurb text-3" style="margin-top:6px">Entry-level contract: <strong>$700K · 3 years</strong></p>`
     : '';
 
   detail.innerHTML = `
@@ -249,7 +364,7 @@ function renderPickDetail(state) {
         </div>
         <div class="draft-stat">
           <div class="draft-stat-label">POT</div>
-          <div class="draft-stat-value ovr-good">${p.potential}</div>
+          <div class="draft-stat-value ${overallClass(p.potential)}">${p.potential}</div>
         </div>
         <div class="draft-stat">
           <div class="draft-stat-label">AGE</div>
@@ -261,13 +376,17 @@ function renderPickDetail(state) {
         ? `<p class="prospect-blurb">${p.scoutingBlurb}</p>`
         : `<p class="prospect-blurb text-3">No scouting report available.</p>`}
 
+      ${salaryLine}
+
       ${p.weirdNote || p.trait
         ? `<p class="prospect-weird">⚡ ${p.weirdNote ?? p.trait}</p>`
         : ''}
 
       <div class="draft-pick-actions">
+        ${isPlayerTurn ? `<div class="draft-pick-number">Round ${round}, Pick ${pickInRound} · <strong>#${pickIdx + 1} overall</strong></div>` : ''}
         ${pickBtn}
         ${autoBtn}
+        ${skipBtn}
       </div>
     </div>
     ${renderDraftHistorySnippet(state)}
@@ -287,6 +406,13 @@ function renderPickDetail(state) {
       selectedProspectId = null;
       window.hockeyGM.advanceCPUPicks();
     }
+  });
+
+  el('btn-draft-skip')?.addEventListener('click', () => {
+    // Skip: advance the pick counter without drafting anyone
+    window.hockeyGM.skipDraftPick();
+    selectedProspectId = null;
+    window.hockeyGM.advanceCPUPicks();
   });
 }
 

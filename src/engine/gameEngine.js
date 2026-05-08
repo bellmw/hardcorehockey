@@ -56,6 +56,38 @@ export function simulateGame(homeTeam, awayTeam, allPlayers) {
     overtimeType
   );
 
+  // Per-period goal distribution (regulation only; OT goal added to period 4)
+  const homePeriods = splitGoalsAcrossPeriods(
+    overtimeType ? homeGoals - (homeGoals > awayGoals && overtimeType ? 1 : 0) : homeGoals
+  );
+  const awayPeriods = splitGoalsAcrossPeriods(
+    overtimeType ? awayGoals - (awayGoals > homeGoals && overtimeType ? 1 : 0) : awayGoals
+  );
+  if (overtimeType) {
+    if (homeGoals > awayGoals) homePeriods.push(1), awayPeriods.push(0);
+    else                       homePeriods.push(0), awayPeriods.push(1);
+  }
+
+  // Estimated shots: realistic range 22–40, influenced by team offense rating
+  // offense is typically 55–80; we use a small modifier so variance dominates
+  const homeShots = Math.round(clamp(24 + Math.random() * 14 + (homeRatings.offense - 65) * 0.25, 20, 42));
+  const awayShots = Math.round(clamp(24 + Math.random() * 14 + (awayRatings.offense - 65) * 0.25, 20, 42));
+
+  // Stars of the game: 1st star (winning team top fwd), 2nd star (best goalie), 3rd star (losing top fwd)
+  const winnerPlayers = homeGoals > awayGoals ? homePlayers : awayPlayers;
+  const loserPlayers  = homeGoals > awayGoals ? awayPlayers  : homePlayers;
+  const winnerTeam    = homeGoals > awayGoals ? homeTeam : awayTeam;
+  const loserTeam     = homeGoals > awayGoals ? awayTeam  : homeTeam;
+  const topFwd    = [...winnerPlayers].filter(p => p.position !== 'G').sort((a, b) => b.overall - a.overall)[0];
+  const topGoalie = [...homePlayers, ...awayPlayers].filter(p => p.position === 'G').sort((a, b) => b.overall - a.overall)[0];
+  const topLoser  = [...loserPlayers].filter(p => p.position !== 'G').sort((a, b) => b.overall - a.overall)[0];
+  const goalieTeam = topGoalie && homePlayers.includes(topGoalie) ? homeTeam : awayTeam;
+  const stars = [
+    topFwd    ? { player: topFwd,    teamId: winnerTeam.id } : null,
+    topGoalie ? { player: topGoalie, teamId: goalieTeam.id } : null,
+    topLoser  ? { player: topLoser,  teamId: loserTeam.id  } : null,
+  ].filter(Boolean).slice(0, 3);
+
   return {
     homeTeamId: homeTeam.id,
     awayTeamId: awayTeam.id,
@@ -65,12 +97,108 @@ export function simulateGame(homeTeam, awayTeam, allPlayers) {
     loser: loser.id,
     overtimeType,    // null | 'OT' | 'SO'
     highlights,
+    homePeriods,     // e.g. [1, 2, 0] or [1, 2, 0, 1] if OT
+    awayPeriods,
+    homeShots,
+    awayShots,
+    stars,           // array of player objects (up to 3)
     // Points: W=2, OTL=1, L=0
     homePoints: homeGoals > awayGoals ? 2 : overtimeType ? 1 : 0,
     awayPoints: awayGoals > homeGoals ? 2 : overtimeType ? 1 : 0,
   };
 }
 
+/** Distributes N goals randomly across 3 regulation periods. */
+function splitGoalsAcrossPeriods(total) {
+  const periods = [0, 0, 0];
+  for (let i = 0; i < total; i++) {
+    periods[Math.floor(Math.random() * 3)]++;
+  }
+  return periods;
+}
+// ─── Season stat accumulation ─────────────────────────────────────────────────
+
+/**
+ * Generates per-player stat lines for a single game and returns a map of
+ * { [playerId]: statDelta } to be merged into allPlayers[id].seasonStats.
+ *
+ * Skaters: gp, g, a, pts, pm
+ * Goalies: gp, w, ga, sv, sa
+ */
+export function generateGameStats(homeTeam, awayTeam, result, allPlayers) {
+  const { homeGoals, awayGoals, homeShots, awayShots } = result;
+  const homePlayers = getActivePlayers(homeTeam, allPlayers);
+  const awayPlayers = getActivePlayers(awayTeam, allPlayers);
+
+  const homeSkaters = homePlayers.filter(p => p.position !== 'G');
+  const awaySkaters = awayPlayers.filter(p => p.position !== 'G');
+  const homeGoalie  = homePlayers.filter(p => p.position === 'G').sort((a, b) => b.overall - a.overall)[0];
+  const awayGoalie  = awayPlayers.filter(p => p.position === 'G').sort((a, b) => b.overall - a.overall)[0];
+
+  const deltas = {};
+
+  const ensure = (id) => {
+    if (!deltas[id]) deltas[id] = { gp: 0, g: 0, a: 0, pts: 0, pm: 0, w: 0, ga: 0, sv: 0, sa: 0 };
+    return deltas[id];
+  };
+
+  // Each player played this game
+  [...homePlayers, ...awayPlayers].forEach(p => { ensure(p.id).gp = 1; });
+
+  // Distribute goals to skaters (weighted by OVR)
+  const assignGoal = (scorers, assists) => {
+    if (scorers.length === 0) return;
+    const scorer = weightedPick(scorers);
+    ensure(scorer.id).g++;
+    ensure(scorer.id).pts++;
+    // 0, 1 or 2 assists
+    const numAssists = Math.random() < 0.15 ? 0 : Math.random() < 0.4 ? 1 : 2;
+    const eligible = assists.filter(p => p.id !== scorer.id);
+    for (let i = 0; i < Math.min(numAssists, eligible.length); i++) {
+      const helper = weightedPick(eligible.filter((_, j) => j !== 0)); // rough pick
+      if (helper) { ensure(helper.id).a++; ensure(helper.id).pts++; }
+    }
+  };
+
+  for (let i = 0; i < homeGoals; i++) assignGoal(homeSkaters, homeSkaters);
+  for (let i = 0; i < awayGoals; i++) assignGoal(awaySkaters, awaySkaters);
+
+  // +/-: each home skater gets +(homeGoals - awayGoals), each away skater inverse
+  const pm = homeGoals - awayGoals;
+  homeSkaters.forEach(p => { ensure(p.id).pm += pm; });
+  awaySkaters.forEach(p => { ensure(p.id).pm -= pm; });
+
+  // Goalie stats
+  const homeSaves = (awayShots ?? 0) - awayGoals;
+  const awaySaves = (homeShots ?? 0) - homeGoals;
+
+  if (homeGoalie) {
+    ensure(homeGoalie.id).ga  += awayGoals;
+    ensure(homeGoalie.id).sv  += Math.max(0, homeSaves);
+    ensure(homeGoalie.id).sa  += awayShots ?? 0;
+    if (homeGoals > awayGoals) ensure(homeGoalie.id).w++;
+  }
+  if (awayGoalie) {
+    ensure(awayGoalie.id).ga  += homeGoals;
+    ensure(awayGoalie.id).sv  += Math.max(0, awaySaves);
+    ensure(awayGoalie.id).sa  += homeShots ?? 0;
+    if (awayGoals > homeGoals) ensure(awayGoalie.id).w++;
+  }
+
+  return deltas;
+}
+
+/** Picks a random player weighted by overall rating. */
+function weightedPick(players) {
+  if (!players || players.length === 0) return null;
+  const total = players.reduce((s, p) => s + p.overall, 0);
+  let r = Math.random() * total;
+  for (const p of players) {
+    r -= p.overall;
+    if (r <= 0) return p;
+  }
+  return players[players.length - 1];
+}
 // ─── Team Ratings ─────────────────────────────────────────────────────────────
 
 /**

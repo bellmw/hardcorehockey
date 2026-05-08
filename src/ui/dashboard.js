@@ -27,10 +27,17 @@ function renderDashboard(state) {
 
   renderHeader(state, team, teamEntry, leagueId);
   renderTeamSummary(team);
+  renderRosterBreakdown(state, team);
   renderStandingsSnippet(state, leagueId, standings);
   renderCapBar(state, team);
+  renderUpcomingGames(state, team);
   renderNews(state.news);
   renderSimControls(state.phase);
+
+  // Auto-open bracket if we just entered playoffs
+  if (state.playoffBracketPending && window.hockeyGM?.showPlayoffBracket) {
+    window.hockeyGM.showPlayoffBracket();
+  }
 }
 
 // ─── Header ───────────────────────────────────────────────────────────────────
@@ -68,7 +75,61 @@ function renderTeamSummary(team) {
   `;
 }
 
-// ─── Standings snippet ────────────────────────────────────────────────────────
+// ─── Roster breakdown ────────────────────────────────────────────────────────
+
+function renderRosterBreakdown(state, team) {
+  const container = el('dash-roster-breakdown');
+  if (!container) return;
+
+  const roster = (team.rosterIds || [])
+    .map(id => state.allPlayers[id])
+    .filter(Boolean);
+
+  const fwd  = roster.filter(p => ['C','LW','RW'].includes(p.position));
+  const def  = roster.filter(p => ['LD','RD'].includes(p.position));
+  const goal = roster.filter(p => p.position === 'G');
+  const avg  = arr => arr.length ? Math.round(arr.reduce((s, p) => s + p.overall, 0) / arr.length) : 0;
+
+  const groups = [
+    { label: 'Forwards',     avg: avg(fwd),  players: fwd  },
+    { label: 'Defence',      avg: avg(def),  players: def  },
+    { label: 'Goaltending',  avg: avg(goal), players: goal },
+  ];
+
+  const sorted = [...groups].sort((a, b) => b.avg - a.avg);
+  const best   = sorted[0];
+  const worst  = sorted[sorted.length - 1];
+
+  const barHTML = groups.map(g => {
+    const pct = Math.min(Math.max((g.avg - 40) / 50 * 100, 2), 100);
+    const cls = ovrClassDash(g.avg);
+    return `
+      <div class="breakdown-row">
+        <span class="breakdown-label">${g.label}</span>
+        <div class="breakdown-bar-track">
+          <div class="breakdown-bar ${cls}" style="width:${pct}%"></div>
+        </div>
+        <span class="breakdown-avg ${cls}">${g.avg}</span>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="breakdown-bars">${barHTML}</div>
+    <div class="breakdown-sw">
+      <span class="sw-pill strength-label">↑ ${best.label}</span>
+      <span class="sw-pill weakness-label">↓ ${worst.label}</span>
+    </div>
+  `;
+}
+
+function ovrClassDash(ovr) {
+  if (ovr >= 80) return 'ovr-elite';
+  if (ovr >= 70) return 'ovr-good';
+  if (ovr >= 60) return 'ovr-avg';
+  return 'ovr-poor';
+}
+
+// ─── Standings snippet ─────────────────────────────────────────────────────────
 
 function renderStandingsSnippet(state, leagueId, standings) {
   const container = el('dash-standings-snippet');
@@ -97,7 +158,7 @@ function renderStandingsSnippet(state, leagueId, standings) {
     return `
       <tr class="${rowClass}">
         <td class="standings-pos">${idx + 1}</td>
-        <td class="standings-team">${abbrev}</td>
+        <td class="standings-team"><span class="team-tip" data-team-id="${entry.teamId}">${abbrev}</span></td>
         <td>${entry.gp}</td>
         <td>${entry.w}</td>
         <td>${entry.l}</td>
@@ -144,6 +205,43 @@ function renderCapBar(state, team) {
   `;
 }
 
+// ─── Upcoming games ──────────────────────────────────────────────────────────
+
+function renderUpcomingGames(state, team) {
+  const container = el('dash-schedule');
+  if (!container) return;
+
+  const leagueId = team.leagueId;
+  const schedule = state.leagues[leagueId]?.schedule ?? [];
+
+  const upcoming = schedule
+    .filter(g => !g.played && (g.homeTeamId === team.id || g.awayTeamId === team.id))
+    .sort((a, b) => (a.week ?? 0) - (b.week ?? 0))
+    .slice(0, 5);
+
+  if (upcoming.length === 0) {
+    container.innerHTML = '<p class="schedule-empty">No upcoming games.</p>';
+    return;
+  }
+
+  const rows = upcoming.map(g => {
+    const isHome   = g.homeTeamId === team.id;
+    const oppId    = isHome ? g.awayTeamId : g.homeTeamId;
+    const opp      = state.teams[oppId];
+    const oppName  = opp?.abbrev ?? oppId;
+    const venue    = isHome ? 'vs' : '@';
+    const venueClass = isHome ? 'sched-home' : 'sched-away';
+    return `
+      <div class="sched-row">
+        <span class="sched-week">Wk ${g.week ?? '?'}</span>
+        <span class="sched-venue ${venueClass}">${venue}</span>
+        <span class="sched-opp team-tip" data-team-id="${oppId}">${oppName}</span>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = `<div class="sched-list">${rows}</div>`;
+}
+
 // ─── News feed ────────────────────────────────────────────────────────────────
 
 function renderNews(news) {
@@ -181,23 +279,30 @@ function renderSimControls(phase) {
   const btnEnd      = el('btn-end-season');
   const btnNext     = el('btn-sim-next');
   const btnSimWeek  = el('btn-sim-week');
-  const btnSimPO    = el('btn-sim-playoffs');  // "sim to playoffs" button
+  const btnSimPO    = el('btn-sim-playoffs');
+  const btnSeries   = el('btn-sim-series');
 
   // Hide all first, then show what's relevant
-  [btnEnd, btnNext, btnSimWeek, btnSimPO].forEach(b => { if (b) b.style.display = 'none'; });
+  [btnEnd, btnNext, btnSimWeek, btnSimPO, btnSeries].forEach(b => { if (b) b.style.display = 'none'; });
 
   if (isSeason) {
-    if (btnNext)    btnNext.style.display    = '';
+    if (btnNext)    { btnNext.style.display    = ''; btnNext.textContent = 'Sim my next game'; btnNext.onclick = () => window.hockeyGM.simToMyNextGame(); }
     if (btnSimWeek) btnSimWeek.style.display = '';
-    if (btnSimPO)   btnSimPO.style.display   = '';
+    if (btnSimPO)   { btnSimPO.style.display = ''; btnSimPO.textContent = 'Sim to playoffs'; btnSimPO.onclick = () => window.hockeyGM.simToPlayoffs(); }
   }
 
   if (isPlayoffs) {
-    // Only sim-playoffs visible — end-season must wait until playoffs are done
-    if (btnSimPO) {
-      btnSimPO.style.display = '';
-      btnSimPO.textContent   = 'Sim playoffs →';
-      btnSimPO.onclick       = () => window.hockeyGM.simPlayoffs();
+    if (btnNext)  { btnNext.style.display = '';  btnNext.textContent  = 'Sim my next playoff game'; btnNext.onclick  = () => window.hockeyGM.simMyNextPlayoffGame(); }
+    if (btnSeries){ btnSeries.style.display = ''; }
+    if (btnSimPO) { btnSimPO.style.display  = ''; btnSimPO.textContent = 'Sim all playoffs →';     btnSimPO.onclick = () => window.hockeyGM.simPlayoffs(); }
+    // Add view bracket button dynamically if not already present
+    const simCtrl = btnNext?.closest('.sim-controls');
+    if (simCtrl && !simCtrl.querySelector('.btn-view-bracket')) {
+      const bkt = document.createElement('button');
+      bkt.className   = 'btn-secondary btn-view-bracket';
+      bkt.textContent = 'View bracket';
+      bkt.onclick     = () => window.hockeyGM.showPlayoffBracket();
+      simCtrl.insertBefore(bkt, btnNext);
     }
   }
 
@@ -209,6 +314,70 @@ function renderSimControls(phase) {
     }
   }
 }
+
+// ─── Team tooltip ────────────────────────────────────────────────────────────
+
+(function initTeamTooltip() {
+  const tip = document.getElementById('team-tooltip');
+  if (!tip) return;
+
+  let _state = null;
+
+  // Keep a reference to the latest state so tooltip always has fresh data
+  document.addEventListener('render-screen', (e) => {
+    if (e.detail?.state) _state = e.detail.state;
+  });
+
+  document.addEventListener('mouseover', (e) => {
+    const target = e.target.closest('.team-tip');
+    if (!target || !_state) return;
+
+    const teamId = target.dataset.teamId;
+    const team   = _state.teams?.[teamId];
+    if (!team) return;
+
+    const leagueId  = team.leagueId;
+    const standings = _state.standings?.[leagueId];
+    const entry     = standings?.[teamId];
+    const record    = entry ? `${entry.w}–${entry.l}–${entry.otl}` : '—';
+    const pts       = entry ? `${entry.pts} pts` : '';
+    const leagueBadge = leagueId?.toUpperCase() ?? '';
+
+    tip.innerHTML = `
+      <div class="tip-name">${team.fullName}</div>
+      <div class="tip-meta">
+        <span class="league-badge ${leagueId}">${leagueBadge}</span>
+        <span class="tip-record">${record}</span>
+        ${pts ? `<span class="tip-pts">${pts}</span>` : ''}
+      </div>
+      <div class="tip-detail">${team.city} · ${team.arena}</div>
+    `;
+
+    const rect = target.getBoundingClientRect();
+    const scrollY = window.scrollY || 0;
+    const scrollX = window.scrollX || 0;
+    tip.style.display = 'block';
+
+    // Position below the element, flip up if near bottom
+    let top  = rect.bottom + scrollY + 6;
+    let left = rect.left  + scrollX;
+    if (rect.bottom + 90 > window.innerHeight) {
+      top = rect.top + scrollY - 6;
+      tip.style.transform = 'translateY(-100%)';
+    } else {
+      tip.style.transform = '';
+    }
+    // Keep tooltip on screen horizontally
+    left = Math.min(left, window.innerWidth + scrollX - 200);
+    tip.style.top  = `${top}px`;
+    tip.style.left = `${left}px`;
+  });
+
+  document.addEventListener('mouseout', (e) => {
+    if (!e.target.closest('.team-tip')) return;
+    tip.style.display = 'none';
+  });
+})();
 
 // ─── Event listener ───────────────────────────────────────────────────────────
 

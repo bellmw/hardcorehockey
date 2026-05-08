@@ -6,7 +6,7 @@
 import { generateRoster, generatePlayer, generateDraftClass, ageAllPlayers, getExpiringContracts, formatSalary } from './engine/playerGenerator.js';
 import { generateSchedule, updateStandings, sortStandings, createStandingsEntry,
          buildPlayoffBracket, determineRelegation, getSalaryCap, getTeamCapUsed } from './engine/leagueManager.js';
-import { simulateGame } from './engine/gameEngine.js';
+import { simulateGame, generateGameStats } from './engine/gameEngine.js';
 import { generateHeadline, generateTradeOffer, generateCommissionerAnnouncement,
          generateRandomEvent, augmentDraftClass } from './api/claudeAgent.js';
 
@@ -72,7 +72,7 @@ export async function newGame(playerTeamId) {
     version: '1.0',
     year: 1,
     week: 0,
-    phase: 'season',   // preseason | season | playoffs | offseason
+    phase: 'preseason_draft',   // preseason_draft → season → playoffs → offseason
     playerTeamId,
 
     // Team maps
@@ -115,6 +115,58 @@ export async function newGame(playerTeamId) {
   });
   addNews({ type: 'commissioner', text: announcement, week: 0 });
 
+  // Generate pre-season draft class immediately so it's ready on team-intro
+  const rawProspects = generateDraftClass(NAME_DATA, GAME_STATE.year);
+  // Give all prospects entry-level contracts (age 18–21, $700K, 3 years)
+  rawProspects.forEach(p => {
+    p.age           = Math.floor(Math.random() * 4) + 18; // 18–21
+    p.salary        = 700_000;
+    p.contractYears = 3;
+    p.isRookie      = true;
+    GAME_STATE.allPlayers[p.id] = p;
+  });
+
+  // Build draft order: player's team picks first (new GM gets priority), then random
+  const otherTeamIds = Object.keys(GAME_STATE.teams).filter(id => id !== playerTeamId);
+  otherTeamIds.sort(() => Math.random() - 0.5);
+  const draftOrder = [playerTeamId, ...otherTeamIds];
+
+  GAME_STATE.draftClass       = rawProspects.map(p => p.id);
+  GAME_STATE.draftOrder       = draftOrder;
+  GAME_STATE.draftCurrentPick = 0;
+  GAME_STATE.draftRounds      = 3;
+
+  // Snapshot pre-draft roster OVR for every team so we can show deltas after draft
+  const preDraftOvr = {};
+  Object.values(GAME_STATE.teams).forEach(team => {
+    const players = (team.rosterIds || []).map(id => GAME_STATE.allPlayers[id]).filter(Boolean);
+    preDraftOvr[team.id] = players.length
+      ? Math.round(players.reduce((s, p) => s + p.overall, 0) / players.length)
+      : 0;
+  });
+  GAME_STATE.preDraftOvr = preDraftOvr;
+
+  saveGame();
+  showScreen('team-intro');
+}
+
+// ─── Begin Season (after pre-season draft) ───────────────────────────────────
+
+/**
+ * Called when the player clicks "Begin Season" after the preseason draft.
+ * Clears leftover draft state and starts the regular season.
+ */
+export function beginSeason() {
+  const state = GAME_STATE;
+  state.phase          = 'season';
+  state.draftClass     = [];
+  state.draftOrder     = [];
+  state.draftCurrentPick = 0;
+  // Reset all season stats at start of season
+  Object.values(state.allPlayers).forEach(p => {
+    p.seasonStats = { gp:0, g:0, a:0, pts:0, pm:0, w:0, ga:0, sv:0, sa:0 };
+  });
+  saveGame();
   showScreen('dashboard');
 }
 
@@ -124,7 +176,7 @@ export async function newGame(playerTeamId) {
  * Simulates the next game for each league (all leagues advance in parallel).
  * Fires Claude agents as appropriate.
  */
-export async function simNextGame() {
+export async function simNextGame(silent = false) {
   const state = GAME_STATE;
   state.week++;
 
@@ -147,8 +199,25 @@ export async function simNextGame() {
     game.played = true;
     game.result = result;
 
+    // Show game result modal for the player's own team
+    const playerInvolved = home.id === state.playerTeamId || away.id === state.playerTeamId;
+    if (!silent && playerInvolved) {
+      document.dispatchEvent(new CustomEvent('game-result', {
+        detail: { result, home, away, allPlayers: state.allPlayers },
+      }));
+    }
+
     // Update standings
     state.standings[leagueId] = updateStandings(state.standings[leagueId], result);
+
+    // Accumulate season stats for all players in this game
+    const statDeltas = generateGameStats(home, away, result, state.allPlayers);
+    Object.entries(statDeltas).forEach(([pid, delta]) => {
+      const p = state.allPlayers[pid];
+      if (!p) return;
+      if (!p.seasonStats) p.seasonStats = { gp:0, g:0, a:0, pts:0, pm:0, w:0, ga:0, sv:0, sa:0 };
+      Object.keys(delta).forEach(k => { p.seasonStats[k] = (p.seasonStats[k] || 0) + delta[k]; });
+    });
 
     // Generate headline (Claude API — only for player's league or all if preferred)
     const headline = await generateHeadline(result, home, away, result.highlights);
@@ -179,6 +248,8 @@ export async function simNextGame() {
   if (allGamesPlayed) {
     state.phase = 'playoffs';
     addNews({ type: 'league', text: 'Regular season complete. Playoffs begin!', week: state.week });
+    initPlayoffsState(state);
+    state.playoffBracketPending = true;
   }
 
   // Trade offer (1-in-5 chance per sim)
@@ -190,93 +261,408 @@ export async function simNextGame() {
   renderCurrentScreen();
 }
 
+// ─── Playoff bracket modal ───────────────────────────────────────────────
+
+function teamLabel(team) {
+  return `<span class="po-team-name team-tip" data-team-id="${team.id}">${team.abbrev}</span>`;
+}
+
+function seriesScoreLine(series, teamA, teamB) {
+  if (!series) return '';
+  const wA = series.winsA ?? 0;
+  const wB = series.winsB ?? 0;
+  if (wA === 0 && wB === 0) return '<span class="po-series-score">0–0</span>';
+  const leader = wA > wB ? teamA.abbrev : wB > wA ? teamB.abbrev : null;
+  const score  = leader ? `${Math.max(wA, wB)}–${Math.min(wA, wB)} ${leader}` : `${wA}–${wB}`;
+  return `<span class="po-series-score">${score}</span>`;
+}
+
+function buildBracketHTML(state) {
+  const leagueLabels = { phl: 'Premier Hockey League', cd: 'Continental Division', rc: 'Regional Circuit' };
+
+  return ['phl', 'cd', 'rc'].map(lid => {
+    const po = state.playoffs?.[lid];
+    if (!po) return '';
+    const teamName = id => state.teams[id]?.fullName ?? id;
+    const abbrev   = id => state.teams[id];
+
+    const sf1tA = abbrev(po.sf1.teamA), sf1tB = abbrev(po.sf1.teamB);
+    const sf2tA = abbrev(po.sf2.teamA), sf2tB = abbrev(po.sf2.teamB);
+    const isPlayerLeague = state.leagues[lid].teamIds.includes(state.playerTeamId);
+
+    const finalistA = po._sf1Winner ? abbrev(po._sf1Winner) : null;
+    const finalistB = po._sf2Winner ? abbrev(po._sf2Winner) : null;
+    const finalSeries = po.final;
+    const champion   = po.champion ? abbrev(po.champion) : null;
+
+    const sf1Done = po.sf1.winsA >= 4 || po.sf1.winsB >= 4;
+    const sf2Done = po.sf2.winsA >= 4 || po.sf2.winsB >= 4;
+
+    const matchup = (s, tA, tB, label) => {
+      if (!tA || !tB) return `<div class="po-matchup po-matchup-tbd"><span class="po-round-label">${label}</span><span class="text-3">TBD</span></div>`;
+      const wA = s?.winsA ?? 0, wB = s?.winsB ?? 0;
+      const done = wA >= 4 || wB >= 4;
+      const winnerId = wA >= 4 ? tA.id : wB >= 4 ? tB.id : null;
+      const playerIn  = tA.id === state.playerTeamId || tB.id === state.playerTeamId;
+      return `
+        <div class="po-matchup ${playerIn ? 'po-matchup-player' : ''}">
+          <span class="po-round-label">${label}</span>
+          <div class="po-seed ${done && tA.id !== winnerId ? 'po-eliminated' : ''}">${teamLabel(tA)} <small class="text-3">${teamName(tA.id)}</small></div>
+          <div class="po-vs">vs</div>
+          <div class="po-seed ${done && tB.id !== winnerId ? 'po-eliminated' : ''}">${teamLabel(tB)} <small class="text-3">${teamName(tB.id)}</small></div>
+          ${seriesScoreLine(s, tA, tB)}
+        </div>`;
+    };
+
+    return `
+      <div class="po-league-bracket ${isPlayerLeague ? 'po-player-league' : ''}">
+        <h3 class="po-league-title ${lid}">${leagueLabels[lid]}</h3>
+        <div class="po-bracket-grid">
+          <div class="po-col po-col-semis">
+            <div class="po-col-label">Semifinals</div>
+            ${matchup(po.sf1, sf1tA, sf1tB, '1 vs 4')}
+            ${matchup(po.sf2, sf2tA, sf2tB, '2 vs 3')}
+          </div>
+          <div class="po-col po-col-final">
+            <div class="po-col-label">Final</div>
+            ${matchup(finalSeries, finalistA, finalistB, 'Championship')}
+          </div>
+          <div class="po-col po-col-champ">
+            <div class="po-col-label">Champion</div>
+            <div class="po-champion-slot">
+              ${champion
+                ? `<span class="po-champion-crown">🏆</span><span class="po-champion-name team-tip" data-team-id="${champion.id}">${champion.fullName}</span>`
+                : '<span class="text-3">Undecided</span>'}
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+export function showPlayoffBracket() {
+  const state   = GAME_STATE;
+  const overlay = document.getElementById('playoff-bracket-overlay');
+  const content = document.getElementById('playoff-bracket-content');
+  if (!overlay || !content) return;
+  content.innerHTML = buildBracketHTML(state);
+  overlay.style.display = '';
+  // Close button
+  document.getElementById('playoff-bracket-close').onclick = () => closePlayoffBracket();
+  overlay.addEventListener('click', e => { if (e.target === overlay) closePlayoffBracket(); }, { once: true });
+}
+
+export function closePlayoffBracket() {
+  const overlay = document.getElementById('playoff-bracket-overlay');
+  if (overlay) overlay.style.display = 'none';
+  GAME_STATE.playoffBracketPending = false;
+  saveGame();
+  renderCurrentScreen();
+}
+
+// ─── Playoff state helpers ───────────────────────────────────────────────────
+
+/** Builds best-of-7 series brackets for all leagues from current standings. */
+function initPlayoffsState(state) {
+  state.playoffs = {};
+  for (const leagueId of ['phl', 'cd', 'rc']) {
+    const bracket = buildPlayoffBracket(state.standings[leagueId]);
+    state.playoffs[leagueId] = {
+      round:      'semis',  // 'semis' | 'final' | 'complete'
+      sf1:        { teamA: bracket.semifinalA.topSeed,  teamB: bracket.semifinalA.bottomSeed, winsA: 0, winsB: 0, gameNum: 0 },
+      sf2:        { teamA: bracket.semifinalB.topSeed,  teamB: bracket.semifinalB.bottomSeed, winsA: 0, winsB: 0, gameNum: 0 },
+      final:      null,
+      _sf1Winner: null,
+      _sf2Winner: null,
+      champion:   null,
+    };
+  }
+}
+
+/** Returns 'sf1', 'sf2', 'final', or null — the player team's active series. */
+function getPlayerSeriesKey(state, leagueId) {
+  const po  = state.playoffs[leagueId];
+  const pid = state.playerTeamId;
+  if (po.round === 'semis') {
+    if ((po.sf1.teamA === pid || po.sf1.teamB === pid) && po.sf1.winsA < 4 && po.sf1.winsB < 4) return 'sf1';
+    if ((po.sf2.teamA === pid || po.sf2.teamB === pid) && po.sf2.winsA < 4 && po.sf2.winsB < 4) return 'sf2';
+  }
+  if (po.round === 'final' && po.final) {
+    if ((po.final.teamA === pid || po.final.teamB === pid) && po.final.winsA < 4 && po.final.winsB < 4) return 'final';
+  }
+  return null; // eliminated or league playoffs done
+}
+
+/** Returns the key of the first incomplete series in a league playoff object. */
+function getActiveSeries(po) {
+  if (po.round === 'semis') {
+    if (po.sf1 && po.sf1.winsA < 4 && po.sf1.winsB < 4) return 'sf1';
+    if (po.sf2 && po.sf2.winsA < 4 && po.sf2.winsB < 4) return 'sf2';
+  }
+  if (po.round === 'final' && po.final && po.final.winsA < 4 && po.final.winsB < 4) return 'final';
+  return null;
+}
+
+/**
+ * Simulates one game in a best-of-7 series. Updates winsA/winsB.
+ * Fires game-result event for player's team unless silent=true.
+ * Returns { result, home, away } or null if series is already over.
+ */
+function simSeriesGame(leagueId, seriesKey, silent = true) {
+  const state  = GAME_STATE;
+  const po     = state.playoffs[leagueId];
+  const series = po[seriesKey];
+  if (!series || !series.teamA || !series.teamB) return null;
+  if (series.winsA >= 4 || series.winsB >= 4)   return null;
+
+  series.gameNum++;
+
+  // Standard home-ice schedule: games 1,2,5,7 at teamA (higher seed); 3,4,6 at teamB
+  const aHosts  = [1, 2, 5, 7].includes(series.gameNum);
+  const homeTeam = aHosts ? state.teams[series.teamA] : state.teams[series.teamB];
+  const awayTeam = aHosts ? state.teams[series.teamB] : state.teams[series.teamA];
+
+  const result  = simulateGame(homeTeam, awayTeam, state.allPlayers);
+  const homeWon = result.homeGoals > result.awayGoals;
+  if ((homeWon && aHosts) || (!homeWon && !aHosts)) series.winsA++;
+  else series.winsB++;
+
+  // Accumulate season stats
+  const statDeltas = generateGameStats(homeTeam, awayTeam, result, state.allPlayers);
+  Object.entries(statDeltas).forEach(([pid, delta]) => {
+    const p = state.allPlayers[pid];
+    if (!p) return;
+    if (!p.seasonStats) p.seasonStats = { gp:0, g:0, a:0, pts:0, pm:0, w:0, ga:0, sv:0, sa:0 };
+    Object.keys(delta).forEach(k => { p.seasonStats[k] = (p.seasonStats[k] || 0) + delta[k]; });
+  });
+
+  // Player involvement modal
+  const ptId = state.playerTeamId;
+  if (!silent && (homeTeam.id === ptId || awayTeam.id === ptId)) {
+    document.dispatchEvent(new CustomEvent('game-result', {
+      detail: { result, home: homeTeam, away: awayTeam, allPlayers: state.allPlayers },
+    }));
+  }
+
+  // News
+  const lgName  = leagueId.toUpperCase();
+  const round   = seriesKey === 'final' ? 'Final' : 'Semis';
+  const leader  = series.winsA > series.winsB ? state.teams[series.teamA]
+                : series.winsA < series.winsB ? state.teams[series.teamB] : null;
+  const seriesNote = leader
+    ? `${leader.abbrev} lead ${Math.max(series.winsA, series.winsB)}-${Math.min(series.winsA, series.winsB)}`
+    : `Series tied ${series.winsA}-${series.winsB}`;
+  addNews({
+    type: 'game', leagueId,
+    headline: `${lgName} ${round} Gm${series.gameNum}: ${homeTeam.abbrev} ${result.homeGoals}–${result.awayGoals} ${awayTeam.abbrev}`,
+    report:   seriesNote,
+    homeTeamId: homeTeam.id, awayTeamId: awayTeam.id,
+    homeGoals: result.homeGoals, awayGoals: result.awayGoals,
+    week: state.week,
+  });
+
+  // Series over?
+  if (series.winsA >= 4 || series.winsB >= 4) {
+    const winnerId = series.winsA >= 4 ? series.teamA : series.teamB;
+    _advanceSeriesWinner(state, leagueId, seriesKey, winnerId);
+  }
+
+  return { result, home: homeTeam, away: awayTeam };
+}
+
+function _advanceSeriesWinner(state, leagueId, seriesKey, winnerId) {
+  const po     = state.playoffs[leagueId];
+  const winner = state.teams[winnerId];
+  const lgName = leagueId.toUpperCase();
+  const loserId = po[seriesKey].teamA === winnerId ? po[seriesKey].teamB : po[seriesKey].teamA;
+  const loser   = state.teams[loserId];
+
+  if (seriesKey === 'sf1' || seriesKey === 'sf2') {
+    if (seriesKey === 'sf1') po._sf1Winner = winnerId;
+    else                     po._sf2Winner = winnerId;
+    addNews({ type: 'league', text: `${winner.fullName} defeat ${loser.fullName} and advance to the ${lgName} Final!`, week: state.week });
+    if (po._sf1Winner && po._sf2Winner) {
+      po.round = 'final';
+      po.final = { teamA: po._sf1Winner, teamB: po._sf2Winner, winsA: 0, winsB: 0, gameNum: 0 };
+      const t1 = state.teams[po._sf1Winner];
+      const t2 = state.teams[po._sf2Winner];
+      addNews({ type: 'league', text: `${lgName} Final set: ${t1.fullName} vs ${t2.fullName}`, week: state.week });
+    }
+  } else if (seriesKey === 'final') {
+    po.champion = winnerId;
+    po.round    = 'complete';
+    state.leagues[leagueId].champion = winnerId;
+    addNews({ type: 'commissioner', text: `🏆 ${winner.fullName} are the ${lgName} Champions!`, week: state.week });
+  }
+}
+
 /**
  * Sims all remaining regular season games at once.
  */
 export async function simToPlayoffs() {
   while (GAME_STATE.phase === 'season') {
-    await simNextGame();
+    await simNextGame(true); // silent — no per-game modals during bulk sim
+  }
+}
+
+/**
+ * Silently sims all games until the player's next scheduled game, then sims
+ * that game normally so the result modal fires.
+ */
+export async function simToMyNextGame() {
+  const state = GAME_STATE;
+  if (state.phase !== 'season') return;
+
+  const playerTeamId  = state.playerTeamId;
+  const playerLeagueId = ['phl', 'cd', 'rc'].find(lid =>
+    state.leagues[lid].teamIds.includes(playerTeamId)
+  );
+  if (!playerLeagueId) return;
+
+  // Find the player's next unplayed game
+  const playerNextGame = state.leagues[playerLeagueId].schedule
+    .filter(g => !g.played && (g.homeTeamId === playerTeamId || g.awayTeamId === playerTeamId))
+    .sort((a, b) => a.week - b.week)[0];
+
+  if (!playerNextGame) {
+    // No more games — just do a normal sim tick
+    await simNextGame(false);
+    return;
+  }
+
+  // Sim silently until the player's game is the very next one in their league
+  let safety = 300;
+  while (safety-- > 0) {
+    const nextInLeague = state.leagues[playerLeagueId].schedule
+      .filter(g => !g.played)
+      .sort((a, b) => a.week - b.week)[0];
+
+    if (!nextInLeague) break;
+
+    if (nextInLeague.id === playerNextGame.id) {
+      // Player's game is next — sim with popup
+      await simNextGame(false);
+      break;
+    }
+
+    // Not the player's game yet — advance silently
+    await simNextGame(true);
+
+    if (state.phase !== 'season') break;
   }
 }
 
 // ─── Playoffs ─────────────────────────────────────────────────────────────────
 
 /**
- * Simulates the playoffs for all three leagues.
- * Runs semifinal A, semifinal B, then the final for each league.
- * Sets phase to 'offseason' when complete.
+ * Simulates all remaining playoff games (best-of-7) silently for all leagues.
  */
 export async function simPlayoffs() {
   const state = GAME_STATE;
   if (state.phase !== 'playoffs') return;
+  if (!state.playoffs) initPlayoffsState(state);
 
-  const leagueIds = ['phl', 'cd', 'rc'];
-  const leagueNames = { phl: 'PHL', cd: 'CD', rc: 'RC' };
-
-  for (const leagueId of leagueIds) {
-    const bracket = buildPlayoffBracket(state.standings[leagueId]);
-    const leagueName = leagueNames[leagueId];
-
-    // Semifinal A: seed 1 vs seed 4
-    const sfAHome = state.teams[bracket.semifinalA.topSeed];
-    const sfAAway = state.teams[bracket.semifinalA.bottomSeed];
-    const sfAResult = simulateGame(sfAHome, sfAAway, state.allPlayers);
-    const sfAWinner = sfAResult.homeGoals > sfAResult.awayGoals ? sfAHome : sfAAway;
-    addNews({
-      type: 'game',
-      leagueId,
-      headline: `${leagueName} Semis: ${sfAWinner.fullName} advance`,
-      report: `${sfAHome.abbrev} ${sfAResult.homeGoals}–${sfAResult.awayGoals} ${sfAAway.abbrev}`,
-      homeTeamId: sfAHome.id, awayTeamId: sfAAway.id,
-      homeGoals: sfAResult.homeGoals, awayGoals: sfAResult.awayGoals,
-      week: state.week,
-    });
-
-    // Semifinal B: seed 2 vs seed 3
-    const sfBHome = state.teams[bracket.semifinalB.topSeed];
-    const sfBAway = state.teams[bracket.semifinalB.bottomSeed];
-    const sfBResult = simulateGame(sfBHome, sfBAway, state.allPlayers);
-    const sfBWinner = sfBResult.homeGoals > sfBResult.awayGoals ? sfBHome : sfBAway;
-    addNews({
-      type: 'game',
-      leagueId,
-      headline: `${leagueName} Semis: ${sfBWinner.fullName} advance`,
-      report: `${sfBHome.abbrev} ${sfBResult.homeGoals}–${sfBResult.awayGoals} ${sfBAway.abbrev}`,
-      homeTeamId: sfBHome.id, awayTeamId: sfBAway.id,
-      homeGoals: sfBResult.homeGoals, awayGoals: sfBResult.awayGoals,
-      week: state.week,
-    });
-
-    // Final
-    const finalHome = sfAWinner;
-    const finalAway = sfBWinner;
-    const finalResult = simulateGame(finalHome, finalAway, state.allPlayers);
-    const champion = finalResult.homeGoals > finalResult.awayGoals ? finalHome : finalAway;
-
-    // Store champion on league
-    state.leagues[leagueId].champion = champion.id;
-
-    const champAnnouncement = await generateCommissionerAnnouncement('champion', {
-      champion: champion.fullName,
-      league: leagueName,
-    });
-    addNews({
-      type: 'commissioner',
-      text: champAnnouncement,
-      week: state.week,
-    });
-    addNews({
-      type: 'game',
-      leagueId,
-      headline: `🏆 ${leagueName} Champions: ${champion.fullName}!`,
-      report: `${finalHome.abbrev} ${finalResult.homeGoals}–${finalResult.awayGoals} ${finalAway.abbrev}`,
-      homeTeamId: finalHome.id, awayTeamId: finalAway.id,
-      homeGoals: finalResult.homeGoals, awayGoals: finalResult.awayGoals,
-      week: state.week,
-    });
+  let safety = 400;
+  while (safety-- > 0) {
+    const allComplete = ['phl', 'cd', 'rc'].every(lid => state.playoffs[lid].round === 'complete');
+    if (allComplete) break;
+    for (const leagueId of ['phl', 'cd', 'rc']) {
+      const po = state.playoffs[leagueId];
+      if (po.round === 'complete') continue;
+      const sk = getActiveSeries(po);
+      if (sk) simSeriesGame(leagueId, sk, true);
+    }
   }
 
   state.phase = 'offseason';
+  saveGame();
+  renderCurrentScreen();
+}
+
+/**
+ * Sims one game in the player's current playoff series (with popup).
+ * All other leagues and the other semi (if still running) advance one game silently.
+ */
+export async function simMyNextPlayoffGame() {
+  const state = GAME_STATE;
+  if (state.phase !== 'playoffs') return;
+  if (!state.playoffs) initPlayoffsState(state);
+
+  const playerLeagueId = ['phl', 'cd', 'rc'].find(lid =>
+    state.leagues[lid].teamIds.includes(state.playerTeamId)
+  );
+  if (!playerLeagueId) return;
+
+  // Silently advance all other leagues one game
+  for (const lid of ['phl', 'cd', 'rc']) {
+    if (lid === playerLeagueId) continue;
+    const sk = getActiveSeries(state.playoffs[lid]);
+    if (sk) simSeriesGame(lid, sk, true);
+  }
+
+  const seriesKey = getPlayerSeriesKey(state, playerLeagueId);
+  if (seriesKey) {
+    // Also advance the OTHER semi in player's league silently (they run in parallel)
+    if (state.playoffs[playerLeagueId].round === 'semis') {
+      const otherSk = seriesKey === 'sf1' ? 'sf2' : 'sf1';
+      const other = state.playoffs[playerLeagueId][otherSk];
+      if (other && other.winsA < 4 && other.winsB < 4) simSeriesGame(playerLeagueId, otherSk, true);
+    }
+    // Sim player's game — fires popup
+    simSeriesGame(playerLeagueId, seriesKey, false);
+  } else {
+    // Player eliminated — silently advance their league
+    const sk = getActiveSeries(state.playoffs[playerLeagueId]);
+    if (sk) simSeriesGame(playerLeagueId, sk, true);
+  }
+
+  const allComplete = ['phl', 'cd', 'rc'].every(lid => state.playoffs[lid].round === 'complete');
+  if (allComplete) state.phase = 'offseason';
+
+  saveGame();
+  renderCurrentScreen();
+}
+
+/**
+ * Sims the player's entire current series to completion, showing popup each game.
+ * Other leagues advance one game silently per player game.
+ */
+export async function simPlayerSeries() {
+  const state = GAME_STATE;
+  if (state.phase !== 'playoffs') return;
+  if (!state.playoffs) initPlayoffsState(state);
+
+  const playerLeagueId = ['phl', 'cd', 'rc'].find(lid =>
+    state.leagues[lid].teamIds.includes(state.playerTeamId)
+  );
+  if (!playerLeagueId) return;
+
+  let seriesKey = getPlayerSeriesKey(state, playerLeagueId);
+  if (!seriesKey) return; // eliminated
+
+  let safety = 7;
+  while (safety-- > 0) {
+    const series = state.playoffs[playerLeagueId][seriesKey];
+    if (!series || series.winsA >= 4 || series.winsB >= 4) break;
+
+    simSeriesGame(playerLeagueId, seriesKey, false); // popup for player games
+
+    // Advance other leagues and the other semi silently
+    for (const lid of ['phl', 'cd', 'rc']) {
+      if (lid === playerLeagueId) continue;
+      const sk = getActiveSeries(state.playoffs[lid]);
+      if (sk) simSeriesGame(lid, sk, true);
+    }
+    if (state.playoffs[playerLeagueId].round === 'semis') {
+      const otherSk = seriesKey === 'sf1' ? 'sf2' : 'sf1';
+      const other = state.playoffs[playerLeagueId][otherSk];
+      if (other && other.winsA < 4 && other.winsB < 4) simSeriesGame(playerLeagueId, otherSk, true);
+    }
+  }
+
+  const allComplete = ['phl', 'cd', 'rc'].every(lid => state.playoffs[lid].round === 'complete');
+  if (allComplete) state.phase = 'offseason';
+
   saveGame();
   renderCurrentScreen();
 }
@@ -477,6 +863,12 @@ export function deleteSave() {
   GAME_STATE = null;
 }
 
+export function restartGame() {
+  if (!confirm('Abandon this save and start a new game? This cannot be undone.')) return;
+  localStorage.removeItem(SAVE_KEY);
+  location.reload();
+}
+
 /** Shows a small save status indicator in the UI if the element exists. */
 function setSaveIndicator(status) {
   const el = document.getElementById('save-indicator');
@@ -595,6 +987,11 @@ export async function endSeason() {
   state.phase = 'season';
   state.pendingTrades = [];
 
+  // Reset season stats for new year
+  Object.values(state.allPlayers).forEach(p => {
+    p.seasonStats = { gp:0, g:0, a:0, pts:0, pm:0, w:0, ga:0, sv:0, sa:0 };
+  });
+
   // Rebuild standings and schedules for new league compositions
   const buildStandings = (teamIds) => {
     const s = {};
@@ -666,7 +1063,7 @@ export async function startDraft() {
  */
 export function makeDraftPick(prospectId) {
   const state = GAME_STATE;
-  if (state.phase !== 'draft') return;
+  if (state.phase !== 'draft' && state.phase !== 'preseason_draft') return;
   if (!state.draftClass.includes(prospectId)) return;
 
   const totalTeams  = state.draftOrder.length;
@@ -696,13 +1093,21 @@ export function makeDraftPick(prospectId) {
   state.draftCurrentPick++;
 
   const totalPicks = totalTeams * state.draftRounds;
+  const isPreseason = state.phase === 'preseason_draft';
   if (state.draftCurrentPick >= totalPicks || state.draftClass.length === 0) {
-    state.phase = 'offseason';
-    addNews({
-      type: 'commissioner',
-      text: `Year ${state.year} draft complete. ${totalPicks} picks made across ${state.draftRounds} rounds.`,
-      week: state.week,
-    });
+    // Preseason: leave phase as-is so draft UI shows the summary + "Begin Season"
+    // Regular draft: flip to offseason
+    if (!isPreseason) {
+      state.phase = 'offseason';
+      addNews({
+        type: 'commissioner',
+        text: `Year ${state.year} draft complete. ${totalPicks} picks made across ${state.draftRounds} rounds.`,
+        week: state.week,
+      });
+    } else {
+      // Empty draftClass signals draft is over in preseason mode
+      state.draftClass = [];
+    }
   }
 
   saveGame();
@@ -714,14 +1119,15 @@ export function makeDraftPick(prospectId) {
  */
 export function advanceCPUPicks() {
   const state = GAME_STATE;
-  if (state.phase !== 'draft') return;
+  if (state.phase !== 'draft' && state.phase !== 'preseason_draft') return;
 
-  const totalTeams = state.draftOrder.length;
+  const totalTeams  = state.draftOrder.length;
+  const totalPicks  = totalTeams * state.draftRounds;
+  const activePhase = state.phase;
 
-  while (state.phase === 'draft') {
+  while (state.phase === activePhase && state.draftClass.length > 0 && state.draftCurrentPick < totalPicks) {
     const pickingTeamId = state.draftOrder[state.draftCurrentPick % totalTeams];
     if (pickingTeamId === state.playerTeamId) break;
-    if (state.draftClass.length === 0) break;
 
     const best = bestAvailableForTeam(pickingTeamId, state);
     if (!best) break;
@@ -730,6 +1136,24 @@ export function advanceCPUPicks() {
 
   saveGame();
   showScreen('draft');
+}
+
+/**
+ * Skips the player's current preseason draft pick (no player added).
+ */
+export function skipDraftPick() {
+  const state = GAME_STATE;
+  if (state.phase !== 'preseason_draft') return;
+
+  const totalTeams = state.draftOrder.length;
+  const totalPicks = totalTeams * state.draftRounds;
+  state.draftCurrentPick++;
+
+  if (state.draftCurrentPick >= totalPicks || state.draftClass.length === 0) {
+    state.draftClass = [];
+  }
+
+  saveGame();
 }
 
 /** Scores a prospect for a given team based on positional need + quality. */
@@ -803,19 +1227,27 @@ function renderCurrentScreen() {
 window.hockeyGM = {
   boot,
   newGame,
+  beginSeason,
   simNextGame,
+  simToMyNextGame,
   simToPlayoffs,
   simPlayoffs,
+  simMyNextPlayoffGame,
+  simPlayerSeries,
+  showPlayoffBracket,
+  closePlayoffBracket,
   endSeason,
   acceptTrade,
   declineTrade,
   signFreeAgent,
   startDraft,
   makeDraftPick,
+  skipDraftPick,
   advanceCPUPicks,
   showScreen,
   saveGame,
   deleteSave,
+  restartGame,
   getState: () => GAME_STATE,
 };
 
