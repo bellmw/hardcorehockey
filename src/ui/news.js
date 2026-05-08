@@ -121,12 +121,20 @@ function renderTradeOffer(item, state) {
   const trade = state.pendingTrades?.find(t => t.id === item.tradeId);
   const fromTeam = state.teams[item.fromTeamId];
   const teamName = fromTeam?.fullName ?? item.fromTeamId;
+  const tags = (trade?.tags || item.tags || []).map(tag => `<span class="trade-tag">${tag}</span>`).join('');
   const status = trade
     ? `<span class="trade-status trade-status-pending">PENDING — <button class="btn-inline-link" onclick="hockeyGM.showScreen('trade')">Review →</button></span>`
     : `<span class="trade-status trade-status-resolved">Resolved</span>`;
 
+  const headline = trade?.tags?.includes('blockbuster')
+    ? `Blockbuster offer from ${teamName}`
+    : trade?.tags?.includes('cross-league')
+      ? `Cross-league offer from ${teamName}`
+      : `Trade offer from ${teamName}`;
+
   return newsWrap('trade_offer', `
-    <div class="news-headline">Trade offer from ${teamName}</div>
+    <div class="news-headline">${headline}</div>
+    ${tags ? `<div class="news-meta-row">${tags}</div>` : ''}
     <div class="news-meta-row">${status}</div>
     <div class="news-meta">Week ${item.week ?? '—'}</div>
   `);
@@ -144,9 +152,16 @@ function renderTradeComplete(item, state) {
 
   const gave     = playerNames(trade.wanted);
   const received = playerNames(trade.offered);
+  const tags = (trade.tags || []).map(tag => `<span class="trade-tag">${tag}</span>`).join('');
+  const headline = trade.tags?.includes('blockbuster')
+    ? 'Blockbuster completed'
+    : trade.tags?.includes('cross-league')
+      ? 'Cross-league trade completed'
+      : 'Trade completed';
 
   return newsWrap('trade_complete', `
-    <div class="news-headline">Trade completed</div>
+    <div class="news-headline">${headline}</div>
+    ${tags ? `<div class="news-meta-row">${tags}</div>` : ''}
     <div class="news-report">
       <strong>${toTeam}</strong> traded ${gave} to <strong>${fromTeam}</strong><br>
       Received: ${received}

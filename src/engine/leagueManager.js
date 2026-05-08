@@ -197,11 +197,11 @@ export function determineRelegation(phlStandings, cdStandings, rcStandings) {
 
 // ─── Salary Cap ───────────────────────────────────────────────────────────────
 
-const BASE_CAP = 40_000_000;
-const CAP_INCREASE_PER_YEAR = 2_000_000;
+const BASE_CAP = 75_000_000;
+const CAP_GROWTH_RATE = 1.20;
 
 export function getSalaryCap(year) {
-  return BASE_CAP + (year - 1) * CAP_INCREASE_PER_YEAR;
+  return Math.round((BASE_CAP * Math.pow(CAP_GROWTH_RATE, Math.max(0, year - 1))) / 50_000) * 50_000;
 }
 
 export function getTeamCapUsed(team, allPlayers) {

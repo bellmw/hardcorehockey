@@ -31,7 +31,7 @@ function renderDashboard(state) {
   renderStandingsSnippet(state, leagueId, standings);
   renderCapBar(state, team);
   renderUpcomingGames(state, team);
-  renderNews(state.news);
+  renderNews(state);
   renderSimControls(state.phase);
 
   // Auto-open bracket if we just entered playoffs
@@ -48,6 +48,17 @@ function renderHeader(state, team, teamEntry, leagueId) {
 
   const recordEl = el('hdr-record');
   if (recordEl) recordEl.textContent = `${teamEntry.w}-${teamEntry.l}-${teamEntry.otl}`;
+
+  const capEl = el('hdr-cap');
+  if (capEl) {
+    const total = state.cap ?? 75_000_000;
+    const used  = (team.rosterIds || [])
+      .map(id => state.allPlayers[id])
+      .filter(Boolean)
+      .reduce((sum, p) => sum + (p.salary || 0), 0);
+    const pct = Math.min((used / total) * 100, 100);
+    capEl.textContent = `${formatMoney(used)} / ${formatMoney(total)} (${pct.toFixed(0)}%)`;
+  }
 
   const yearEl = el('hdr-year');
   if (yearEl) yearEl.textContent = `Year ${state.year}`;
@@ -141,11 +152,10 @@ function renderStandingsSnippet(state, leagueId, standings) {
     return (b.gf - b.ga) - (a.gf - a.ga);
   });
 
-  // Bottom 2 face relegation; last safe position is index (length - 3), 0-based
+  // Show all 12 teams
   const lastSafeIdx = sorted.length - 3;
-  const sliced      = sorted.slice(0, 6);
 
-  const rows = sliced.map((entry, idx) => {
+  const rows = sorted.map((entry, idx) => {
     const isPlayer = entry.teamId === state.playerTeamId;
     const team     = state.teams[entry.teamId];
     const abbrev   = team?.abbrev ?? entry.teamId;
@@ -185,7 +195,7 @@ function renderCapBar(state, team) {
   const container = el('dash-cap-bar');
   if (!container) return;
 
-  const total = state.cap ?? 40_000_000;
+  const total = state.cap ?? 75_000_000;
   const used  = (team.rosterIds || [])
     .map(id => state.allPlayers[id])
     .filter(Boolean)
@@ -244,18 +254,39 @@ function renderUpcomingGames(state, team) {
 
 // ─── News feed ────────────────────────────────────────────────────────────────
 
-function renderNews(news) {
+function renderNews(state) {
   const container = el('dash-news');
   if (!container) return;
 
-  const items = (news || []).slice(0, 5);
+  const news = state.news || [];
+  const pendingTrades = (state.pendingTrades || []).length;
+  const weeksToDeadline = Math.max(0, state.tradeDeadlineWeek - state.week);
+  const isTradeWindowOpen = state.phase === 'season' && !state.tradeMarketClosed && state.week <= state.tradeDeadlineWeek;
+
+  // Trade status widget
+  const tradeWidget = `
+    <div class="news-trade-widget">
+      <div class="trade-widget-row">
+        <button class="trade-widget-item" onclick="hockeyGM.showScreen('trade')" title="View trade offers">
+          <span class="trade-widget-label">Pending Trades</span>
+          <span class="trade-widget-value">${pendingTrades}</span>
+        </button>
+        <button class="trade-widget-item" onclick="hockeyGM.showScreen('trade')" title="View trade deadline" ${!isTradeWindowOpen ? 'disabled' : ''}>
+          <span class="trade-widget-label">Weeks to Deadline</span>
+          <span class="trade-widget-value">${isTradeWindowOpen ? weeksToDeadline : '—'}</span>
+        </button>
+      </div>
+    </div>
+  `;
+
+  const items = news.slice(0, 5);
 
   if (items.length === 0) {
-    container.innerHTML = '<p class="news-empty">No news yet.</p>';
+    container.innerHTML = tradeWidget + '<p class="news-empty">No news yet.</p>';
     return;
   }
 
-  container.innerHTML = items.map(item => {
+  const newsItems = items.map(item => {
     const headlineText = item.headline ?? item.text ?? '';
     const reportHtml   = item.report
       ? `<div class="news-report">${item.report}</div>`
@@ -267,14 +298,19 @@ function renderNews(news) {
         <div class="news-meta">Week ${item.week ?? '—'}</div>
       </div>`;
   }).join('');
+
+  container.innerHTML = tradeWidget + newsItems;
 }
 
 // ─── Sim controls ─────────────────────────────────────────────────────────────
 
 function renderSimControls(phase) {
+  const state = window.hockeyGM?.getState?.();
   const isPlayoffs  = phase === 'playoffs';
   const isOffseason = phase === 'offseason';
   const isSeason    = phase === 'season';
+  const isPreseasonDraft = phase === 'preseason_draft' && !!state?.draftClass && state.draftClass.length > 0;
+  const isPreseasonComplete = phase === 'preseason_draft' && (!state?.draftClass || state.draftClass.length === 0);
 
   const btnEnd      = el('btn-end-season');
   const btnNext     = el('btn-sim-next');
@@ -289,6 +325,27 @@ function renderSimControls(phase) {
     if (btnNext)    { btnNext.style.display    = ''; btnNext.textContent = 'Sim my next game'; btnNext.onclick = () => window.hockeyGM.simToMyNextGame(); }
     if (btnSimWeek) btnSimWeek.style.display = '';
     if (btnSimPO)   { btnSimPO.style.display = ''; btnSimPO.textContent = 'Sim to playoffs'; btnSimPO.onclick = () => window.hockeyGM.simToPlayoffs(); }
+  }
+
+  if (isPreseasonDraft) {
+    if (btnNext) {
+      btnNext.style.display = '';
+      btnNext.textContent = 'Go to draft';
+      btnNext.onclick = () => window.hockeyGM.showScreen('draft');
+    }
+    if (btnSimWeek) {
+      btnSimWeek.style.display = '';
+      btnSimWeek.textContent = 'Skip draft, begin season';
+      btnSimWeek.onclick = () => window.hockeyGM.skipPreseasonDraft();
+    }
+  }
+
+  if (isPreseasonComplete) {
+    if (btnNext) {
+      btnNext.style.display = '';
+      btnNext.textContent = 'Begin season';
+      btnNext.onclick = () => window.hockeyGM.beginSeason();
+    }
   }
 
   if (isPlayoffs) {
@@ -343,6 +400,16 @@ function renderSimControls(phase) {
     const pts       = entry ? `${entry.pts} pts` : '';
     const leagueBadge = leagueId?.toUpperCase() ?? '';
 
+    // Build roster breakdown
+    const roster = (team.rosterIds || [])
+      .map(id => _state.allPlayers[id])
+      .filter(Boolean);
+    const fwd  = roster.filter(p => ['C','LW','RW'].includes(p.position));
+    const def  = roster.filter(p => ['LD','RD'].includes(p.position));
+    const goal = roster.filter(p => p.position === 'G');
+    const avg  = arr => arr.length ? Math.round(arr.reduce((s, p) => s + p.overall, 0) / arr.length) : 0;
+    const rosterBreakdown = `${fwd.length} Fwd (${avg(fwd)}) · ${def.length} Def (${avg(def)}) · ${goal.length} G (${avg(goal)})`;
+
     tip.innerHTML = `
       <div class="tip-name">${team.fullName}</div>
       <div class="tip-meta">
@@ -351,6 +418,7 @@ function renderSimControls(phase) {
         ${pts ? `<span class="tip-pts">${pts}</span>` : ''}
       </div>
       <div class="tip-detail">${team.city} · ${team.arena}</div>
+      <div class="tip-roster">${rosterBreakdown}</div>
     `;
 
     const rect = target.getBoundingClientRect();
@@ -361,7 +429,7 @@ function renderSimControls(phase) {
     // Position below the element, flip up if near bottom
     let top  = rect.bottom + scrollY + 6;
     let left = rect.left  + scrollX;
-    if (rect.bottom + 90 > window.innerHeight) {
+    if (rect.bottom + 110 > window.innerHeight) {
       top = rect.top + scrollY - 6;
       tip.style.transform = 'translateY(-100%)';
     } else {

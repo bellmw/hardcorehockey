@@ -343,6 +343,10 @@ function renderPickDetail(state) {
     ? `<button class="btn-secondary" id="btn-draft-skip">Skip this pick</button>`
     : '';
 
+  const skipDraftBtn = isPreseason
+    ? `<button class="btn-secondary" id="btn-draft-skip-all">Skip draft, begin season</button>`
+    : '';
+
   const salaryLine = isPreseason
     ? `<p class="prospect-blurb text-3" style="margin-top:6px">Entry-level contract: <strong>$700K · 3 years</strong></p>`
     : '';
@@ -387,6 +391,7 @@ function renderPickDetail(state) {
         ${pickBtn}
         ${autoBtn}
         ${skipBtn}
+        ${skipDraftBtn}
       </div>
     </div>
     ${renderDraftHistorySnippet(state)}
@@ -413,6 +418,11 @@ function renderPickDetail(state) {
     window.hockeyGM.skipDraftPick();
     selectedProspectId = null;
     window.hockeyGM.advanceCPUPicks();
+  });
+
+  el('btn-draft-skip-all')?.addEventListener('click', () => {
+    selectedProspectId = null;
+    window.hockeyGM.skipPreseasonDraft();
   });
 }
 

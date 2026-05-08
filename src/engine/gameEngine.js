@@ -3,7 +3,7 @@
  * Simulates individual hockey games. No Claude API calls here — runs fast.
  */
 
-import { getPlayersByTeam } from './playerGenerator.js';
+import { getDressedPlayers } from './playerGenerator.js';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -353,9 +353,7 @@ function generateHighlights(homeTeam, awayTeam, homeGoals, awayGoals, homePlayer
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getActivePlayers(team, allPlayers) {
-  return (team.rosterIds || [])
-    .map(id => allPlayers[id])
-    .filter(p => p && !p.injured && !p.suspended);
+  return getDressedPlayers(team, allPlayers);
 }
 
 function avg(arr) {

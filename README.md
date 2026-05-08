@@ -1,5 +1,7 @@
 # Hockey GM — Personal Hockey Management Sim
 
+Current version: v1.2.0
+
 A stripped-down, goofy hockey GM game. You manage a team, sim seasons, survive
 relegation, and watch Claude-powered AI make absurd trade offers at you.
 

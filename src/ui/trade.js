@@ -11,8 +11,30 @@
 // ─── Main render ──────────────────────────────────────────────────────────────
 
 function renderTrade(state) {
+  renderTradeMarketStatus(state);
   renderPendingOffers(state);
   renderTradeHistory(state);
+}
+
+function renderTradeMarketStatus(state) {
+  const el = document.getElementById('trade-market-status');
+  if (!el) return;
+
+  const weeksLeft = Math.max(0, (state.tradeDeadlineWeek ?? 0) - (state.week ?? 0));
+  if (state.tradeMarketClosed) {
+    el.className = 'trade-market-status trade-market-status--closed';
+    el.textContent = 'Market closed until next season';
+    return;
+  }
+
+  if (weeksLeft <= 1) {
+    el.className = 'trade-market-status trade-market-status--hot';
+    el.textContent = `Deadline week: ${state.tradeDeadlineWeek}`;
+    return;
+  }
+
+  el.className = 'trade-market-status';
+  el.textContent = `Open · ${weeksLeft} weeks to deadline`;
 }
 
 // ─── Pending offers ───────────────────────────────────────────────────────────
@@ -24,7 +46,9 @@ function renderPendingOffers(state) {
   const pending = (state.pendingTrades || []).filter(t => t.status === 'pending');
 
   if (pending.length === 0) {
-    container.innerHTML = '<p class="trade-empty text-3">No pending offers. Sim more games to attract interest.</p>';
+    container.innerHTML = state.tradeMarketClosed
+      ? '<p class="trade-empty text-3">Deadline passed. No new offers until next season.</p>'
+      : '<p class="trade-empty text-3">No pending offers. Shop a player on the block or sim more games to attract interest.</p>';
     return;
   }
 
@@ -56,7 +80,7 @@ function renderTradeHistory(state) {
 
   // Show declined trades too, most recent first
   const history = [...(state.tradeHistory || [])];
-  const declined = (state.pendingTrades || []).filter(t => t.status === 'declined');
+  const declined = (state.pendingTrades || []).filter(t => ['declined', 'expired'].includes(t.status));
   const all = [...history, ...declined].sort((a, b) => (b.week ?? 0) - (a.week ?? 0));
 
   if (all.length === 0) {
@@ -73,6 +97,7 @@ function tradeCard(trade, state, showActions) {
   const fromTeam = state.teams[trade.fromTeamId];
   const gmName   = fromTeam?.gmName   ?? 'Unknown GM';
   const teamName = fromTeam?.fullName ?? trade.fromTeamId;
+  const leagueTag = fromTeam?.leagueId?.toUpperCase() ?? '—';
 
   const offeredPlayers = (trade.offered || [])
     .map(id => state.allPlayers[id])
@@ -99,6 +124,9 @@ function tradeCard(trade, state, showActions) {
     ? `<span class="trade-status-badge trade-status-badge--${trade.status}">${trade.status.toUpperCase()}</span>`
     : '';
 
+  const tags = (trade.tags || []).map(tag => `<span class="trade-tag">${tag}</span>`).join('');
+  const salarySwing = salarySummary(trade);
+
   const actionsHtml = showActions ? `
     <div class="trade-actions">
       <button class="btn-accept" data-trade-id="${trade.id}">Accept</button>
@@ -111,9 +139,12 @@ function tradeCard(trade, state, showActions) {
       <div class="trade-card-header">
         <span class="trade-gm-name">${gmName}</span>
         <span class="trade-team-name text-2">${teamName}</span>
+        <span class="league-badge ${fromTeam?.leagueId ?? ''}">${leagueTag}</span>
         <span class="trade-week text-3">Wk ${trade.week ?? '—'}</span>
         ${statusBadge}
       </div>
+
+      ${tags ? `<div class="trade-tag-row">${tags}</div>` : ''}
 
       <p class="trade-offer-text">${trade.offerText ?? ''}</p>
 
@@ -133,6 +164,7 @@ function tradeCard(trade, state, showActions) {
 
       ${trade.gmQuote ? `<blockquote class="trade-gm-quote">${trade.gmQuote}</blockquote>` : ''}
 
+      <div class="trade-meta-row text-3">${salarySwing}</div>
       <div class="trade-value ${valueClass}">${valueLabel}</div>
 
       ${actionsHtml}
@@ -145,12 +177,14 @@ function tradeCard(trade, state, showActions) {
 function playerChip(player, side) {
   const ovrClass = overallClass(player.overall);
   const posClass = positionGroupClass(player.position);
+  const contractLabel = `${player.contractType === 'entry' ? 'ELC' : `${player.contractYears ?? 0}y`}`;
   return `
     <div class="trade-player-chip trade-player-chip--${side}">
       <span class="pos-badge ${posClass}">${player.position}</span>
       <span class="trade-player-name">${player.fullName}</span>
       <span class="${ovrClass} trade-player-ovr">${player.overall}</span>
       <span class="trade-player-salary text-3">${formatMoney(player.salary ?? 0)}</span>
+      <span class="trade-player-term text-3">${contractLabel}</span>
     </div>
   `;
 }
@@ -179,6 +213,12 @@ function positionGroupClass(pos) {
 function formatMoney(amount) {
   if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(1)}M`;
   return `$${(amount / 1_000).toFixed(0)}K`;
+}
+
+function salarySummary(trade) {
+  const offered = formatMoney(trade.offeredSalary ?? 0);
+  const wanted = formatMoney(trade.wantedSalary ?? 0);
+  return `Cap swing: incoming ${offered} · outgoing ${wanted}`;
 }
 
 // ─── Event listener ───────────────────────────────────────────────────────────

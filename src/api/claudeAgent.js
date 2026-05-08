@@ -118,25 +118,41 @@ const GM_PERSONALITY_DESCRIPTIONS = {
  * @param {Array}  wantedPlayers  - players the rival wants from you
  * @param {Array}  offeredPicks   - optional draft picks being offered
  * @param {Array}  wantedPicks    - optional draft picks being requested
+ * @param {Object} tradeContext  - optional context about timing, leagues, and trade tags
  * @returns {Object} { offerText, gmQuote, valueOpinion }
  */
-export async function generateTradeOffer(rivalTeam, offeredPlayers, wantedPlayers, offeredPicks = [], wantedPicks = []) {
+export async function generateTradeOffer(rivalTeam, offeredPlayers, wantedPlayers, offeredPicks = [], wantedPicks = [], tradeContext = {}) {
   const gmPersonality = GM_PERSONALITY_DESCRIPTIONS[rivalTeam.gmPersonality] || 'Unknown personality.';
 
-  const offered = offeredPlayers.map(p => `${p.fullName} (${p.position}, OVR ${p.overall}, age ${p.age})`).join(', ');
-  const wanted  = wantedPlayers.map(p => `${p.fullName} (${p.position}, OVR ${p.overall}, age ${p.age})`).join(', ');
+  const playerSummary = (player) => {
+    const term = `${player.contractYears ?? 0}y`;
+    const contractType = player.contractType === 'entry' ? 'ELC' : 'std';
+    const salary = `$${((player.salary ?? 0) / 1_000_000).toFixed(1)}M`;
+    return `${player.fullName} (${player.position}, OVR ${player.overall}, age ${player.age}, ${salary}, ${term}, ${contractType})`;
+  };
+
+  const offered = offeredPlayers.map(playerSummary).join(', ');
+  const wanted  = wantedPlayers.map(playerSummary).join(', ');
   const picksOffered  = offeredPicks.length > 0 ? `+ ${offeredPicks.join(', ')}` : '';
   const picksWanted   = wantedPicks.length  > 0 ? `+ ${wantedPicks.join(', ')}`  : '';
+  const contextLine = [
+    tradeContext.week != null ? `Week ${tradeContext.week}` : null,
+    tradeContext.deadlineWeek != null ? `trade deadline in Week ${tradeContext.deadlineWeek}` : null,
+    tradeContext.fromLeague && tradeContext.toLeague ? `cross-league context: ${tradeContext.fromLeague.toUpperCase()} to ${tradeContext.toLeague.toUpperCase()}` : null,
+    tradeContext.tags?.length ? `story tags: ${tradeContext.tags.join(', ')}` : null,
+  ].filter(Boolean).join(' | ');
 
   const prompt = `
 Rival GM: ${rivalTeam.gmName} (${rivalTeam.fullName})
 GM Personality: ${gmPersonality}
+Trade context: ${contextLine || 'standard in-season trade'}
 
 Trade offer:
 - They offer: ${offered || 'nothing'} ${picksOffered}
 - They want:  ${wanted  || 'nothing'} ${picksWanted}
 
 Generate the offer text (how this would appear in my trade inbox) and a GM quote in character.
+Mention salary or term pressure when it matters, and lean into deadline or cross-league weirdness when present.
 Include a valueOpinion of whether this deal is fair from my perspective.
 JSON only.`;
 
@@ -177,7 +193,7 @@ slightly pompous and occasionally absurd. Keep announcements under 80 words. Ton
 export async function generateCommissionerAnnouncement(type, context) {
   const prompts = {
     season_start: `It is the start of Year ${context.year} of the league. Salary cap is now $${(context.cap / 1_000_000).toFixed(0)}M. Write a pompous season-opening announcement.`,
-    cap_increase: `The salary cap has increased from $${((context.cap - 2_000_000) / 1_000_000).toFixed(0)}M to $${(context.cap / 1_000_000).toFixed(0)}M. Announce this with excessive gravitas.`,
+    cap_increase: `The salary cap has increased from $${((context.previousCap ?? context.cap) / 1_000_000).toFixed(1)}M to $${(context.cap / 1_000_000).toFixed(1)}M. Announce this with excessive gravitas.`,
     relegation: `${context.relegated?.join(' and ')} have been relegated. ${context.promoted?.join(' and ')} have been promoted. Write the official announcement.`,
     championship: `${context.champion} have won the ${context.league} championship. Write a brief, self-important Commissioner proclamation.`,
     survival_playoff: `${context.teamA} and ${context.teamB} will play a one-game survival playoff to determine relegation. The stakes are high. Make it sound dramatic.`,

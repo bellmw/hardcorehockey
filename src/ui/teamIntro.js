@@ -106,7 +106,7 @@ function buildScoutingReport(roster, state) {
 
   // Cap situation
   const totalSalary = roster.reduce((s, p) => s + (p.salary || 0), 0);
-  const cap = state.cap ?? 40_000_000;
+  const cap = state.cap ?? 75_000_000;
   const capPct = (totalSalary / cap) * 100;
   if (capPct > 90) concerns.push(`Over 90% of the salary cap committed — little flexibility.`);
   else if (capPct < 50) concerns.push(`Lots of cap space but a thin roster — may need reinforcements.`);

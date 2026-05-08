@@ -8,6 +8,10 @@
 
 const POSITIONS = ['C', 'LW', 'RW', 'LD', 'RD', 'G'];
 
+export const LEAGUE_MIN_SALARY = 700_000;
+export const ENTRY_LEVEL_YEARS = 3;
+export const MAX_CONTRACT_YEARS = 5;
+
 // Roster composition: 12 forwards, 6 defence, 2 goalies (+ depth = 20 total)
 const ROSTER_TEMPLATE = [
   'C','C','C','C',
@@ -34,8 +38,12 @@ export function generatePlayer(nameData, options = {}) {
   } = options;
 
   const overall = options.overall ?? generateOverall(tier, age);
-  const salary  = calculateSalary(overall, age);
-  const contractYears = randomContractLength(age);
+  const accruedSeasons = Math.max(0, options.accruedSeasons ?? (age - 18));
+  const onEntryDeal = accruedSeasons < ENTRY_LEVEL_YEARS;
+  const contractYears = onEntryDeal
+    ? Math.max(1, ENTRY_LEVEL_YEARS - accruedSeasons)
+    : randomContractLength(age);
+  const salary  = onEntryDeal ? LEAGUE_MIN_SALARY : calculateSalary(overall, age);
 
   const firstName = pickFirstName(nameData);
   const lastName  = pickLastName(nameData);
@@ -52,6 +60,9 @@ export function generatePlayer(nameData, options = {}) {
     age,
     salary,
     contractYears,
+    contractLength: contractYears,
+    contractType: onEntryDeal ? 'entry' : 'standard',
+    accruedSeasons,
     nationality,
     trait,
     injured: false,
@@ -59,7 +70,11 @@ export function generatePlayer(nameData, options = {}) {
     suspended: false,
     suspendedGames: 0,
     morale: 0,           // -5 to +5, affects effective overall by morale/2
-    isRookie: age <= 20,
+    isRookie: accruedSeasons === 0,
+    tradeBlock: false,
+    pendingExtension: null,
+    askingSalary: null,
+    askingContractYears: null,
     // Development tracking
     potential: generatePotential(overall, age),
     seasonsInLeague: 0,
@@ -88,6 +103,26 @@ export function getPlayersByTeam(team, allPlayers) {
 export function getActivePlayers(team, allPlayers) {
   return getPlayersByTeam(team, allPlayers)
     .filter(p => !p.injured && !p.suspended);
+}
+
+export function getDressedPlayers(team, allPlayers) {
+  const active = getActivePlayers(team, allPlayers);
+  const sortByOverall = (a, b) => b.overall - a.overall;
+
+  const forwards = active
+    .filter(p => ['C', 'LW', 'RW'].includes(p.position))
+    .sort(sortByOverall)
+    .slice(0, 12);
+  const defence = active
+    .filter(p => ['LD', 'RD'].includes(p.position))
+    .sort(sortByOverall)
+    .slice(0, 6);
+  const goalies = active
+    .filter(p => p.position === 'G')
+    .sort(sortByOverall)
+    .slice(0, 2);
+
+  return [...forwards, ...defence, ...goalies];
 }
 
 // ─── Player Aging & Development ───────────────────────────────────────────────
@@ -136,9 +171,6 @@ export function ageAllPlayers(allPlayers) {
     if (p.age >= 35 && Math.random() < 0.40) {
       p.overall = Math.max(38, p.overall - (Math.floor(Math.random() * 3) + 1));
     }
-
-    // Tick down contract
-    p.contractYears = Math.max(0, p.contractYears - 1);
 
     // Reset season-level statuses
     p.injured = false;
@@ -221,11 +253,11 @@ export function generateDraftClass(nameData, year) {
  */
 export function calculateSalary(overall, age) {
   // Base salary from overall
-  const baseSalary = Math.pow((overall - 40) / 55, 1.8) * 5_500_000 + 500_000;
+  const baseSalary = Math.pow((overall - 40) / 55, 1.8) * 5_300_000 + LEAGUE_MIN_SALARY;
   // Age modifier: prime age (27–30) commands a small premium
   const ageMultiplier = age >= 27 && age <= 30 ? 1.08 : age > 33 ? 0.9 : 1.0;
   // Round to nearest $50K
-  return Math.round((baseSalary * ageMultiplier) / 50_000) * 50_000;
+  return Math.max(LEAGUE_MIN_SALARY, Math.round((baseSalary * ageMultiplier) / 50_000) * 50_000);
 }
 
 /**
@@ -286,8 +318,9 @@ function generatePotential(overall, age) {
 
 function randomContractLength(age) {
   if (age >= 33) return Math.random() < 0.7 ? 1 : 2;
-  if (age <= 22) return Math.random() < 0.5 ? 2 : 3;
-  return Math.floor(Math.random() * 3) + 1; // 1–3
+  if (age <= 24) return Math.random() < 0.4 ? 3 : 4;
+  if (age <= 28) return Math.floor(Math.random() * 4) + 2; // 2–5
+  return Math.floor(Math.random() * 4) + 1; // 1–4
 }
 
 function pickWeightedPosition() {

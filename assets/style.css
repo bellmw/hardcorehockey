@@ -64,6 +64,22 @@ body {
 }
 .screen-inner.centered { max-width: 700px; }
 
+.title-version {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.6rem auto 0;
+  padding: 4px 10px;
+  border: 1px solid var(--border-2);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: rgba(240, 192, 48, 0.08);
+}
+
 /* ─── App header ────────────────────────────────── */
 .app-header {
   display: flex;
@@ -118,17 +134,64 @@ body {
 
 .header-meta {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
+  gap: 1.5rem;
+  margin-left: auto;
   font-size: 11px;
   color: var(--text-2);
-  gap: 1px;
+}
+
+.header-cap,
+.header-record {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.cap-label,
+.record-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.cap-value,
+.record-value {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: var(--gold);
+  letter-spacing: -0.02em;
+}
+
+.year-badge {
+  font-size: 11px;
+  color: var(--text-2);
+}
+
+.version-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 62px;
+  padding: 4px 8px;
+  border: 1px solid var(--border-2);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: rgba(240, 192, 48, 0.08);
 }
 
 /* ─── Dashboard layout ──────────────────────────── */
 .dashboard-main {
   display: grid;
-  grid-template-columns: 280px 1fr 300px;
+  grid-template-columns: 450px 1fr 300px;
   gap: 1px;
   height: calc(100vh - 48px);
   background: var(--border);
@@ -303,6 +366,56 @@ tr:hover td { background: var(--bg-2); }
 }
 .news-empty { padding: 1rem; color: var(--text-3); }
 
+/* ─── Trade widget ────────────────────────────────── */
+.news-trade-widget {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.trade-widget-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.trade-widget-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  transition: all 0.15s;
+}
+.trade-widget-item:hover:not(:disabled) {
+  background: var(--bg);
+  border-color: var(--phl-color);
+  color: var(--phl-color);
+}
+.trade-widget-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.trade-widget-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+}
+.trade-widget-value {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ice);
+}
+
 /* ─── News filter buttons ──────────────────────── */
 .news-filters {
   display: flex;
@@ -340,6 +453,21 @@ tr:hover td { background: var(--bg-2); }
   background: var(--border);
   min-height: calc(100vh - 56px);
 }
+.trade-market-status {
+  margin-left: auto;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-2);
+}
+.trade-market-status--hot {
+  color: var(--gold);
+  text-shadow: var(--glow-gold);
+}
+.trade-market-status--closed {
+  color: var(--accent);
+  text-shadow: var(--glow-red);
+}
 .trade-layout > section {
   background: var(--bg);
   padding: 1.25rem;
@@ -368,6 +496,24 @@ tr:hover td { background: var(--bg-2); }
 }
 .trade-team-name { font-size: 12px; }
 .trade-week { font-size: 11px; margin-left: auto; }
+.trade-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.trade-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border-2);
+  background: var(--bg-3);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-2);
+}
 
 .trade-offer-text {
   color: var(--text-2);
@@ -414,6 +560,7 @@ tr:hover td { background: var(--bg-2); }
 .trade-player-name { flex: 1; color: var(--text); font-weight: 600; }
 .trade-player-ovr  { font-weight: 700; }
 .trade-player-salary { font-size: 11px; }
+.trade-player-term { font-size: 10px; opacity: 0.8; }
 
 .trade-pick-chip {
   font-size: 11px;
@@ -447,8 +594,10 @@ tr:hover td { background: var(--bg-2); }
 .trade-status-badge--accepted  { background: #1a3a1a; color: #5aaa5a; }
 .trade-status-badge--declined  { background: var(--bg-3); color: var(--text-3); }
 .trade-status-badge--pending   { background: #3a2a00; color: var(--gold); }
+.trade-status-badge--expired   { background: #31161a; color: #d97c7c; }
 
 .trade-empty { padding: 0.5rem 0; }
+.trade-meta-row { margin-bottom: 6px; }
 
 /* ─── Trade card ────────────────────────────────── */
 .trade-card {
@@ -781,6 +930,36 @@ tr:hover td { background: var(--bg-2); }
   box-shadow: var(--glow-red);
 }
 
+.btn-trade-block,
+.btn-extend {
+  background: none;
+  border: 1px solid var(--border-2);
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-trade-block:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  box-shadow: var(--glow-gold);
+}
+.btn-extend:hover:not(:disabled) {
+  border-color: var(--neon-blue);
+  color: var(--neon-blue);
+  box-shadow: var(--glow-ice);
+}
+.btn-extend:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 /* ─── Sign button (free agents) ─────────────────── */
 .btn-sign {
   background: none;
@@ -816,6 +995,85 @@ tr:hover td { background: var(--bg-2); }
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 120px;
+}
+
+.roster-player-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 4px;
+}
+.roster-dressed-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 10px;
+}
+.roster-dressed-summary strong {
+  color: var(--text);
+}
+.roster-flag {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 1px solid var(--border-2);
+  background: var(--bg-3);
+  color: var(--text-2);
+}
+.roster-flag--dressed {
+  border-color: rgba(57, 255, 20, 0.35);
+  color: var(--neon-green);
+}
+.roster-flag--scratch {
+  border-color: rgba(154, 152, 147, 0.25);
+  color: var(--text-2);
+}
+.roster-flag--out {
+  border-color: rgba(255, 30, 60, 0.35);
+  color: var(--accent);
+}
+.roster-flag--trade {
+  border-color: rgba(240, 192, 48, 0.4);
+  color: var(--gold);
+}
+.roster-flag--extension {
+  border-color: rgba(0, 212, 255, 0.4);
+  color: var(--neon-blue);
+}
+.contract-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.contract-pill {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border-2);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-2);
+  background: var(--bg-3);
+}
+.contract-pill--entry {
+  border-color: rgba(57, 255, 20, 0.25);
+  color: var(--neon-green);
+}
+.contract-pill--expiring {
+  border-color: rgba(240, 192, 48, 0.35);
+  color: var(--gold);
+}
+.roster-actions-cell {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 /* ─── Screen header ─────────────────────────────── */
@@ -1341,6 +1599,14 @@ tr:hover td { background: var(--bg-2); }
   font-size: 11px;
   color: var(--text-3);
 }
+.tip-roster {
+  font-size: 10px;
+  color: var(--text-2);
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+}
 
 /* ── Game Result Modal ───────────────────────────────────────── */
 .modal-overlay {
@@ -1556,6 +1822,35 @@ tr:hover td { background: var(--bg-2); }
   position: absolute;
   left: 0;
   color: var(--text-3);
+}
+
+.gr-social-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gr-social-post {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+.gr-social-post--fan { border-left: 3px solid var(--ice); }
+.gr-social-post--insider { border-left: 3px solid var(--gold); }
+.gr-social-post--analytics { border-left: 3px solid var(--neon-blue); }
+.gr-social-post--pressure { border-left: 3px solid var(--accent-2); }
+.gr-social-post--rumor { border-left: 3px solid var(--accent); }
+.gr-social-handle {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ice);
+  margin-bottom: 4px;
+}
+.gr-social-text {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-2);
 }
 
 /* Footer */

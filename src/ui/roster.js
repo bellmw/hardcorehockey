@@ -4,6 +4,8 @@
  * Triggered by 'render-screen' CustomEvent with detail.screen === 'roster'.
  */
 
+import { getDressedPlayers } from '../engine/playerGenerator.js';
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const GROUPS = [
@@ -27,7 +29,7 @@ function renderCapSummary(state) {
   if (!container) return;
 
   const team  = state.teams[state.playerTeamId];
-  const total = state.cap ?? 40_000_000;
+  const total = state.cap ?? 75_000_000;
   const used  = (team?.rosterIds || [])
     .map(id => state.allPlayers[id])
     .filter(Boolean)
@@ -63,6 +65,8 @@ function renderPlayerTable(state) {
   const roster = (team.rosterIds || [])
     .map(id => state.allPlayers[id])
     .filter(Boolean);
+  const dressedIds = new Set(getDressedPlayers(team, state.allPlayers).map(player => player.id));
+  const dressedCounts = getDressedCounts(roster, dressedIds);
 
   if (roster.length === 0) {
     container.innerHTML = '<p class="text-3" style="padding:1rem">No players on roster.</p>';
@@ -76,7 +80,7 @@ function renderPlayerTable(state) {
 
     if (players.length === 0) return '';
 
-    const rows = players.map(p => playerRow(p, group.posClass)).join('');
+    const rows = players.map(p => playerRow(p, group.posClass, dressedIds)).join('');
 
     return `
       <tr class="roster-group-header">
@@ -87,6 +91,10 @@ function renderPlayerTable(state) {
   }).join('');
 
   container.innerHTML = `
+    <div class="roster-dressed-summary text-3">
+      Dressed tonight: <strong>${dressedCounts.total}</strong>/20
+      <span>(${dressedCounts.forwards}F · ${dressedCounts.defence}D · ${dressedCounts.goalies}G)</span>
+    </div>
     <table class="standings-table roster-table">
       <thead>
         <tr>
@@ -95,9 +103,9 @@ function renderPlayerTable(state) {
           <th>Age</th>
           <th>OVR</th>
           <th>Salary</th>
-          <th>Yrs</th>
+          <th>Contract</th>
           <th class="roster-th-trait">Trait</th>
-          <th></th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>${sections}</tbody>
@@ -114,23 +122,61 @@ function renderPlayerTable(state) {
       }
     });
   });
+
+  container.querySelectorAll('.btn-trade-block').forEach(btn => {
+    btn.addEventListener('click', () => {
+      window.hockeyGM.toggleTradeBlock(btn.dataset.playerId);
+      window.hockeyGM.showScreen('roster');
+    });
+  });
+
+  container.querySelectorAll('.btn-extend').forEach(btn => {
+    btn.addEventListener('click', () => {
+      window.hockeyGM.renegotiatePlayer(btn.dataset.playerId);
+      window.hockeyGM.showScreen('roster');
+    });
+  });
 }
 
-function playerRow(player, posClass) {
+function playerRow(player, posClass, dressedIds) {
   const ovrClass = overallClass(player.overall);
   const injFlag  = player.injured    ? ' <span title="Injured" style="color:var(--accent)">✦</span>' : '';
   const susFlag  = player.suspended  ? ' <span title="Suspended" style="color:var(--gold)">⚑</span>'  : '';
+  const isDressed = dressedIds.has(player.id);
+  const unavailable = player.injured || player.suspended;
+  const lineupBadge = unavailable
+    ? '<span class="roster-flag roster-flag--out">OUT</span>'
+    : isDressed
+      ? '<span class="roster-flag roster-flag--dressed">DRESSED</span>'
+      : '<span class="roster-flag roster-flag--scratch">SCRATCH</span>';
+  const tradeBlockBadge = player.tradeBlock ? '<span class="roster-flag roster-flag--trade">ON BLOCK</span>' : '';
+  const extensionBadge = player.pendingExtension
+    ? `<span class="roster-flag roster-flag--extension">EXT ${formatMoney(player.pendingExtension.salary)} · ${player.pendingExtension.years}y</span>`
+    : '';
+  const contractBadge = contractBadgeHtml(player);
+  const canExtend = canRenegotiate(player);
+  const extendTitle = canExtend ? 'Renegotiate' : 'Only available in the last year of the deal';
+  const tradeBlockLabel = player.tradeBlock ? 'Unblock' : 'Shop';
 
   return `
     <tr>
       <td><span class="pos-badge ${posClass}">${player.position}</span></td>
-      <td class="td-name">${player.fullName}${injFlag}${susFlag}</td>
+      <td class="td-name">${player.fullName}${injFlag}${susFlag}<div class="roster-player-flags">${lineupBadge}${tradeBlockBadge}${extensionBadge}</div></td>
       <td>${player.age}</td>
       <td class="${ovrClass}">${player.overall}</td>
       <td>${formatMoney(player.salary ?? 0)}</td>
-      <td>${player.contractYears ?? 0}y</td>
+      <td>${contractBadge}</td>
       <td><span class="trait-chip" title="${player.trait ?? ''}">${player.trait ?? '—'}</span></td>
-      <td>
+      <td class="roster-actions-cell">
+        <button class="btn-trade-block"
+          data-player-id="${player.id}">
+          ${tradeBlockLabel}
+        </button>
+        <button class="btn-extend"
+          data-player-id="${player.id}"
+          ${canExtend ? '' : `disabled title="${extendTitle}"`}>
+          Extend
+        </button>
         <button class="btn-release"
           data-player-id="${player.id}"
           data-player-name="${escapeAttr(player.fullName)}">
@@ -160,7 +206,7 @@ function renderFreeAgents(state) {
     .sort((a, b) => b.overall - a.overall);
 
   const team  = state.teams[state.playerTeamId];
-  const total = state.cap ?? 40_000_000;
+  const total = state.cap ?? 75_000_000;
   const used  = (team?.rosterIds || [])
     .map(id => state.allPlayers[id])
     .filter(Boolean)
@@ -170,15 +216,17 @@ function renderFreeAgents(state) {
   const rows = fas.map(p => {
     const ovrClass = overallClass(p.overall);
     const posClass = p.position === 'G' ? 'goal' : ['LD','RD'].includes(p.position) ? 'def' : 'fwd';
-    const canSign  = (p.salary || 0) <= remaining;
+    const askingSalary = p.askingSalary ?? p.salary ?? 0;
+    const askingYears = p.askingContractYears ?? p.contractYears ?? 1;
+    const canSign  = askingSalary <= remaining;
     return `
       <tr>
         <td><span class="pos-badge ${posClass}">${p.position}</span></td>
         <td class="td-name">${p.fullName}</td>
         <td>${p.age}</td>
         <td class="${ovrClass}">${p.overall}</td>
-        <td>${formatMoney(p.salary ?? 0)}</td>
-        <td>${p.contractYears ?? 1}y</td>
+        <td>${formatMoney(askingSalary)}</td>
+        <td>${askingYears}y</td>
         <td><span class="trait-chip">${p.trait ?? '—'}</span></td>
         <td>
           <button class="btn-sign"
@@ -332,6 +380,31 @@ function overallClass(ovr) {
   if (ovr >= 58) return 'ovr-avg';
   if (ovr >= 45) return 'ovr-poor';
   return 'ovr-bust';
+}
+
+function canRenegotiate(player) {
+  return (player.contractYears ?? 0) === 1;
+}
+
+function getDressedCounts(roster, dressedIds) {
+  const dressed = roster.filter(player => dressedIds.has(player.id));
+  return {
+    total: dressed.length,
+    forwards: dressed.filter(player => ['C', 'LW', 'RW'].includes(player.position)).length,
+    defence: dressed.filter(player => ['LD', 'RD'].includes(player.position)).length,
+    goalies: dressed.filter(player => player.position === 'G').length,
+  };
+}
+
+function contractBadgeHtml(player) {
+  const label = player.contractType === 'entry' ? 'ELC' : 'STD';
+  const expiring = (player.contractYears ?? 0) === 1 ? '<span class="contract-pill contract-pill--expiring">LAST YEAR</span>' : '';
+  return `
+    <div class="contract-stack">
+      <span class="contract-pill ${player.contractType === 'entry' ? 'contract-pill--entry' : ''}">${label} · ${player.contractYears ?? 0}y</span>
+      ${expiring}
+    </div>
+  `;
 }
 
 function formatMoney(amount) {

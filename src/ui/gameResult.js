@@ -7,10 +7,15 @@
 
 const overlay = document.getElementById('game-result-overlay');
 const content = document.getElementById('game-result-content');
+const modal = document.getElementById('game-result-modal');
 
 function closeModal() {
+  if (modal) modal.scrollTop = 0;
+  if (content) content.scrollTop = 0;
   overlay.style.display = 'none';
 }
+
+window.closeGameResultModal = closeModal;
 
 // Close on overlay background click
 overlay.addEventListener('click', (e) => {
@@ -24,7 +29,7 @@ document.addEventListener('keydown', (e) => {
 
 // ─── Render ───────────────────────────────────────────────────────────────────
 
-function renderGameResult({ result, home, away, allPlayers }) {
+function renderGameResult({ result, home, away, allPlayers, socialFeed = [] }) {
   const { homeGoals, awayGoals, homePeriods, awayPeriods,
           homeShots, awayShots, overtimeType, highlights, stars } = result;
 
@@ -135,23 +140,40 @@ function renderGameResult({ result, home, away, allPlayers }) {
     </div>
   ` : '';
 
+  const socialHtml = socialFeed.length > 0 ? `
+    <div class="gr-section">
+      <div class="gr-section-title">Social Pulse</div>
+      <div class="gr-social-feed">
+        ${socialFeed.map(post => `
+          <article class="gr-social-post gr-social-post--${post.kind}">
+            <div class="gr-social-handle">${post.handle}</div>
+            <div class="gr-social-text">${post.text}</div>
+          </article>
+        `).join('')}
+      </div>
+    </div>
+  ` : '';
+
   content.innerHTML = `
     <div class="gr-header">
       <span class="gr-header-label">Game Result</span>
-      <button class="gr-close" onclick="document.getElementById('game-result-overlay').style.display='none'" aria-label="Close">✕</button>
+      <button class="gr-close" onclick="window.closeGameResultModal?.()" aria-label="Close">✕</button>
     </div>
     ${scoreHtml}
     ${periodHtml}
     ${shotsHtml}
     ${starsHtml}
     ${highlightsHtml}
+    ${socialHtml}
     <div class="gr-footer">
-      <button class="btn-primary gr-dismiss" onclick="document.getElementById('game-result-overlay').style.display='none'">
+      <button class="btn-primary gr-dismiss" onclick="window.closeGameResultModal?.()">
         Back to Dashboard
       </button>
     </div>
   `;
 
+  if (modal) modal.scrollTop = 0;
+  if (content) content.scrollTop = 0;
   overlay.style.display = 'flex';
 }
 
