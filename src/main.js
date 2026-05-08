@@ -21,6 +21,8 @@ import { simulateGame, generateGameStats } from './engine/gameEngine.js';
 import { generateHeadline, generateTradeOffer, generateCommissionerAnnouncement,
          generateRandomEvent, augmentDraftClass } from './api/claudeAgent.js';
 import { startGameWatch } from './ui/gameWatch.js';
+import { loadEvents, checkForEvent, applyEventEffects } from './engine/eventEngine.js';
+import { showEvent } from './ui/eventModal.js';
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
@@ -71,6 +73,9 @@ export async function boot() {
     fetch('./data/player-names.json').then(r => r.json()),
     fetch('./data/teams.json').then(r => r.json()),
   ]);
+  
+  // Load event data
+  await loadEvents();
 
   // Check for saved game
   const saved = loadGame();
@@ -121,6 +126,7 @@ export async function newGame(playerTeamId) {
     tradeDeadlineWeek: TRADE_DEADLINE_WEEK,
     tradeMarketClosed: false,
     tradeDeadlineClosedInYear: null,
+    chaosLevel: 5,    // Event system: 0 (benign) to 10 (chaotic)
 
     // Team maps
     teams: Object.fromEntries(allTeams.map(t => [t.id, t])),
@@ -252,6 +258,13 @@ export async function simNextGame(silent = false) {
 
   if (state.phase === 'season') {
     closeTradeMarketIfNeeded(state);
+    
+    // Check for league events (every 2 weeks during regular season)
+    const eventData = checkForEvent(state.week, state.chaosLevel);
+    if (eventData && !silent) {
+      const effects = applyEventEffects(eventData, state, state.playerTeamId);
+      await showEvent(eventData, effects);
+    }
   }
 
   const leagueIds = ['phl', 'cd', 'rc'];

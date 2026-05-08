@@ -62,7 +62,18 @@ function renderTeamIntro(state) {
       </div>
     </div>
 
-    <button class="btn-primary intro-cta" onclick="hockeyGM.showScreen('draft')">
+    <div class="intro-chaos-section">
+      <h3 class="intro-section-sub">Chaos Level</h3>
+      <p class="intro-chaos-description">Choose how often wild events occur during the season (0 = none, 10 = constant chaos)</p>
+      <div class="chaos-slider-container">
+        <span class="chaos-label chaos-label-min">0 (Benign)</span>
+        <input type="range" id="chaos-level-slider" class="chaos-slider" min="0" max="10" value="5" oninput="updateChaosDisplay()">
+        <span class="chaos-label chaos-label-max">10 (Chaotic)</span>
+      </div>
+      <div class="chaos-display" id="chaos-display">Chaos Level: <strong>5</strong></div>
+    </div>
+
+    <button class="btn-primary intro-cta" onclick="window.startWithChaosLevel()">
       Head to Draft Day →
     </button>
   `;
@@ -172,6 +183,28 @@ function formatPersonality(p) {
   };
   return map[p] ?? p ?? '';
 }
+
+// ─── Chaos Level Controls ─────────────────────────────────────────────────────
+
+window.updateChaosDisplay = function() {
+  const slider = document.getElementById('chaos-level-slider');
+  const display = document.getElementById('chaos-display');
+  if (slider && display) {
+    display.innerHTML = `Chaos Level: <strong>${slider.value}</strong>`;
+  }
+};
+
+window.startWithChaosLevel = function() {
+  const slider = document.getElementById('chaos-level-slider');
+  if (slider) {
+    const chaosLevel = parseInt(slider.value, 10);
+    const state = window.hockeyGM?.getState?.();
+    if (state) {
+      state.chaosLevel = chaosLevel;
+    }
+  }
+  window.hockeyGM?.showScreen('draft');
+};
 
 // ─── Event listener ───────────────────────────────────────────────────────────
 
