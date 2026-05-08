@@ -1,6 +1,6 @@
 # Hockey GM — Personal Hockey Management Sim
 
-Current version: v1.2.0
+Current version: v1.2.4
 
 A stripped-down, goofy hockey GM game. You manage a team, sim seasons, survive
 relegation, and watch Claude-powered AI make absurd trade offers at you.
@@ -118,6 +118,31 @@ Promotion / Relegation each season:
 
 ---
 
+## Game Simulation Modes
+
+When you click **"Sim my next game"** on the dashboard, you can choose how to experience the game:
+
+### ⚡ Quick Sim
+- Jumps directly to the final result
+- Perfect for when you want fast outcomes
+- Displays full scoreboard, period breakdown, shots, stars, and social feed immediately
+
+### 🎬 Watch Game  
+- Shows the game **period-by-period**
+- Displays goals scored in each period with running totals
+- Progress bar tracks game progression (1 of 3, 2 of 3, 3 of 3)
+- After all three periods, displays the complete final result
+- Great for getting immersed in the action
+
+Both modes display the same final information:
+- **Period-by-period scoring**
+- **Shots on goal**
+- **Stars of the Game** (3-star selections)
+- **Game Notes** (key moments)
+- **Social Pulse** (community reaction)
+
+---
+
 ## Salary Cap
 
 | Year | Cap |
@@ -128,3 +153,18 @@ Promotion / Relegation each season:
 | ... | +$2M/yr |
 
 Player salary range: $500K (rookies) → $6M (stars)
+
+---
+
+## Recent Features (v1.2.3–v1.2.4)
+
+### v1.2.4
+- **Dual game simulation modes**: Choose between Quick Sim (instant result) and Watch Game (period-by-period)
+- Period-by-period display shows cumulative scoring with progress tracking
+- Enhanced visual feedback during game progression
+
+### v1.2.3
+- **Trade desk shortcuts**: Quick links to GM Assistant, trade history, and league roster
+- **League leaders carousel**: Navigate between Points, Goals, GAA, and Save % leaderboards
+- **Player tooltips**: Hover over leaders to see full player stats, contract details, and salary info
+- **Team highlighting**: User's roster players are visually distinguished on leaderboards
