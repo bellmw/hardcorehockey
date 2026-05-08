@@ -140,12 +140,19 @@ export function sortStandings(standings) {
  */
 export function buildPlayoffBracket(standings) {
   const sorted = sortStandings(standings);
-  const [p1, p2, p3, p4] = sorted.slice(0, 4);
+  const [p1, p2, p3, p4, p5, p6, p7, p8] = sorted.slice(0, 8);
   return {
-    semifinalA: { topSeed: p1.teamId, bottomSeed: p4.teamId, result: null },
-    semifinalB: { topSeed: p2.teamId, bottomSeed: p3.teamId, result: null },
-    final:      { teamA: null, teamB: null, result: null },
-    champion:   null,
+    // First round matchups: 1vs8, 2vs7, 3vs6, 4vs5
+    firstRoundA: { topSeed: p1.teamId, bottomSeed: p8.teamId, result: null },
+    firstRoundB: { topSeed: p2.teamId, bottomSeed: p7.teamId, result: null },
+    firstRoundC: { topSeed: p3.teamId, bottomSeed: p6.teamId, result: null },
+    firstRoundD: { topSeed: p4.teamId, bottomSeed: p5.teamId, result: null },
+    // Semifinals (winners advance)
+    semifinalA:  { teamA: null, teamB: null, result: null },
+    semifinalB:  { teamA: null, teamB: null, result: null },
+    // Finals
+    final:       { teamA: null, teamB: null, result: null },
+    champion:    null,
   };
 }
 

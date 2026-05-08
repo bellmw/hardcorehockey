@@ -3,6 +3,8 @@
  * Manages league and team events during regular season play
  */
 
+import { injureRandomPlayer, getInjuredPlayerCount } from './injurySystem.js';
+
 let eventsList = [];
 
 /**
@@ -23,9 +25,10 @@ export async function loadEvents() {
  * @param {number} week - Current week
  * @param {number} chaosLevel - 0-10 chaos level
  * @param {string} phase - Current game phase (should be 'season')
+ * @param {Array} firedEventIds - List of event IDs that have fired this season (prevents duplicates)
  * @returns {object|null} - Event object if triggered, null otherwise
  */
-export function checkForEvent(week, chaosLevel, phase) {
+export function checkForEvent(week, chaosLevel, phase, firedEventIds = []) {
   // Only fire during regular season
   if (phase !== 'season') return null;
   
@@ -36,10 +39,15 @@ export function checkForEvent(week, chaosLevel, phase) {
   const baseChance = (chaosLevel / 10) * 0.85;
   if (Math.random() > baseChance) return null;
   
+  // Filter out events that have already fired this season
+  const availableEvents = eventsList.filter(e => !firedEventIds.includes(e.id));
+  
+  if (availableEvents.length === 0) return null;  // All events used
+  
   // Select random event weighted by type
-  const benefitEvents = eventsList.filter(e => e.type === 'benefit');
-  const chaosEvents = eventsList.filter(e => e.type === 'chaos');
-  const benignEvents = eventsList.filter(e => e.type === 'benign');
+  const benefitEvents = availableEvents.filter(e => e.type === 'benefit');
+  const chaosEvents = availableEvents.filter(e => e.type === 'chaos');
+  const benignEvents = availableEvents.filter(e => e.type === 'benign');
   
   let event = null;
   
@@ -54,7 +62,7 @@ export function checkForEvent(week, chaosLevel, phase) {
   } else if (benignEvents.length > 0) {
     event = benignEvents[Math.floor(Math.random() * benignEvents.length)];
   } else {
-    event = eventsList[Math.floor(Math.random() * eventsList.length)];
+    event = availableEvents[Math.floor(Math.random() * availableEvents.length)];
   }
   
   return event;
@@ -152,12 +160,7 @@ function applyTeamEffects(teamEffects, state, teamIdOrAll, summary) {
     }
     
     if (teamEffects.random_player_illness) {
-      const players = team.rosterIds.map(id => state.allPlayers[id]).filter(Boolean);
-      if (players.length > 0) {
-        const player = players[Math.floor(Math.random() * players.length)];
-        player.injuryWeeks = (teamEffects.duration || 1);
-        summary.push(`${team.abbrev}: ${player.fullName || player.lastName} is out with flu`);
-      }
+      injureRandomPlayer(team, state.allPlayers, summary);
     }
     
     if (teamEffects.top_player_injury) {
@@ -167,8 +170,13 @@ function applyTeamEffects(teamEffects, state, teamIdOrAll, summary) {
         .sort((a, b) => (b.overall || 70) - (a.overall || 70));
       if (players.length > 0) {
         const player = players[0];
-        player.injuryWeeks = teamEffects.injury_weeks || 2;
-        summary.push(`${team.abbrev}: Star player ${player.fullName || player.lastName} injured for ~${player.injuryWeeks} weeks`);
+        // Check max injury limit
+        if (getInjuredPlayerCount(team, state.allPlayers) < 2 && !player.injured) {
+          const durationWeeks = Math.floor(Math.random() * 3) + 1;
+          player.injured = true;
+          player.injuredGames = durationWeeks;
+          summary.push(`${team.abbrev}: Star player ${player.fullName || player.lastName} injured for ${durationWeeks} week(s)`);
+        }
       }
     }
     
@@ -179,8 +187,13 @@ function applyTeamEffects(teamEffects, state, teamIdOrAll, summary) {
         .sort((a, b) => (b.overall || 70) - (a.overall || 70));
       if (players.length > 0) {
         const player = players[0];
-        player.injuryWeeks = teamEffects.weeks || 1;
-        summary.push(`${team.abbrev}: Star player ${player.fullName || player.lastName} out sick for ${player.injuryWeeks} week(s)`);
+        // Check max injury limit
+        if (getInjuredPlayerCount(team, state.allPlayers) < 2 && !player.injured) {
+          const durationWeeks = Math.floor(Math.random() * 3) + 1;
+          player.injured = true;
+          player.injuredGames = durationWeeks;
+          summary.push(`${team.abbrev}: Star player ${player.fullName || player.lastName} out sick for ${durationWeeks} week(s)`);
+        }
       }
     }
   });

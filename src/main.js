@@ -23,6 +23,7 @@ import { generateHeadline, generateTradeOffer, generateCommissionerAnnouncement,
 import { startGameWatch } from './ui/gameWatch.js';
 import { loadEvents, checkForEvent, applyEventEffects } from './engine/eventEngine.js';
 import { showEvent } from './ui/eventModal.js';
+import { healInjuries, canPlayerBeTrade } from './engine/injurySystem.js';
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
@@ -127,6 +128,7 @@ export async function newGame(playerTeamId) {
     tradeMarketClosed: false,
     tradeDeadlineClosedInYear: null,
     chaosLevel: 5,    // Event system: 0 (benign) to 10 (chaotic)
+    firedEventIds: [], // Track events that have fired this season to prevent duplicates
 
     // Team maps
     teams: Object.fromEntries(allTeams.map(t => [t.id, t])),
@@ -222,6 +224,7 @@ export function beginSeason() {
   state.tradeDeadlineWeek = TRADE_DEADLINE_WEEK;
   state.tradeMarketClosed = false;
   state.tradeDeadlineClosedInYear = null;
+  state.firedEventIds  = [];  // Reset event tracking for new season
   state.draftClass     = [];
   state.draftOrder     = [];
   state.draftCurrentPick = 0;
@@ -254,16 +257,20 @@ export async function simNextGame(silent = false) {
 
   if (state.phase === 'season') {
     state.week = getCurrentScheduleWeek(state);
+    // Heal player injuries at the start of each week
+    healInjuries(state);
   }
 
   if (state.phase === 'season') {
     closeTradeMarketIfNeeded(state);
     
     // Check for league events (every 2 weeks during regular season)
-    const eventData = checkForEvent(state.week, state.chaosLevel, state.phase);
+    const eventData = checkForEvent(state.week, state.chaosLevel, state.phase, state.firedEventIds);
     if (eventData && !silent) {
       const effects = applyEventEffects(eventData, state, state.playerTeamId);
       await showEvent(eventData, effects);
+      // Mark this event as fired to prevent duplicates this season
+      state.firedEventIds.push(eventData.id);
     }
   }
 
@@ -1702,6 +1709,23 @@ export function acceptTrade(tradeId) {
 
   const fromTeam = state.teams[trade.fromTeamId];
   const toTeam   = state.teams[trade.toTeamId];
+
+  // Check if any offered players are injured
+  for (const playerId of trade.offered) {
+    const player = state.allPlayers[playerId];
+    if (player && !canPlayerBeTrade(player)) {
+      alert(`${player.fullName} is injured and cannot be traded.`);
+      return;
+    }
+  }
+
+  for (const playerId of trade.wanted) {
+    const player = state.allPlayers[playerId];
+    if (player && !canPlayerBeTrade(player)) {
+      alert(`${player.fullName} is injured and cannot be traded.`);
+      return;
+    }
+  }
 
   const fromPostTradeSalary = calculateTeamSalaryAfterTrade(fromTeam.id, state, trade.wanted, trade.offered);
   const toPostTradeSalary = calculateTeamSalaryAfterTrade(toTeam.id, state, trade.offered, trade.wanted);
