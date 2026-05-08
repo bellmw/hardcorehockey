@@ -1,6 +1,6 @@
 # Hockey GM — Personal Hockey Management Sim
 
-Current version: v1.2.5
+Current version: v1.2.6
 
 A stripped-down, goofy hockey GM game. You manage a team, sim seasons, survive
 relegation, and watch Claude-powered AI make absurd trade offers at you.
@@ -18,13 +18,23 @@ random events, draft classes). See **API Setup** below.
 
 ---
 
-## Features (v1.2.5)
+## Features (v1.2.6)
 
 - **Dual Simulation Modes** — Quick Sim (instant result) or Watch Game (period-by-period)
 - **Event System** — Random in-season events with chaos level (0-10)
   - League-wide and team-specific events
   - Morale, salary cap, and player stat effects
   - Fires every 2 weeks during regular season
+  - **Event deduplication** — Each event fires only once per season
+- **Player Injuries** — Random injuries from events or game impacts
+  - Duration: 1-3 weeks per injury
+  - Max 2 injured players per team
+  - Injured players benched (not available for game lineups)
+  - Cannot trade injured players
+  - Auto-heal each week
+- **8-Team Playoff Bracket** — Per league (24 teams total playoff)
+  - First round: 1v8, 2v7, 3v6, 4v5 matchups
+  - Semifinals and finals
 - **36-Team League** — 3 tiers with promotion/relegation
 - **Salary Cap Management** — Trade, sign, or release players
 - **Claude AI Agents** — Trade offers, headlines, events
@@ -73,23 +83,24 @@ hockey-gm/
 │   ├── main.js             ← Game init, screen router, save/load
 │   │
 │   ├── engine/
-│   │   ├── gameEngine.js       ← Simulates individual games
-│   │   ├── leagueManager.js    ← Standings, schedule, relegation
-│   │   ├── playerGenerator.js  ← Creates and ages players
-│   │   └── eventEngine.js      ← Event selection, effects (v1.2.5)
+│   │   ├── gameEngine.js         ← Simulates individual games
+│   │   ├── leagueManager.js      ← Standings, schedule, relegation
+│   │   ├── playerGenerator.js    ← Creates and ages players
+│   │   ├── eventEngine.js        ← Event selection, effects
+│   │   └── injurySystem.js       ← Player injuries (v1.2.6)
 │   │
 │   ├── api/
-│   │   └── claudeAgent.js  ← All Claude API calls (4 agents)
+│   │   └── claudeAgent.js    ← All Claude API calls (4 agents)
 │   │
 │   └── ui/
-│       ├── dashboard.js        ← Main GM dashboard screen
-│       ├── roster.js           ← Roster management screen
-│       ├── trade.js            ← Trade desk screen
-│       ├── draft.js            ← Draft day screen
-│       ├── news.js             ← Headlines and events feed
-│       ├── gameWatch.js        ← Period-by-period game viewer (v1.2.4)
-│       ├── teamIntro.js        ← Team intro with chaos selector (v1.2.5)
-│       └── eventModal.js       ← Event display modal (v1.2.5)
+│       ├── dashboard.js         ← Main GM dashboard screen
+│       ├── roster.js            ← Roster management screen
+│       ├── trade.js             ← Trade desk screen
+│       ├── draft.js             ← Draft day screen
+│       ├── news.js              ← Headlines and events feed
+│       ├── gameWatch.js         ← Period-by-period game viewer
+│       ├── teamIntro.js         ← Team intro with chaos selector
+│       └── eventModal.js        ← Event display modal
 │
 └── assets/
     └── style.css           ← Global styles
@@ -97,7 +108,7 @@ hockey-gm/
 
 ---
 
-## Event System (v1.2.5)
+## Event System (v1.2.5+)
 
 When you start a new game, you select a **Chaos Level** (0-10):
 
@@ -110,15 +121,51 @@ with a modal until you acknowledge them. Effects include:
 
 - **Morale changes** — Team-wide or league-wide
 - **Salary cap adjustments** — Unexpected costs or refunds
-- **Player injuries/illness** — Random or targeted
+- **Player injuries/illness** — Random or targeted (1-3 weeks)
 - **Game bonuses/penalties** — Win/loss modifications
 - **Revenue swings** — Economic impacts
 
-Examples:
-- "Commissioner Controversy" — All teams lose morale
-- "Major Storm Rescheduling" — Schedule disruptions
-- "Trade Deadline Panic" — Roster uncertainty effects
-- "Star Player Breakthrough" — Targeted player boost
+**v1.2.6 Update:** Each event fires only once per season, preventing repeats.
+
+---
+
+## Player Injuries (v1.2.6)
+
+Injuries can occur from:
+- In-game "player injury" events
+- Random "star player illness" events
+
+Effects:
+- Player is **benched** (unavailable for lineups)
+- **Cannot be traded** while injured
+- Maximum **2 injured players per team**
+- Duration: **1-3 weeks**
+- Auto-heal at the start of each week
+
+Example: If your star player gets injured in week 2 for 2 weeks, they return in week 4.
+
+---
+
+## Playoff Structure (v1.2.6)
+
+Each of the 3 leagues sends 8 teams to playoffs:
+
+```
+Round 1 (4 games per league):
+  1 vs 8  →  Winner A
+  2 vs 7  →  Winner B
+  3 vs 6  →  Winner C
+  4 vs 5  →  Winner D
+
+Semifinals (2 games per league):
+  Winner A vs Winner D
+  Winner B vs Winner C
+
+Finals (1 game per league):
+  Winner 1 vs Winner 2
+
+League Champions: Top 3 teams
+```
 
 ---
 
@@ -131,7 +178,7 @@ All run through `src/api/claudeAgent.js`:
 | **Commissioner** | Season start / end | Announces cap increases, relegation, rule changes |
 | **Rival GMs** | Weekly during season | Proposes wacky trades based on their personality |
 | **Headline Bot** | After each game sim | Generates funny post-game news stories |
-| **Event Engine** | Every 2 weeks (season) | Fires random chaos events based on chaos level |
+| **Event Engine** | Every 2 weeks (season) | Fires random chaos events (no duplicates per season) |
 
 ---
 
@@ -155,8 +202,8 @@ Promotion / Relegation each season:
 1. **Draft** — 3 rounds, pick rookies from Claude-generated class
 2. **Chaos Selection** — Choose chaos level (0-10) for event frequency
 3. **Signings** — Sign/release free agents within salary cap
-4. **Season** — Sim 20 games; trades arrive, events fire every 2 weeks, headlines generated
-5. **Playoffs** — Top 4 in your league, sim bracket
+4. **Season** — Sim 20 games; trades arrive, events fire every 2 weeks (no repeats), headlines generated, injuries tracked
+5. **Playoffs** — Top 8 per league in bracket (1v8, 2v7, 3v6, 4v5)
 6. **Relegation** — Bottom 2 drop, top 2 rise, 3rd vs 10th drama
 7. **Off-season** — Cap rises $2M, repeat
 
