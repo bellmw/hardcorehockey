@@ -24,6 +24,7 @@ import { startGameWatch } from './ui/gameWatch.js';
 import { loadEvents, checkForEvent, applyEventEffects } from './engine/eventEngine.js';
 import { showEvent } from './ui/eventModal.js';
 import { healInjuries, canPlayerBeTrade } from './engine/injurySystem.js';
+import { showSeasonSummary } from './ui/seasonSummary.js';
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
@@ -508,6 +509,67 @@ function getPlayerSeriesKey(state, leagueId) {
   return null; // eliminated or league playoffs done
 }
 
+/**
+ * Determine playoff result for the player's team
+ * @param {object} state - Game state
+ * @returns {string} - 'champion', 'finals', 'semifinals', 'first_round', or 'missed'
+ */
+function getPlayerPlayoffResult(state) {
+  const playerLeagueId = ['phl', 'cd', 'rc'].find(lid =>
+    state.leagues[lid].teamIds.includes(state.playerTeamId)
+  );
+  if (!playerLeagueId) return 'missed';
+
+  const po = state.playoffs[playerLeagueId];
+  const pid = state.playerTeamId;
+
+  // Check if player won the championship (first round -> semis -> final -> champion)
+  if (po.final && po.final.champion === pid) {
+    return 'champion';
+  }
+
+  // Check if player made finals but didn't win
+  if (po.final && (po.final.teamA === pid || po.final.teamB === pid)) {
+    return 'finals';
+  }
+
+  // Check if player is in semis or was in semis
+  if (po.sf1 && (po.sf1.teamA === pid || po.sf1.teamB === pid)) {
+    if (po.sf1.champion === pid || (po.sf1.winsA === 4 && po.sf1.teamA === pid) || (po.sf1.winsB === 4 && po.sf1.teamB === pid)) {
+      return 'semifinals'; // Won semis, lost in finals or still playing
+    } else if (po.sf1.winsA >= 4 || po.sf1.winsB >= 4) {
+      return 'first_round'; // Lost semis
+    }
+  }
+  if (po.sf2 && (po.sf2.teamA === pid || po.sf2.teamB === pid)) {
+    if (po.sf2.champion === pid || (po.sf2.winsA === 4 && po.sf2.teamA === pid) || (po.sf2.winsB === 4 && po.sf2.teamB === pid)) {
+      return 'semifinals'; // Won semis, lost in finals or still playing
+    } else if (po.sf2.winsA >= 4 || po.sf2.winsB >= 4) {
+      return 'first_round'; // Lost semis
+    }
+  }
+
+  // Check if player is/was in first round
+  if (po.round === 'first_round' || po.round === 'semis' || po.round === 'final') {
+    // Player was in playoffs at some point but not in current round
+    // This means they lost in first round or earlier
+    if (po.first_round) {
+      for (const skKey of ['q1', 'q2', 'q3', 'q4']) {
+        const series = po.first_round[skKey];
+        if (series && (series.teamA === pid || series.teamB === pid)) {
+          if (series.winsA >= 4 || series.winsB >= 4) {
+            // Series is over, player lost
+            return 'first_round';
+          }
+        }
+      }
+    }
+  }
+
+  // Player didn't make playoffs or missed early
+  return 'missed';
+}
+
 /** Returns the key of the first incomplete series in a league playoff object. */
 function getActiveSeries(po) {
   if (po.round === 'semis') {
@@ -751,9 +813,12 @@ export async function simPlayoffs() {
     }
   }
 
+  // Determine playoff result and show season summary
+  const playoffResult = getPlayerPlayoffResult(state);
   state.phase = 'offseason';
   saveGame();
   renderCurrentScreen();
+  showSeasonSummary(state, playoffResult);
 }
 
 /**
@@ -798,6 +863,10 @@ export async function simMyNextPlayoffGame() {
 
   saveGame();
   renderCurrentScreen();
+  if (allComplete) {
+    const playoffResult = getPlayerPlayoffResult(state);
+    showSeasonSummary(state, playoffResult);
+  }
 }
 
 /**
@@ -842,6 +911,10 @@ export async function simPlayerSeries() {
 
   saveGame();
   renderCurrentScreen();
+  if (allComplete) {
+    const playoffResult = getPlayerPlayoffResult(state);
+    showSeasonSummary(state, playoffResult);
+  }
 }
 
 // ─── Events ───────────────────────────────────────────────────────────────────

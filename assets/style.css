@@ -2984,3 +2984,128 @@ tr:hover td { background: var(--bg-2); }
   font-weight: 700;
 }
 
+/* ─── Season Summary ────────────────────────────── */
+.season-summary-container {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 30px;
+  background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-3) 100%);
+  border: 2px solid var(--border-2);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  box-shadow: var(--glow-red);
+}
+
+.season-summary-header {
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--border);
+}
+
+.season-summary-header h1 {
+  font-family: var(--font-display);
+  font-size: 32px;
+  color: var(--ice);
+  margin-bottom: 4px;
+  text-shadow: var(--glow-ice);
+}
+
+.season-summary-year {
+  font-size: 12px;
+  color: var(--text-3);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.season-summary-main {
+  display: flex;
+  gap: 40px;
+  margin-bottom: 40px;
+  align-items: center;
+  justify-content: center;
+}
+
+.season-summary-grade-box {
+  flex: 0 0 auto;
+}
+
+.season-summary-grade {
+  font-family: var(--font-display);
+  font-size: 120px;
+  font-weight: 800;
+  line-height: 1;
+  text-shadow: 0 0 20px rgba(255, 30, 60, 0.6);
+  margin-bottom: 10px;
+}
+
+.season-summary-grade-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-3);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.season-summary-stats {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.season-summary-stat {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.season-summary-stat-label {
+  font-size: 10px;
+  color: var(--text-3);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.season-summary-stat-value {
+  font-family: var(--font-display);
+  font-size: 16px;
+  color: var(--ice);
+  font-weight: 600;
+}
+
+.season-summary-narrative {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.season-summary-narrative h2 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--gold);
+  margin-bottom: 12px;
+  text-shadow: var(--glow-gold);
+}
+
+.season-summary-narrative p {
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+.season-summary-footer {
+  display: flex;
+  gap: 12px;
+}
+
+.season-summary-footer .btn-primary {
+  flex: 1;
+}
