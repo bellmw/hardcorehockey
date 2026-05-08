@@ -27,7 +27,7 @@ let GAME_STATE = null;
 let NAME_DATA  = null;
 let TEAMS_DATA = null;
 
-const APP_VERSION = '1.2.2';
+const APP_VERSION = '1.2.3';
 const TRADE_DEADLINE_WEEK = 14;
 const TRADEABLE_PICK_YEARS = 2;
 const TRADEABLE_PICK_ROUNDS = [1, 2, 3];

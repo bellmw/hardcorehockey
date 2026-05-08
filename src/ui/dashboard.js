@@ -4,6 +4,19 @@
  * Triggered by 'render-screen' CustomEvent on document with detail.screen === 'dashboard'.
  */
 
+// ─── Carousel State ───────────────────────────────────────────────────────────
+
+const leaderboardCarousel = {
+  categories: ['Points', 'Goals', 'GAA', 'Save %'],
+  currentIndex: 0,
+  data: {
+    Points: [],
+    Goals: [],
+    GAA: [],
+    'Save %': [],
+  },
+};
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function el(id) {
@@ -259,18 +272,19 @@ function renderLeagueLeaders(state, team) {
   if (!container) return;
 
   const leagueId = team.leagueId;
+  const playerTeamId = state.playerTeamId;
   
   // Get all players in the league (from all teams in same league) and build teamId mapping
   const allTeamsInLeague = Object.values(state.teams).filter(t => t.leagueId === leagueId);
   const leaguePlayers = [];
-  const playerTeamMap = {};  // Map playerId -> teamId
+  const playerTeamMap = {};
   
   allTeamsInLeague.forEach(t => {
     (t.rosterIds || []).forEach(playerId => {
       const player = state.allPlayers[playerId];
       if (player) {
         leaguePlayers.push(player);
-        playerTeamMap[playerId] = t.id;  // Map this player to their team
+        playerTeamMap[playerId] = t.id;
       }
     });
   });
@@ -306,74 +320,156 @@ function renderLeagueLeaders(state, team) {
     .sort((a, b) => b.svpct - a.svpct)
     .slice(0, 10);
 
-  // Helper to format table rows
-  const skaterRow = (p, stat) => {
-    const value = stat === 'pts' ? (p.seasonStats?.pts ?? 0) : (p.seasonStats?.g ?? 0);
-    const teamId = playerTeamMap[p.id];
-    const team = state.teams[teamId];
-    const teamBadge = team?.abbrev ?? '—';
-    return `
-      <tr>
-        <td class="leaders-name">
-          <span class="leaders-player">${p.fullName}</span>
-          <span class="leaders-team-badge">${teamBadge}</span>
-        </td>
-        <td class="leaders-stat">${value}</td>
-      </tr>`;
-  };
+  // Store data in carousel
+  leaderboardCarousel.data.Points = topPointScorers.map(p => ({ 
+    ...p, 
+    teamId: playerTeamMap[p.id], 
+    stat: p.seasonStats?.pts ?? 0 
+  }));
+  leaderboardCarousel.data.Goals = topGoalScorers.map(p => ({ 
+    ...p, 
+    teamId: playerTeamMap[p.id], 
+    stat: p.seasonStats?.g ?? 0 
+  }));
+  leaderboardCarousel.data.GAA = gaaLeaders.map(g => ({ 
+    ...g, 
+    teamId: playerTeamMap[g.id], 
+    stat: g.gaa 
+  }));
+  leaderboardCarousel.data['Save %'] = svpctLeaders.map(g => ({ 
+    ...g, 
+    teamId: playerTeamMap[g.id], 
+    stat: g.svpct 
+  }));
 
-  const goalieRow = (g, stat) => {
-    const value = stat === 'gaa' ? g.gaa.toFixed(2) : g.svpct.toFixed(1) + '%';
-    const teamId = playerTeamMap[g.id];
-    const team = state.teams[teamId];
-    const teamBadge = team?.abbrev ?? '—';
-    return `
-      <tr>
-        <td class="leaders-name">
-          <span class="leaders-player">${g.fullName}</span>
-          <span class="leaders-team-badge">${teamBadge}</span>
-        </td>
-        <td class="leaders-stat">${value}</td>
-      </tr>`;
-  };
-
-  const ptsHtml = topPointScorers.length
-    ? `<table class="leaders-table">${topPointScorers.map(p => skaterRow(p, 'pts')).join('')}</table>`
-    : '<p class="leaders-empty">No data yet</p>';
-
-  const goalHtml = topGoalScorers.length
-    ? `<table class="leaders-table">${topGoalScorers.map(p => skaterRow(p, 'g')).join('')}</table>`
-    : '<p class="leaders-empty">No data yet</p>';
-
-  const gaaHtml = gaaLeaders.length
-    ? `<table class="leaders-table">${gaaLeaders.map(g => goalieRow(g, 'gaa')).join('')}</table>`
-    : '<p class="leaders-empty">No data yet</p>';
-
-  const svpctHtml = svpctLeaders.length
-    ? `<table class="leaders-table">${svpctLeaders.map(g => goalieRow(g, 'svpct')).join('')}</table>`
-    : '<p class="leaders-empty">No data yet</p>';
-
-  container.innerHTML = `
-    <div class="leaders-grid">
-      <div class="leaders-card">
-        <h3 class="leaders-title">Points</h3>
-        ${ptsHtml}
-      </div>
-      <div class="leaders-card">
-        <h3 class="leaders-title">Goals</h3>
-        ${goalHtml}
-      </div>
-      <div class="leaders-card">
-        <h3 class="leaders-title">GAA</h3>
-        ${gaaHtml}
-      </div>
-      <div class="leaders-card">
-        <h3 class="leaders-title">Save %</h3>
-        ${svpctHtml}
-      </div>
-    </div>
-  `;
+  // Render current category
+  renderLeaderboardCategory(container, state, playerTeamId);
 }
+
+function renderLeaderboardCategory(container, state, playerTeamId) {
+  if (!container) return;
+  
+  const category = leaderboardCarousel.categories[leaderboardCarousel.currentIndex];
+  const players = leaderboardCarousel.data[category] || [];
+  
+  // Update category label
+  const label = el('leaders-category-label');
+  if (label) label.textContent = category;
+  
+  const rows = players.map((p, idx) => {
+    const team = state.teams[p.teamId];
+    const teamBadge = team?.abbrev ?? '—';
+    const isMyTeam = p.teamId === playerTeamId;
+    const rowClass = isMyTeam ? 'leaders-table-row leaders-table-row--my-team' : 'leaders-table-row';
+    
+    let value = p.stat;
+    if (category === 'GAA') value = p.stat.toFixed(2);
+    else if (category === 'Save %') value = p.stat.toFixed(1) + '%';
+    
+    const playerClass = isMyTeam ? 'leaders-player leaders-player--my-team' : 'leaders-player';
+    
+    return `
+      <tr class="${rowClass}" data-player-id="${p.id}">
+        <td class="leaders-rank">${idx + 1}</td>
+        <td class="leaders-name">
+          <span class="${playerClass}" data-player-id="${p.id}" data-player-info='${JSON.stringify({
+            fullName: p.fullName,
+            position: p.position,
+            overall: p.overall,
+            age: p.age,
+            salary: p.salary,
+            contractYears: p.contractYears,
+            contractType: p.contractType,
+            teamId: p.teamId,
+            teamAbbrev: teamBadge,
+            gp: p.seasonStats?.gp ?? 0,
+            g: p.seasonStats?.g ?? 0,
+            a: p.seasonStats?.a ?? 0,
+            pts: p.seasonStats?.pts ?? 0,
+          }).replace(/'/g, "&apos;")}'>
+            ${p.fullName}
+          </span>
+          <span class="leaders-team-badge">${teamBadge}</span>
+        </td>
+        <td class="leaders-stat">${value}</td>
+      </tr>`;
+  }).join('');
+
+  const tableHtml = players.length
+    ? `<table class="leaders-table"><tbody>${rows}</tbody></table>`
+    : '<p class="leaders-empty">No data yet</p>';
+
+  container.innerHTML = `<div class="leaders-card">${tableHtml}</div>`;
+  
+  // Bind player tooltips
+  bindLeaderPlayerTooltips(state);
+}
+
+function bindLeaderPlayerTooltips(state) {
+  const playerSpans = document.querySelectorAll('.leaders-player[data-player-info]');
+  const tip = document.getElementById('leaders-player-tooltip');
+  
+  if (!tip) return;
+  
+  playerSpans.forEach(span => {
+    span.addEventListener('mouseover', (e) => {
+      const info = JSON.parse(e.target.dataset.playerInfo);
+      const formatMoney = (amt) => {
+        if (amt >= 1_000_000) return `$${(amt / 1_000_000).toFixed(1)}M`;
+        return `$${(amt / 1_000).toFixed(0)}K`;
+      };
+      
+      const salaryClass = info.contractType === 'entry' ? 'entry-deal' : 'standard-deal';
+      const highlight = e.target.classList.contains('leaders-player--my-team') ? '★ ' : '';
+      
+      tip.innerHTML = `
+        <div class="tip-name">${highlight}${info.fullName}</div>
+        <div class="tip-position">${info.position} • OVR ${info.overall}</div>
+        <div class="tip-meta">Age ${info.age} · ${info.teamAbbrev}</div>
+        <div class="tip-salary">
+          <span>${formatMoney(info.salary)}</span>
+          <span class="contract-badge ${salaryClass}">${info.contractYears}yr ${info.contractType}</span>
+        </div>
+        <div class="tip-stats">GP: ${info.gp} | G: ${info.g} | A: ${info.a} | Pts: ${info.pts}</div>
+      `;
+      
+      const rect = e.target.getBoundingClientRect();
+      const scrollY = window.scrollY || 0;
+      const scrollX = window.scrollX || 0;
+      tip.style.display = 'block';
+      
+      let top = rect.bottom + scrollY + 6;
+      let left = rect.left + scrollX;
+      if (rect.bottom + 140 > window.innerHeight) {
+        top = rect.top + scrollY - 6;
+        tip.style.transform = 'translateY(-100%)';
+      } else {
+        tip.style.transform = '';
+      }
+      left = Math.min(left, window.innerWidth + scrollX - 220);
+      tip.style.top = `${top}px`;
+      tip.style.left = `${left}px`;
+    });
+    
+    span.addEventListener('mouseout', () => {
+      if (tip) tip.style.display = 'none';
+    });
+  });
+}
+
+// ─── Carousel Navigation ──────────────────────────────────────────────────────
+
+window.dashboardLeadersPrev = function() {
+  leaderboardCarousel.currentIndex = (leaderboardCarousel.currentIndex - 1 + leaderboardCarousel.categories.length) % leaderboardCarousel.categories.length;
+  const state = window.hockeyGM?.getState?.();
+  if (state) renderLeaderboardCategory(el('dash-league-leaders'), state, state.playerTeamId);
+};
+
+window.dashboardLeadersNext = function() {
+  leaderboardCarousel.currentIndex = (leaderboardCarousel.currentIndex + 1) % leaderboardCarousel.categories.length;
+  const state = window.hockeyGM?.getState?.();
+  if (state) renderLeaderboardCategory(el('dash-league-leaders'), state, state.playerTeamId);
+};
 // ─── News feed ────────────────────────────────────────────────────────────────
 
 function renderNews(state) {

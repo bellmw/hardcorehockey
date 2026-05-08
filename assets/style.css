@@ -2258,6 +2258,199 @@ tr:hover td { background: var(--bg-2); }
   color: var(--text-3);
   font-size: 12px;
 }
+
+/* ─── Trade Desk Shortcuts ──────────────────────────────── */
+.trade-shortcuts {
+  display: flex;
+  gap: 8px;
+  padding: 12px 1.5rem;
+  background: var(--bg-3);
+  border-bottom: 1px solid var(--border);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.trade-shortcut-btn {
+  background: var(--bg);
+  border: 1px solid var(--border-2);
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.trade-shortcut-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 8px rgba(255, 30, 60, 0.3);
+}
+
+/* ─── League Leaders Carousel ───────────────────────────── */
+.leaders-carousel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.leaders-carousel-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.leaders-nav-btn {
+  background: var(--bg-3);
+  border: 1px solid var(--border-2);
+  color: var(--text-2);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s;
+  min-width: 28px;
+}
+
+.leaders-nav-btn:hover {
+  border-color: var(--ice);
+  color: var(--ice);
+  box-shadow: 0 0 6px rgba(168, 216, 240, 0.3);
+}
+
+.leaders-category-label {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ice);
+  min-width: 60px;
+  text-align: center;
+}
+
+.leaders-carousel {
+  min-height: 200px;
+}
+
+/* ─── Leaders Table Rows & Highlighting ─────────────────── */
+.leaders-table-row {
+  border-bottom: 1px solid var(--border);
+  transition: background-color 0.1s;
+}
+
+.leaders-table-row:hover {
+  background: var(--bg-3);
+}
+
+.leaders-table-row--my-team {
+  background: rgba(168, 216, 240, 0.08);
+  border-left: 3px solid var(--ice);
+}
+
+.leaders-table-row--my-team:hover {
+  background: rgba(168, 216, 240, 0.12);
+}
+
+.leaders-player--my-team {
+  color: var(--ice);
+  font-weight: 700;
+}
+
+.leaders-rank {
+  padding: 8px 6px;
+  text-align: center;
+  color: var(--text-3);
+  font-weight: 700;
+  font-size: 11px;
+  width: 24px;
+}
+
+/* ─── Player Tooltip (League Leaders) ────────────────────── */
+.leaders-player-tooltip {
+  position: fixed;
+  display: none;
+  background: var(--bg-2);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-lg);
+  padding: 10px 12px;
+  font-size: 11px;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  min-width: 200px;
+  max-width: 220px;
+  word-break: break-word;
+}
+
+.leaders-player-tooltip .tip-name {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ice);
+  margin-bottom: 4px;
+}
+
+.leaders-player-tooltip .tip-position {
+  color: var(--text-2);
+  margin-bottom: 3px;
+}
+
+.leaders-player-tooltip .tip-meta {
+  color: var(--text-3);
+  font-size: 10px;
+  margin-bottom: 5px;
+}
+
+.leaders-player-tooltip .tip-salary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+  padding: 5px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.leaders-player-tooltip .tip-salary span:first-child {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.contract-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 2px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.contract-badge.entry-deal {
+  background: rgba(57, 255, 20, 0.15);
+  color: var(--neon-green);
+}
+
+.contract-badge.standard-deal {
+  background: rgba(255, 30, 60, 0.15);
+  color: var(--accent);
+}
+
+.leaders-player-tooltip .tip-stats {
+  color: var(--text-2);
+  font-size: 10px;
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px solid var(--border);
+}
+
 }
 
 .po-league-title {

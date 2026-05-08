@@ -14,6 +14,9 @@
   <!-- Global team tooltip -->
   <div id="team-tooltip" class="team-tooltip" aria-hidden="true"></div>
 
+  <!-- Global player tooltip (for league leaders) -->
+  <div id="leaders-player-tooltip" class="leaders-player-tooltip" aria-hidden="true"></div>
+
   <!-- Game result modal -->
   <div id="game-result-overlay" class="modal-overlay" style="display:none" role="dialog" aria-modal="true">
     <div class="modal-box" id="game-result-modal">
@@ -44,7 +47,7 @@
     <div class="screen-inner centered">
       <div class="title-block">
         <h1 class="game-title">Hockey GM</h1>
-        <div id="title-app-version" class="title-version">v1.2.2</div>
+        <div id="title-app-version" class="title-version">v1.2.3</div>
         <p class="game-subtitle">Three leagues. 36 cities. One impossible job.</p>
       </div>
       <div id="team-select-leagues">
@@ -79,7 +82,7 @@
           <span class="record-label">RECORD</span>
           <span id="hdr-record" class="record-value">0-0-0</span>
         </div>
-        <span id="hdr-app-version" class="version-badge">v1.2.2</span>
+        <span id="hdr-app-version" class="version-badge">v1.2.3</span>
         <span id="hdr-year" class="year-badge">Year 1</span>
         <span id="save-indicator" class="save-indicator"></span>
         <button class="btn-restart" onclick="hockeyGM.restartGame()" title="Abandon save and start over">↺ New Game</button>
@@ -130,18 +133,25 @@
         <div id="dash-schedule"><!-- JS renders next 5 games --></div>
       </section>
 
-      <!-- Right panel: news feed -->
+      <!-- Right panel: news feed + league leaders -->
       <section class="panel panel-right">
         <h2 class="panel-label">News feed</h2>
         <div id="dash-news" class="news-feed"><!-- JS renders --></div>
+        
+        <!-- League leaders carousel -->
+        <div class="panel-section" style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+          <div class="leaders-carousel-header">
+            <h2 class="panel-label">League leaders</h2>
+            <div class="leaders-carousel-nav">
+              <button class="leaders-nav-btn leaders-nav-prev" onclick="dashboardLeadersPrev()" title="Previous category">←</button>
+              <span class="leaders-category-label" id="leaders-category-label">Points</span>
+              <button class="leaders-nav-btn leaders-nav-next" onclick="dashboardLeadersNext()" title="Next category">→</button>
+            </div>
+          </div>
+          <div id="dash-league-leaders" class="leaders-carousel"><!-- JS renders single category --></div>
+        </div>
       </section>
     </main>
-
-    <!-- League leaders section (full-width below main panels) -->
-    <section class="dashboard-section-leaders">
-      <h2 class="panel-label">League leaders</h2>
-      <div id="dash-league-leaders"><!-- JS renders leaderboards --></div>
-    </section>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════
@@ -190,6 +200,12 @@
       <button class="back-btn" onclick="hockeyGM.showScreen('dashboard')">← Dashboard</button>
       <h1 class="screen-title">Trade desk</h1>
       <div id="trade-market-status" class="trade-market-status"><!-- JS renders --></div>
+    </div>
+    <!-- Trade Desk Shortcuts -->
+    <div id="trade-shortcuts" class="trade-shortcuts">
+      <button class="trade-shortcut-btn" onclick="document.getElementById('trade-offers-list').scrollIntoView({behavior:'smooth'})" title="Go to GM Assistant & Proposals">🤖 Assistant</button>
+      <button class="trade-shortcut-btn" onclick="document.getElementById('trade-history-list').scrollIntoView({behavior:'smooth'})" title="View trade history">📋 Trades</button>
+      <button class="trade-shortcut-btn" onclick="document.getElementById('trade-league-browser-root').scrollIntoView({behavior:'smooth'})" title="Browse all players">🏒 League Roster</button>
     </div>
     <div class="trade-layout">
       <section id="trade-pending">
