@@ -75,9 +75,24 @@ export function renderSeasonSummary(state, playoffResult) {
   const container = document.getElementById('screen-content');
   if (!container) return;
   
-  const myTeam = state.teams[state.playerTeamId];
+  const playerTeamId = state.playerTeamId;
+  const myTeam = state.teams[playerTeamId];
+  
+  // Safety check: make sure we have valid team and standing data
+  if (!myTeam || !myTeam.leagueId || !state.standings[myTeam.leagueId]) {
+    console.error('Missing team or standings data for season summary', { playerTeamId, myTeam, leagueId: myTeam?.leagueId });
+    container.innerHTML = '<p>Error displaying season summary.</p>';
+    return;
+  }
+  
   const standings = state.standings[myTeam.leagueId];
-  const myStanding = standings[state.playerTeamId];
+  const myStanding = standings[playerTeamId];
+  
+  if (!myStanding) {
+    console.error('Missing player team standing', { playerTeamId, standings });
+    container.innerHTML = '<p>Error displaying season summary.</p>';
+    return;
+  }
   
   const { grade, summary, reasoning, winPct } = calculateSeasonGrade(myStanding, playoffResult);
   
