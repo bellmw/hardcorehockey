@@ -22,14 +22,18 @@ export async function loadEvents() {
  * Check if an event should fire this week
  * @param {number} week - Current week
  * @param {number} chaosLevel - 0-10 chaos level
+ * @param {string} phase - Current game phase (should be 'season')
  * @returns {object|null} - Event object if triggered, null otherwise
  */
-export function checkForEvent(week, chaosLevel) {
-  // Events fire every 2 weeks (even weeks)
-  if (week % 2 !== 0) return null;
+export function checkForEvent(week, chaosLevel, phase) {
+  // Only fire during regular season
+  if (phase !== 'season') return null;
   
-  // Probability based on chaos level
-  const baseChance = (chaosLevel / 10) * 0.70;
+  // Events fire every 2 weeks (even weeks, starting from week 2)
+  if (week < 2 || week % 2 !== 0) return null;
+  
+  // Probability based on chaos level (increased base chance)
+  const baseChance = (chaosLevel / 10) * 0.85;
   if (Math.random() > baseChance) return null;
   
   // Select random event weighted by type

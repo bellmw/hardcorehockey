@@ -260,7 +260,7 @@ export async function simNextGame(silent = false) {
     closeTradeMarketIfNeeded(state);
     
     // Check for league events (every 2 weeks during regular season)
-    const eventData = checkForEvent(state.week, state.chaosLevel);
+    const eventData = checkForEvent(state.week, state.chaosLevel, state.phase);
     if (eventData && !silent) {
       const effects = applyEventEffects(eventData, state, state.playerTeamId);
       await showEvent(eventData, effects);
