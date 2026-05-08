@@ -252,19 +252,20 @@ export function skipPreseasonDraft() {
 /**
  * Simulates the next game for each league (all leagues advance in parallel).
  * Fires Claude agents as appropriate.
+ * @param {boolean} silent - If true, don't show game result modals
+ * @param {boolean} skipEvents - If true, don't check for or fire events (for bulk simulations)
  */
-export async function simNextGame(silent = false) {
+export async function simNextGame(silent = false, skipEvents = false) {
   const state = GAME_STATE;
 
   if (state.phase === 'season') {
     state.week = getCurrentScheduleWeek(state);
     // Heal player injuries at the start of each week
     healInjuries(state);
+    closeTradeMarketIfNeeded(state);
   }
 
-  if (state.phase === 'season') {
-    closeTradeMarketIfNeeded(state);
-    
+  if (state.phase === 'season' && !skipEvents) {
     // Check for league events (every 2 weeks during regular season)
     const eventData = checkForEvent(state.week, state.chaosLevel, state.phase, state.firedEventIds);
     if (eventData && !silent) {
@@ -686,7 +687,7 @@ function _advanceSeriesWinner(state, leagueId, seriesKey, winnerId) {
  */
 export async function simToPlayoffs() {
   while (GAME_STATE.phase === 'season') {
-    await simNextGame(true); // silent — no per-game modals during bulk sim
+    await simNextGame(true, true); // silent + skipEvents — no modals or events during bulk sim
   }
 }
 
