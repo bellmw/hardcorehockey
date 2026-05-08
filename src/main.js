@@ -27,8 +27,34 @@ let GAME_STATE = null;
 let NAME_DATA  = null;
 let TEAMS_DATA = null;
 
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.2.1';
 const TRADE_DEADLINE_WEEK = 14;
+const TRADEABLE_PICK_YEARS = 2;
+const TRADEABLE_PICK_ROUNDS = [1, 2, 3];
+
+const LEAGUE_SOCIAL_ACCOUNTS = {
+  phl: {
+    fan: ['@PHLNorthEnd', '@PHLBleacherLine', '@PHLSection312'],
+    insider: ['@PHLInsiderDesk', '@PHLFrontOffice', '@PHLTradeRadar'],
+    analytics: ['@PHLNumbersLab', '@PHLPuckModel', '@PHLDataDesk'],
+    pressure: ['@PHLHotSeatWatch', '@PHLGMPressure', '@PHLMorningAfter'],
+    chaos: ['@PHLRumourFlood', '@PHLConcourseOracle', '@PHLPuckspiracy'],
+  },
+  cd: {
+    fan: ['@CDRinkRail', '@CDUpperBowl', '@CDFanWire'],
+    insider: ['@CDInsiderDesk', '@CDTradeRadio', '@CDCapSheet'],
+    analytics: ['@CDNumbersLab', '@CDExpectedIce', '@CDDataDesk'],
+    pressure: ['@CDHotSeatWatch', '@CDGMPressure', '@CDMorningAfter'],
+    chaos: ['@CDRumourFlood', '@CDConcourseOracle', '@CDPuckspiracy'],
+  },
+  rc: {
+    fan: ['@RCRinkRail', '@RCBlueLineTalk', '@RCSectionBuzz'],
+    insider: ['@RCInsiderDesk', '@RCTradeRadio', '@RCCapSheet'],
+    analytics: ['@RCNumbersLab', '@RCExpectedIce', '@RCDataDesk'],
+    pressure: ['@RCHotSeatWatch', '@RCGMPressure', '@RCMorningAfter'],
+    chaos: ['@RCRumourFlood', '@RCConcourseOracle', '@RCPuckspiracy'],
+  },
+};
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 
@@ -70,7 +96,7 @@ export async function newGame(playerTeamId) {
     const roster  = generateRoster(NAME_DATA, tier);
     roster.forEach(p => { allPlayers[p.id] = p; });
     team.rosterIds = roster.map(p => p.id);
-    team.tradablePicks = []; // future draft picks this team holds
+    team.tradablePicks = createTeamTradablePicks(team.id, 1);
   });
 
   // Build standings for each league
@@ -282,6 +308,10 @@ export async function simNextGame(silent = false) {
       awayGoals: result.awayGoals,
       week: state.week,
     });
+
+    if (playerInvolved && socialFeed.length > 0) {
+      addSocialPulseNews(state, home, away, result, socialFeed, leagueId);
+    }
 
     // Random event (1-in-4 chance per game)
     if (Math.random() < 0.25) {
@@ -513,6 +543,10 @@ function simSeriesGame(leagueId, seriesKey, silent = true) {
     homeGoals: result.homeGoals, awayGoals: result.awayGoals,
     week: state.week,
   });
+
+  if (playerInvolved && socialFeed.length > 0) {
+    addSocialPulseNews(state, homeTeam, awayTeam, result, socialFeed, leagueId);
+  }
 
   // Series over?
   if (series.winsA >= 4 || series.winsB >= 4) {
@@ -1099,6 +1133,10 @@ function normalizeLoadedState(state) {
     state.allPlayers[playerId] = normalizeLoadedPlayer(state.allPlayers[playerId]);
   });
 
+  Object.keys(state.teams || {}).forEach(teamId => {
+    normalizeTeamTradablePicks(state.teams[teamId], teamId, state.year ?? 1);
+  });
+
   if (state.phase === 'season') {
     state.week = getCurrentScheduleWeek(state);
   }
@@ -1126,6 +1164,98 @@ function syncAppVersionUI() {
 
   const headerVersion = document.getElementById('hdr-app-version');
   if (headerVersion) headerVersion.textContent = `v${APP_VERSION}`;
+}
+
+function createTeamTradablePicks(teamId, startYear = 1) {
+  const picks = [];
+  for (let offset = 1; offset <= TRADEABLE_PICK_YEARS; offset++) {
+    const year = startYear + offset;
+    TRADEABLE_PICK_ROUNDS.forEach(round => {
+      picks.push({
+        id: `pick_${teamId}_y${year}_r${round}`,
+        year,
+        round,
+        originalTeamId: teamId,
+        currentTeamId: teamId,
+        label: `Y${year} R${round} (${teamId.toUpperCase()})`,
+      });
+    });
+  }
+  return picks;
+}
+
+function normalizeTeamTradablePicks(team, teamId, currentYear = 1) {
+  if (!team) return;
+  const fallback = createTeamTradablePicks(teamId, currentYear);
+  if (!Array.isArray(team.tradablePicks) || team.tradablePicks.length === 0) {
+    team.tradablePicks = fallback;
+    return;
+  }
+
+  const seen = new Set();
+  team.tradablePicks = team.tradablePicks
+    .map((pick, idx) => {
+      const year = Math.max(currentYear + 1, Number(pick.year ?? (currentYear + 1)));
+      const round = Math.min(3, Math.max(1, Number(pick.round ?? 1)));
+      const originalTeamId = pick.originalTeamId || teamId;
+      const id = pick.id || `pick_${originalTeamId}_y${year}_r${round}_${idx}`;
+      if (seen.has(id)) return null;
+      seen.add(id);
+      return {
+        id,
+        year,
+        round,
+        originalTeamId,
+        currentTeamId: teamId,
+        label: pick.label || `Y${year} R${round} (${String(originalTeamId).toUpperCase()})`,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => (a.year - b.year) || (a.round - b.round));
+}
+
+function getTeamTradablePicks(teamId, state) {
+  return (state.teams[teamId]?.tradablePicks || []).slice();
+}
+
+function findTeamPickById(teamId, pickId, state) {
+  return getTeamTradablePicks(teamId, state).find(pick => pick.id === pickId) || null;
+}
+
+function getPickTradeValue(pick, acquiringTeamId, state) {
+  const yearsOut = Math.max(0, (pick.year || state.year) - state.year);
+  const base = pick.round === 1 ? 38 : pick.round === 2 ? 24 : 15;
+  const timingPenalty = yearsOut * 4;
+  const mode = getTradeApproach(acquiringTeamId, state);
+
+  let modeAdj = 0;
+  if (mode === 'buy') modeAdj = pick.round === 1 ? -8 : -5;
+  if (mode === 'desperate') modeAdj = pick.round === 1 ? -10 : -6;
+  if (mode === 'retool') modeAdj = pick.round === 1 ? 7 : 4;
+  if (mode === 'dump') modeAdj = 5;
+
+  return Math.max(6, base - timingPenalty + modeAdj);
+}
+
+function sumPlayerTradeValue(playerIds, fromTeamId, toTeamId, state) {
+  return (playerIds || []).reduce((sum, playerId) => {
+    const player = state.allPlayers[playerId];
+    if (!player) return sum;
+    return sum + getPlayerTradeValue(player, fromTeamId, toTeamId, state);
+  }, 0);
+}
+
+function sumPickTradeValue(pickIds, fromTeamId, toTeamId, state) {
+  return (pickIds || []).reduce((sum, pickId) => {
+    const pick = findTeamPickById(fromTeamId, pickId, state);
+    if (!pick) return sum;
+    return sum + getPickTradeValue(pick, toTeamId, state);
+  }, 0);
+}
+
+function teamOwnsPicks(teamId, pickIds, state) {
+  const owned = new Set(getTeamTradablePicks(teamId, state).map(pick => pick.id));
+  return (pickIds || []).every(pickId => owned.has(pickId));
 }
 
 // ─── Trades ───────────────────────────────────────────────────────────────────
@@ -1205,6 +1335,282 @@ async function generateIncomingTradeOffer() {
   addNews({ type: 'trade_offer', tradeId: trade.id, fromTeamId: rivalTeam.id, week: state.week, tags });
 }
 
+export function findTradeTargets(need = 'any') {
+  const state = GAME_STATE;
+  const playerTeamId = state.playerTeamId;
+  const playerTeam = state.teams[playerTeamId];
+  if (!playerTeam) return [];
+
+  const leagueId = playerTeam.leagueId;
+  const teamsInLeague = state.leagues?.[leagueId]?.teamIds || [];
+  const teamApproach = getTradeApproach(playerTeamId, state);
+  const capRoom = Math.max(0, state.cap - getTeamCapUsed(playerTeam, state.allPlayers));
+  const candidates = [];
+
+  teamsInLeague.forEach(teamId => {
+    if (teamId === playerTeamId) return;
+    const roster = getTeamPlayers(teamId, state);
+    roster.forEach(player => {
+      if (!matchesNeed(player, need)) return;
+      const tradeValue = getPlayerTradeValue(player, teamId, playerTeamId, state);
+      const fitScore = getNeedFitScore(player, need);
+      const capImpact = capRoom - (player.salary || 0);
+      const capPenalty = capImpact >= 0 ? 0 : Math.abs(capImpact) / 350_000;
+      const teamWeight = teamApproach === 'buy'
+        ? (player.overall >= 76 ? 14 : 6)
+        : teamApproach === 'retool'
+          ? (player.age <= 26 ? 12 : -5)
+          : teamApproach === 'dump'
+            ? ((player.contractYears || 0) === 1 ? 10 : 2)
+            : 4;
+      const expiringBonus = (player.contractYears || 0) === 1 ? 8 : 0;
+      const score = tradeValue + fitScore + expiringBonus + teamWeight - capPenalty;
+      candidates.push({
+        playerId: player.id,
+        teamId,
+        score,
+        expiring: (player.contractYears || 0) === 1,
+        fitScore,
+        capImpact,
+      });
+    });
+  });
+
+  return candidates
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 16)
+    .map(entry => ({
+      ...entry,
+      player: state.allPlayers[entry.playerId],
+      team: state.teams[entry.teamId],
+    }));
+}
+
+export function findExpiringContractTargets(limit = 30) {
+  const state = GAME_STATE;
+  const playerTeamId = state.playerTeamId;
+  const playerTeam = state.teams[playerTeamId];
+  if (!playerTeam) return [];
+
+  const leagueId = playerTeam.leagueId;
+  const teamsInLeague = state.leagues?.[leagueId]?.teamIds || [];
+  const capRoom = Math.max(0, state.cap - getTeamCapUsed(playerTeam, state.allPlayers));
+  const targets = [];
+
+  teamsInLeague.forEach(teamId => {
+    if (teamId === playerTeamId) return;
+    getTeamPlayers(teamId, state).forEach(player => {
+      if ((player.contractYears || 0) !== 1) return;
+      targets.push({
+        playerId: player.id,
+        teamId,
+        capImpact: capRoom - (player.salary || 0),
+        score: (player.overall * 3) + Math.max(0, (player.potential || player.overall) - player.overall) + (capRoom >= (player.salary || 0) ? 6 : -8),
+      });
+    });
+  });
+
+  return targets
+    .sort((a, b) => b.score - a.score)
+    .slice(0, Math.max(1, limit))
+    .map(entry => ({
+      ...entry,
+      player: state.allPlayers[entry.playerId],
+      team: state.teams[entry.teamId],
+    }));
+}
+
+export function requestTargetedOffer(playerId, fromTeamId) {
+  const state = GAME_STATE;
+  if (!isTradeWindowOpen(state)) {
+    alert('Trade market is closed.');
+    return null;
+  }
+
+  const playerTeamId = state.playerTeamId;
+  const rivalTeam = state.teams[fromTeamId];
+  const targetPlayer = state.allPlayers[playerId];
+  if (!rivalTeam || !targetPlayer) return null;
+  if (!rivalTeam.rosterIds?.includes(playerId)) return null;
+
+  const targetValue = getPlayerTradeValue(targetPlayer, rivalTeam.id, playerTeamId, state);
+  const yourPlayers = getTeamPlayers(playerTeamId, state)
+    .map(player => ({
+      player,
+      demandScore: getDemandScore(player, rivalTeam.id, state, player.tradeBlock),
+      tradeValue: getPlayerTradeValue(player, playerTeamId, rivalTeam.id, state),
+    }))
+    .sort((a, b) => b.demandScore - a.demandScore);
+
+  const wantedPlayers = [];
+  let wantedValue = 0;
+  for (const candidate of yourPlayers) {
+    if (candidate.player.id === playerId) continue;
+    wantedPlayers.push(candidate.player);
+    wantedValue += candidate.tradeValue;
+    if (wantedPlayers.length >= 2 || wantedValue >= targetValue * 0.92) break;
+  }
+
+  if (wantedPlayers.length === 0) return null;
+
+  const offeredPlayers = [targetPlayer];
+  const playerPostTradeSalary = calculateTeamSalaryAfterTrade(playerTeamId, state, offeredPlayers.map(player => player.id), wantedPlayers.map(player => player.id));
+  const rivalPostTradeSalary = calculateTeamSalaryAfterTrade(rivalTeam.id, state, wantedPlayers.map(player => player.id), offeredPlayers.map(player => player.id));
+  if (playerPostTradeSalary > state.cap || rivalPostTradeSalary > state.cap) {
+    alert('Could not find a cap-compliant framework for that target.');
+    return null;
+  }
+
+  const trade = {
+    id: `trade_${Date.now()}`,
+    fromTeamId: rivalTeam.id,
+    toTeamId: playerTeamId,
+    offered: offeredPlayers.map(player => player.id),
+    wanted: wantedPlayers.map(player => player.id),
+    offeredPicks: [],
+    wantedPicks: [],
+    offerText: `You asked about ${targetPlayer.fullName}. ${rivalTeam.gmName} replied with this framework.`,
+    gmQuote: `"If you want ${targetPlayer.lastName}, this is what it costs today."`,
+    valueOpinion: classifyTradeValue(
+      offeredPlayers.reduce((sum, player) => sum + getPlayerTradeValue(player, rivalTeam.id, playerTeamId, state), 0),
+      wantedPlayers.reduce((sum, player) => sum + getPlayerTradeValue(player, playerTeamId, rivalTeam.id, state), 0)
+    ),
+    status: 'pending',
+    week: state.week,
+    tags: ['requested', 'targeted'],
+    offeredSalary: offeredPlayers.reduce((sum, player) => sum + (player.salary || 0), 0),
+    wantedSalary: wantedPlayers.reduce((sum, player) => sum + (player.salary || 0), 0),
+  };
+
+  state.pendingTrades.push(trade);
+  addNews({ type: 'trade_offer', tradeId: trade.id, fromTeamId: rivalTeam.id, week: state.week, tags: trade.tags });
+  saveGame();
+  return trade;
+}
+
+export function proposeTradeFromDesk(targetTeamId, offeredPlayerIds, wantedPlayerIds, offeredPickIds = [], wantedPickIds = []) {
+  const state = GAME_STATE;
+  if (!isTradeWindowOpen(state)) {
+    alert('Trade market is closed.');
+    return { result: 'closed' };
+  }
+
+  const playerTeamId = state.playerTeamId;
+  const fromTeam = state.teams[targetTeamId];
+  const toTeam = state.teams[playerTeamId];
+  if (!fromTeam || !toTeam) return { result: 'invalid' };
+
+  const outgoingPlayerIds = Array.isArray(offeredPlayerIds)
+    ? [...new Set(offeredPlayerIds)]
+    : (offeredPlayerIds ? [offeredPlayerIds] : []);
+  const incomingPlayerIds = Array.isArray(wantedPlayerIds)
+    ? [...new Set(wantedPlayerIds)]
+    : (wantedPlayerIds ? [wantedPlayerIds] : []);
+  const outgoingPickIds = [...new Set(Array.isArray(offeredPickIds) ? offeredPickIds : (offeredPickIds ? [offeredPickIds] : []))];
+  const incomingPickIds = [...new Set(Array.isArray(wantedPickIds) ? wantedPickIds : (wantedPickIds ? [wantedPickIds] : []))];
+
+  if (outgoingPlayerIds.length === 0 && outgoingPickIds.length === 0) return { result: 'invalid' };
+  if (incomingPlayerIds.length === 0 && incomingPickIds.length === 0) return { result: 'invalid' };
+
+  if (!outgoingPlayerIds.every(playerId => toTeam.rosterIds?.includes(playerId))) return { result: 'invalid' };
+  if (!incomingPlayerIds.every(playerId => fromTeam.rosterIds?.includes(playerId))) return { result: 'invalid' };
+  if (!teamOwnsPicks(toTeam.id, outgoingPickIds, state) || !teamOwnsPicks(fromTeam.id, incomingPickIds, state)) return { result: 'invalid' };
+
+  const fromPostTradeSalary = calculateTeamSalaryAfterTrade(fromTeam.id, state, outgoingPlayerIds, incomingPlayerIds);
+  const toPostTradeSalary = calculateTeamSalaryAfterTrade(toTeam.id, state, incomingPlayerIds, outgoingPlayerIds);
+  if (fromPostTradeSalary > state.cap || toPostTradeSalary > state.cap) {
+    alert('That proposal fails the cap check.');
+    return { result: 'cap' };
+  }
+
+  const offeredValue = sumPlayerTradeValue(outgoingPlayerIds, toTeam.id, fromTeam.id, state)
+    + sumPickTradeValue(outgoingPickIds, toTeam.id, fromTeam.id, state);
+  const wantedValue = sumPlayerTradeValue(incomingPlayerIds, fromTeam.id, toTeam.id, state)
+    + sumPickTradeValue(incomingPickIds, fromTeam.id, toTeam.id, state);
+
+  const rivalApproach = getTradeApproach(fromTeam.id, state);
+  const weighting = rivalApproach === 'buy' || rivalApproach === 'desperate'
+    ? 1.03
+    : rivalApproach === 'retool'
+      ? 0.97
+      : 1;
+
+  const ratio = offeredValue / Math.max(1, wantedValue);
+  const acceptanceThreshold = fromTeam.gmPersonality === 'cheapskate' ? 1.05
+    : fromTeam.gmPersonality === 'gambler' ? 0.88
+    : 0.96 * weighting;
+
+  const incomingNames = incomingPlayerIds
+    .map(playerId => state.allPlayers[playerId]?.fullName)
+    .filter(Boolean)
+    .join(', ');
+
+  const trade = {
+    id: `trade_${Date.now()}`,
+    fromTeamId: fromTeam.id,
+    toTeamId: toTeam.id,
+    offered: incomingPlayerIds,
+    wanted: outgoingPlayerIds,
+    offeredPicks: incomingPickIds,
+    wantedPicks: outgoingPickIds,
+    offerText: `Your proposal targets: ${incomingNames || 'pick package'}`,
+    gmQuote: '',
+    valueOpinion: classifyTradeValue(wantedValue, offeredValue),
+    status: 'pending',
+    week: state.week,
+    tags: ['user-proposal'],
+    offeredSalary: incomingPlayerIds.reduce((sum, playerId) => sum + (state.allPlayers[playerId]?.salary || 0), 0),
+    wantedSalary: outgoingPlayerIds.reduce((sum, playerId) => sum + (state.allPlayers[playerId]?.salary || 0), 0),
+  };
+
+  if (ratio >= acceptanceThreshold || Math.random() < 0.12) {
+    trade.status = 'accepted';
+    trade.gmQuote = `"Deal. We'll file it with the league office."`;
+    executeAcceptedTrade(state, trade);
+    alert(`${fromTeam.gmName} accepted your proposal.`);
+    return { result: 'accepted', trade };
+  }
+
+  const closeEnough = ratio >= (acceptanceThreshold - 0.08);
+  if (closeEnough) {
+    const sweetener = getTeamPlayers(playerTeamId, state)
+      .filter(player => !outgoingPlayerIds.includes(player.id))
+      .sort((a, b) => getPlayerTradeValue(a, playerTeamId, fromTeam.id, state) - getPlayerTradeValue(b, playerTeamId, fromTeam.id, state))[0];
+
+    if (sweetener) {
+      trade.wanted.push(sweetener.id);
+      trade.offerText = `${fromTeam.gmName} countered your proposal.`;
+      trade.gmQuote = `"Add ${sweetener.fullName} and we can make this work."`;
+      trade.tags.push('counter');
+      trade.wantedSalary += sweetener.salary || 0;
+      state.pendingTrades.push(trade);
+      addNews({ type: 'trade_offer', tradeId: trade.id, fromTeamId: fromTeam.id, week: state.week, tags: trade.tags });
+      saveGame();
+      return { result: 'counter', trade };
+    }
+
+    const pickSweetener = getTeamTradablePicks(playerTeamId, state).find(pick => !outgoingPickIds.includes(pick.id));
+    if (pickSweetener) {
+      trade.wantedPicks.push(pickSweetener.id);
+      trade.offerText = `${fromTeam.gmName} countered your proposal.`;
+      trade.gmQuote = `"Include ${pickSweetener.label} and we're done."`;
+      trade.tags.push('counter');
+      state.pendingTrades.push(trade);
+      addNews({ type: 'trade_offer', tradeId: trade.id, fromTeamId: fromTeam.id, week: state.week, tags: trade.tags });
+      saveGame();
+      return { result: 'counter', trade };
+    }
+  }
+
+  addNews({
+    type: 'league',
+    text: `${fromTeam.gmName} declined your trade proposal.`,
+    week: state.week,
+  });
+  saveGame();
+  return { result: 'declined' };
+}
+
 /**
  * Accepts a trade offer.
  */
@@ -1229,7 +1635,22 @@ export function acceptTrade(tradeId) {
     return;
   }
 
-  // Swap player roster entries
+  executeAcceptedTrade(state, trade);
+}
+
+export function declineTrade(tradeId) {
+  const state = GAME_STATE;
+  const trade = state.pendingTrades.find(t => t.id === tradeId);
+  if (!trade) return;
+  trade.status = 'declined';
+  saveGame();
+}
+
+function executeAcceptedTrade(state, trade) {
+  const fromTeam = state.teams[trade.fromTeamId];
+  const toTeam = state.teams[trade.toTeamId];
+  if (!fromTeam || !toTeam) return;
+
   trade.wanted.forEach(pid => {
     fromTeam.rosterIds.push(pid);
     toTeam.rosterIds = toTeam.rosterIds.filter(id => id !== pid);
@@ -1241,18 +1662,52 @@ export function acceptTrade(tradeId) {
     if (state.allPlayers[pid]) state.allPlayers[pid].tradeBlock = false;
   });
 
+  transferPickOwnership(fromTeam, toTeam, trade.offeredPicks || []);
+  transferPickOwnership(toTeam, fromTeam, trade.wantedPicks || []);
+
   trade.status = 'accepted';
   state.tradeHistory.push(trade);
-  addNews({ type: 'trade_complete', tradeId, week: state.week });
+  addNews({ type: 'trade_complete', tradeId: trade.id, week: state.week });
   saveGame();
 }
 
-export function declineTrade(tradeId) {
-  const state = GAME_STATE;
-  const trade = state.pendingTrades.find(t => t.id === tradeId);
-  if (!trade) return;
-  trade.status = 'declined';
-  saveGame();
+function transferPickOwnership(fromTeam, toTeam, pickIds) {
+  if (!Array.isArray(pickIds) || pickIds.length === 0) return;
+  if (!Array.isArray(fromTeam.tradablePicks)) fromTeam.tradablePicks = [];
+  if (!Array.isArray(toTeam.tradablePicks)) toTeam.tradablePicks = [];
+
+  pickIds.forEach(pickId => {
+    const idx = fromTeam.tradablePicks.findIndex(pick => pick.id === pickId);
+    if (idx === -1) return;
+    const [pick] = fromTeam.tradablePicks.splice(idx, 1);
+    pick.currentTeamId = toTeam.id;
+    toTeam.tradablePicks.push(pick);
+  });
+
+  const sorter = (a, b) => (a.year - b.year) || (a.round - b.round);
+  fromTeam.tradablePicks.sort(sorter);
+  toTeam.tradablePicks.sort(sorter);
+}
+
+function getNeedFitScore(player, need) {
+  if (!need || need === 'any') return 5;
+  const position = player.position;
+  if (need === position) return 20;
+  if (need === 'fwd' && ['C', 'LW', 'RW'].includes(position)) return 14;
+  if (need === 'def' && ['LD', 'RD'].includes(position)) return 14;
+  if (need === 'G' && position === 'G') return 18;
+  return -6;
+}
+
+function matchesNeed(player, need) {
+  if (!need || need === 'any') return true;
+  const pos = player.position;
+  switch (need) {
+    case 'fwd': return ['C', 'LW', 'RW'].includes(pos);
+    case 'def': return ['LD', 'RD'].includes(pos);
+    case 'g': return pos === 'G';
+    default: return pos === need;
+  }
 }
 
 export function toggleTradeBlock(playerId) {
@@ -1364,50 +1819,56 @@ function generatePostGameSocialFeed(state, homeTeam, awayTeam, result) {
   const starName = topStar?.lastName || topStar?.fullName || 'the top line';
   const leagueTag = playerTeam.leagueId?.toUpperCase() || 'LEAGUE';
 
-  const fanAccounts = [
-    '@Section312Lifer',
-    '@SmelterCityRadio',
-    '@BleacherProphet',
-    '@ColdRinkTakes',
-    '@UpperBowlUncle',
-  ];
-  const insiderAccounts = [
-    `@${leagueTag}InsiderDesk`,
-    '@TradeBoard247',
-    '@CapCrunchWire',
-    '@BenchDoorLeaks',
-  ];
-  const chaosAccounts = [
-    '@PuckspiracyNet',
-    '@MascotWitness',
-    '@RumourFlood',
-    '@ConcourseOracle',
-  ];
+  const accountSeed = (state.week || 0) + teamGoals + oppGoals;
+  const lossStreak = getCurrentLossStreak(state, playerTeam.id, !won);
+  const recentTrade = getRecentTradeForTeam(state, playerTeam.id);
+  const pendingTrades = (state.pendingTrades || []).filter(t => t.status === 'pending').length;
+  const goalieSvPct = oppShots > 0 ? (oppShots - oppGoals) / oppShots : 1;
+
+  const tradeLine = recentTrade
+    ? `Insiders are still arguing about last week's move with ${state.teams[recentTrade.fromTeamId === playerTeam.id ? recentTrade.toTeamId : recentTrade.fromTeamId]?.abbrev ?? 'a rival'}.`
+    : pendingTrades >= 3
+      ? `Phones are buzzing with ${pendingTrades} active proposals and the deadline clock ticking.`
+      : state.tradeMarketClosed
+        ? 'Deadline has passed, so tonight was all about the room and the bench.'
+        : 'No confirmed move yet, but cap chatter is back in every postgame thread.';
+
+  const streakLine = lossStreak >= 3
+    ? `${playerTeam.abbrev} are now on a ${lossStreak}-game skid and the timeline is demanding a shakeup tonight.`
+    : !won && lossStreak === 2
+      ? `${playerTeam.abbrev} have dropped two straight and fans are already circling the next road game.`
+      : won && lossStreak === 0
+        ? `${playerTeam.abbrev} finally calm things down with two points${overtimeLabel}.`
+        : `${playerTeam.abbrev} are still searching for consistency game to game.`;
+
+  const goalieLine = goalieSvPct >= 0.93
+    ? `Goalie watch: ${(goalieSvPct * 100).toFixed(1)}% save rate tonight. ${playerTeam.abbrev} stole this one in net.`
+    : goalieSvPct <= 0.85
+      ? `Goalie watch: ${(goalieSvPct * 100).toFixed(1)}% save rate tonight. Social is questioning the crease plan.`
+      : `Goalie watch: ${(goalieSvPct * 100).toFixed(1)}% save rate. Solid enough, but not a bailout performance.`;
 
   const fanPost = won
-    ? `${playerTeam.abbrev} bank two points${overtimeLabel}. ${starName} showed up and the building felt alive. Keep this group together.`
+    ? `${playerTeam.abbrev} bank two points${overtimeLabel}. ${starName} showed up and the building felt alive.`
     : `${playerTeam.abbrev} drop another one${overtimeLabel}. ${goalDiff <= -3 ? 'That was a flat-out collapse.' : 'Fans are staring at the GM now.'}`;
   const insiderPost = won
-    ? `${leagueTag} chatter says the front office may cool the phones after that ${teamGoals}-${oppGoals} win over ${opponent.abbrev}.`
-    : `${leagueTag} insiders expect pressure to rise after the ${teamGoals}-${oppGoals} loss to ${opponent.abbrev}. Short-term help is being discussed.`;
+    ? `${leagueTag} chatter: ${teamGoals}-${oppGoals} over ${opponent.abbrev}. ${tradeLine}`
+    : `${leagueTag} insiders after ${teamGoals}-${oppGoals} vs ${opponent.abbrev}: ${tradeLine}`;
   const shotPost = shotDiff >= 8
-    ? `${playerTeam.abbrev} owned the shot clock ${teamShots}-${oppShots}. Process people are calling this sustainable.`
+    ? `${playerTeam.abbrev} owned shots ${teamShots}-${oppShots}. Process people are calling this sustainable.`
     : shotDiff <= -8
-      ? `${playerTeam.abbrev} were underwater all night in shots, ${teamShots}-${oppShots}. Social is asking why the roster still looks this slow.`
-      : `${playerTeam.abbrev} and ${opponent.abbrev} traded chances all night. The timeline is split on whether this roster is actually close.`;
+      ? `${playerTeam.abbrev} were underwater in shots ${teamShots}-${oppShots}. Social is calling out the pace.`
+      : `${playerTeam.abbrev} and ${opponent.abbrev} traded chances all night. The timeline is split.`;
   const pressurePost = won
-    ? `${record} doesn't look like a fire drill anymore. Fans are already debating whether the GM should buy early.`
-    : `${record} is the kind of record that turns every rumor into a five-alarm story. The replies are ugly tonight.`;
-  const chaosPost = won
-    ? `Wild story of the night: someone claims ${playerTeam.abbrev}'s mascot pointed at the luxury boxes and yelled "deadline plans changed." Entirely unverified, obviously.`
-    : `Wild rumor hour: a totally unverified account insists the GM was seen calling three rivals before the bus hit the highway. This app is undefeated.`;
+    ? `${record} doesn't look like a fire drill anymore. ${streakLine}`
+    : `${record} is the kind of record that turns every rumor into a five-alarm story. ${streakLine}`;
+  const chaosPost = `${goalieLine} Wild rumor hour says "deadline plans changed" from a source who may literally be the mascot.`;
 
   const candidates = [
-    { handle: pickRandom(fanAccounts), kind: 'fan', text: fanPost },
-    { handle: pickRandom(insiderAccounts), kind: 'insider', text: insiderPost },
-    { handle: '@NumbersOnIce', kind: 'analytics', text: shotPost },
-    { handle: '@FrontOfficeWatch', kind: 'pressure', text: pressurePost },
-    { handle: pickRandom(chaosAccounts), kind: 'rumor', text: chaosPost },
+    { handle: pickLeagueAccount(playerTeam.leagueId, 'fan', accountSeed), kind: 'fan', text: fanPost },
+    { handle: pickLeagueAccount(playerTeam.leagueId, 'insider', accountSeed + 1), kind: 'insider', text: insiderPost },
+    { handle: pickLeagueAccount(playerTeam.leagueId, 'analytics', accountSeed + 2), kind: 'analytics', text: shotPost },
+    { handle: pickLeagueAccount(playerTeam.leagueId, 'pressure', accountSeed + 3), kind: 'pressure', text: pressurePost },
+    { handle: pickLeagueAccount(playerTeam.leagueId, 'chaos', accountSeed + 4), kind: 'rumor', text: chaosPost },
   ];
 
   return [...candidates]
@@ -1415,8 +1876,58 @@ function generatePostGameSocialFeed(state, homeTeam, awayTeam, result) {
     .slice(0, 5);
 }
 
-function pickRandom(items) {
-  return items[Math.floor(Math.random() * items.length)];
+function pickLeagueAccount(leagueId, kind, seed = 0) {
+  const bank = LEAGUE_SOCIAL_ACCOUNTS[leagueId] || LEAGUE_SOCIAL_ACCOUNTS.phl;
+  const accounts = bank[kind] || ['@LeagueWire'];
+  return accounts[Math.abs(seed) % accounts.length];
+}
+
+function getRecentTradeForTeam(state, teamId) {
+  return (state.tradeHistory || []).find(trade =>
+    (trade.fromTeamId === teamId || trade.toTeamId === teamId) &&
+    ((state.week ?? 0) - (trade.week ?? 0) <= 2)
+  ) || null;
+}
+
+function getCurrentLossStreak(state, teamId, currentGameWasLoss) {
+  let streak = currentGameWasLoss ? 1 : 0;
+  const teamGames = (state.news || []).filter(item =>
+    item.type === 'game' && (item.homeTeamId === teamId || item.awayTeamId === teamId)
+  );
+
+  for (const game of teamGames) {
+    const isHome = game.homeTeamId === teamId;
+    const teamGoals = isHome ? game.homeGoals : game.awayGoals;
+    const oppGoals = isHome ? game.awayGoals : game.homeGoals;
+    if (teamGoals < oppGoals) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+}
+
+function addSocialPulseNews(state, homeTeam, awayTeam, result, posts, leagueId) {
+  const playerTeam = state.teams[state.playerTeamId];
+  if (!playerTeam) return;
+
+  const isHome = homeTeam.id === playerTeam.id;
+  const teamGoals = isHome ? result.homeGoals : result.awayGoals;
+  const oppGoals = isHome ? result.awayGoals : result.homeGoals;
+  const opponent = isHome ? awayTeam : homeTeam;
+
+  addNews({
+    type: 'social',
+    leagueId,
+    teamId: playerTeam.id,
+    opponentTeamId: opponent.id,
+    headline: `Social pulse: ${playerTeam.abbrev} ${teamGoals}-${oppGoals} ${opponent.abbrev}`,
+    report: `${posts[0]?.handle ?? '@LeagueWire'}: ${posts[0]?.text ?? ''}`,
+    posts,
+    week: state.week,
+  });
 }
 
 // ─── Save / Load ──────────────────────────────────────────────────────────────
@@ -1855,6 +2366,10 @@ window.hockeyGM = {
   endSeason,
   acceptTrade,
   declineTrade,
+  findTradeTargets,
+  findExpiringContractTargets,
+  requestTargetedOffer,
+  proposeTradeFromDesk,
   toggleTradeBlock,
   renegotiatePlayer,
   signFreeAgent,

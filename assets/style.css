@@ -325,7 +325,51 @@ tr:hover td { background: var(--bg-2); }
 .news-type-retirement .news-headline   { color: var(--gold); }
 .news-type-trade_offer .news-headline,
 .news-type-trade_complete .news-headline { color: var(--phl-color); }
+.news-type-social .news-headline { color: var(--neon-blue); }
 .news-headline--event { font-style: italic; }
+
+.news-social-label {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--neon-blue);
+}
+
+.news-social-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.news-social-post {
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-radius: var(--radius);
+  background: var(--bg-3);
+  padding: 7px 9px;
+}
+
+.news-social-post--fan { border-left-color: var(--ice); }
+.news-social-post--insider { border-left-color: var(--gold); }
+.news-social-post--analytics { border-left-color: var(--neon-blue); }
+.news-social-post--pressure { border-left-color: var(--accent-2); }
+.news-social-post--rumor { border-left-color: var(--accent); }
+
+.news-social-handle {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ice);
+  margin-bottom: 2px;
+}
+
+.news-social-text {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-2);
+}
 
 .news-game-header {
   display: flex;
@@ -474,6 +518,12 @@ tr:hover td { background: var(--bg-2); }
   overflow-y: auto;
 }
 
+.trade-league-browser-panel {
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding: 1.25rem;
+}
+
 .trade-card {
   background: var(--bg-2);
   border: 1px solid var(--border);
@@ -599,6 +649,184 @@ tr:hover td { background: var(--bg-2); }
 .trade-empty { padding: 0.5rem 0; }
 .trade-meta-row { margin-bottom: 6px; }
 
+.trade-assistant-panel {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.trade-assistant-title {
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+.trade-assistant-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: end;
+  margin-bottom: 10px;
+}
+.trade-assistant-controls label,
+.trade-proposal-grid label,
+.trade-browser-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.trade-assistant-controls select,
+.trade-assistant-controls button,
+.trade-proposal-grid select,
+.trade-proposal-builder button,
+.trade-browser-controls select,
+.trade-browser-controls input,
+.trade-browser-view-toggle button,
+.trade-assistant-result button {
+  height: 32px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-3);
+  color: var(--text-2);
+  padding: 0 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.trade-assistant-controls button,
+.trade-proposal-builder button,
+.trade-browser-view-toggle button,
+.trade-assistant-result button {
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.trade-assistant-results {
+  display: grid;
+  gap: 8px;
+  margin: 0.5rem 0 0.9rem;
+}
+.trade-assistant-result {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px;
+}
+.trade-assistant-empty { margin: 0.4rem 0 0.8rem; }
+
+.trade-expiring-table-wrap,
+.trade-browser-table-wrap {
+  overflow-x: auto;
+}
+
+.trade-proposal-builder {
+  border-top: 1px solid var(--border);
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+}
+.trade-proposal-builder h4 {
+  font-family: var(--font-display);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+.trade-proposal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.trade-proposal-grid--top {
+  grid-template-columns: 1fr 1fr;
+  align-items: end;
+}
+.trade-proposal-grid--assets {
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 10px;
+}
+.trade-proposal-hint {
+  align-self: center;
+  padding: 4px 8px;
+}
+.trade-asset-box {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px;
+}
+.trade-asset-box h5 {
+  font-family: var(--font-display);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-2);
+  margin-bottom: 6px;
+}
+.trade-asset-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.trade-asset-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-2);
+}
+
+.btn-add-to-proposal {
+  height: 28px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-3);
+  color: var(--text-2);
+  padding: 0 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+.btn-add-to-proposal:hover {
+  border-color: var(--border-2);
+  color: var(--text);
+}
+
+.trade-league-browser {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+.trade-browser-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  align-items: end;
+  margin-bottom: 10px;
+}
+.trade-browser-view-toggle {
+  display: flex;
+  gap: 6px;
+}
+.trade-browser-view-toggle .is-active {
+  border-color: var(--border-2);
+  color: var(--text);
+}
+
 /* ─── Trade card ────────────────────────────────── */
 .trade-card {
   background: var(--bg-2);
@@ -655,6 +883,22 @@ tr:hover td { background: var(--bg-2); }
   transition: all 0.15s;
 }
 .btn-decline:hover { color: var(--accent); border-color: var(--accent); }
+
+@media (max-width: 980px) {
+  .trade-layout {
+    grid-template-columns: 1fr;
+  }
+  .trade-proposal-grid,
+  .trade-browser-controls {
+    grid-template-columns: 1fr;
+  }
+  .trade-proposal-grid--assets {
+    grid-template-columns: 1fr;
+  }
+  .trade-assistant-result {
+    grid-template-columns: auto 1fr;
+  }
+}
 
 /* ─── Draft screen ─────────────────────────────── */
 .draft-layout {
@@ -1902,13 +2146,18 @@ tr:hover td { background: var(--bg-2); }
   max-width: 860px;
   width: 95vw;
   max-height: 88vh;
-  overflow-y: auto;
+  overflow: auto;
+}
+
+#playoff-bracket-content {
+  overflow-x: auto;
 }
 
 .po-league-bracket {
   margin-bottom: 28px;
   padding-bottom: 24px;
   border-bottom: 1px solid var(--border);
+  min-width: 760px;
 }
 .po-league-bracket:last-child { border-bottom: none; margin-bottom: 0; }
 

@@ -262,6 +262,35 @@ function renderNews(state) {
   const pendingTrades = (state.pendingTrades || []).length;
   const weeksToDeadline = Math.max(0, state.tradeDeadlineWeek - state.week);
   const isTradeWindowOpen = state.phase === 'season' && !state.tradeMarketClosed && state.week <= state.tradeDeadlineWeek;
+  const deadlineLabel = isTradeWindowOpen && weeksToDeadline <= 5 ? 'Deadline Watch' : 'Weeks to Deadline';
+  const deadlineValue = !isTradeWindowOpen
+    ? '—'
+    : weeksToDeadline <= 5
+      ? `${weeksToDeadline} ${weeksToDeadline === 1 ? 'WEEK' : 'WEEKS'} LEFT`
+      : `${weeksToDeadline}`;
+
+  const team = state.teams[state.playerTeamId];
+  const leagueStandings = team ? state.standings?.[team.leagueId] : null;
+  const sortedStandings = leagueStandings
+    ? Object.values(leagueStandings).sort((a, b) => {
+        if (b.pts !== a.pts) return b.pts - a.pts;
+        if (b.w   !== a.w)   return b.w   - a.w;
+        return (b.gf - b.ga) - (a.gf - a.ga);
+      })
+    : [];
+  const rank = sortedStandings.findIndex(entry => entry.teamId === state.playerTeamId) + 1;
+  const inPlayoffSpot = rank > 0 && rank <= 4;
+  const playoffValue = rank > 0
+    ? (inPlayoffSpot ? `IN (${rank})` : `OUT (${rank})`)
+    : '—';
+
+  const schedule = team ? (state.leagues?.[team.leagueId]?.schedule ?? []) : [];
+  const unplayed = schedule.filter(g => !g.played);
+  const lastWeek = unplayed.length ? Math.max(...unplayed.map(g => g.week ?? 0)) : state.week;
+  const seasonWeeksLeft = state.phase === 'season' ? Math.max(0, lastWeek - state.week + 1) : 0;
+  const seasonWeeksValue = state.phase === 'season'
+    ? `${seasonWeeksLeft}`
+    : '—';
 
   // Trade status widget
   const tradeWidget = `
@@ -272,8 +301,18 @@ function renderNews(state) {
           <span class="trade-widget-value">${pendingTrades}</span>
         </button>
         <button class="trade-widget-item" onclick="hockeyGM.showScreen('trade')" title="View trade deadline" ${!isTradeWindowOpen ? 'disabled' : ''}>
-          <span class="trade-widget-label">Weeks to Deadline</span>
-          <span class="trade-widget-value">${isTradeWindowOpen ? weeksToDeadline : '—'}</span>
+          <span class="trade-widget-label">${deadlineLabel}</span>
+          <span class="trade-widget-value">${deadlineValue}</span>
+        </button>
+      </div>
+      <div class="trade-widget-row" style="margin-top:8px">
+        <button class="trade-widget-item" onclick="hockeyGM.showScreen('standings')" title="View season status">
+          <span class="trade-widget-label">Weeks Left (Season)</span>
+          <span class="trade-widget-value">${seasonWeeksValue}</span>
+        </button>
+        <button class="trade-widget-item" onclick="hockeyGM.showScreen('standings')" title="View standings">
+          <span class="trade-widget-label">Playoff Spot</span>
+          <span class="trade-widget-value">${playoffValue}</span>
         </button>
       </div>
     </div>

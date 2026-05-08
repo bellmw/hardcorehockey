@@ -29,7 +29,7 @@ let activeFilter = 'all';
 // Map filter button values to the news item types they match
 const FILTER_MAP = {
   all:          null,   // null = show everything
-  game:         ['game'],
+  game:         ['game', 'social'],
   trade:        ['trade_offer', 'trade_complete'],
   event:        ['event', 'event_static'],
   commissioner: ['commissioner', 'retirement', 'league'],
@@ -79,6 +79,7 @@ function bindFilterButtons(state) {
 function renderItem(item, state) {
   switch (item.type) {
     case 'game':           return renderGame(item, state);
+    case 'social':         return renderSocial(item, state);
     case 'trade_offer':    return renderTradeOffer(item, state);
     case 'trade_complete': return renderTradeComplete(item, state);
     case 'event':          return renderEvent(item, state);
@@ -113,6 +114,31 @@ function renderGame(item, state) {
     </div>
     <div class="news-headline">${headline}</div>
     ${report}
+    <div class="news-meta">Week ${item.week ?? '—'}</div>
+  `);
+}
+
+function renderSocial(item, state) {
+  const leagueBadge = item.leagueId
+    ? `<span class="league-badge ${item.leagueId}">${item.leagueId.toUpperCase()}</span>`
+    : '';
+  const posts = (item.posts || []).slice(0, 5);
+  const postsHtml = posts.length > 0
+    ? `<div class="news-social-list">${posts.map(post => `
+      <article class="news-social-post news-social-post--${post.kind || 'fan'}">
+        <div class="news-social-handle">${post.handle || '@LeagueWire'}</div>
+        <div class="news-social-text">${post.text || ''}</div>
+      </article>
+    `).join('')}</div>`
+    : (item.report ? `<div class="news-report">${item.report}</div>` : '');
+
+  return newsWrap('social', `
+    <div class="news-game-header">
+      ${leagueBadge}
+      <span class="news-social-label">Social Pulse</span>
+    </div>
+    <div class="news-headline">${item.headline ?? 'Post-game social pulse'}</div>
+    ${postsHtml}
     <div class="news-meta">Week ${item.week ?? '—'}</div>
   `);
 }
