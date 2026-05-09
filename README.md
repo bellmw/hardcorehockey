@@ -1,6 +1,6 @@
 # Hockey GM — Personal Hockey Management Sim
 
-Current version: v1.2.7
+Current version: v1.2.8
 
 A stripped-down, goofy hockey GM game. You manage a team, sim seasons, survive
 relegation, and watch Claude-powered AI make absurd trade offers at you.
@@ -18,7 +18,7 @@ random events, draft classes). See **API Setup** below.
 
 ---
 
-## Features (v1.2.7)
+## Features (v1.2.8)
 
 - **Dual Simulation Modes** — Quick Sim (instant result) or Watch Game (period-by-period)
 - **Event System** — Random in-season events with chaos level (0-10)
@@ -150,7 +150,7 @@ Example: If your star player gets injured in week 2 for 2 weeks, they return in 
 
 ---
 
-## Playoff Structure (v1.2.6)
+## Playoff Structure (v1.2.8)
 
 Each of the 3 leagues sends 8 teams to playoffs:
 
@@ -250,6 +250,24 @@ Both modes display the same final information:
 Player salary range: $500K (rookies) → $6M (stars)
 
 ---
+
+## Recent Features (v1.2.6–v1.2.8)
+
+### v1.2.8
+- **8-team playoff bracket** — Quarter-finals (1v8, 2v7, 3v6, 4v5), semis, and final per league
+- **Instant elimination** — Lose a playoff series and you go straight to the season summary; no sitting through other teams' games
+- **Missed playoffs** — If you don't make top 8, bracket screen shows then auto-sims all playoffs and takes you to summary
+- **Dashboard THIS WEEK zone** — Context-aware urgency card surfacing injuries, deadlines, expiring contracts, and next game
+- **Sortable tables** — Click any column header in Standings or Season Stats to re-sort
+- **Active nav highlight** — Current screen is highlighted in the header nav
+- **Team narrative** — Dashboard team summary includes a one-line read on your squad's strengths and weaknesses
+- **Inline game mode toggle** — Quick / Watch preference persisted in localStorage directly from the dashboard
+- **Trade deadline warning** — Commissioner news + THIS WEEK alert fires one week before the deadline
+- **Contract offer timing** — Extensions now take up to 3 weeks to resolve (82% accept rate; 65% for peak-age elites)
+
+### v1.2.7
+- **Player injury system** — Random injuries from events or game impacts; injured players benched and untradeable
+- **Event deduplication** — Each random event fires only once per season
 
 ## Recent Features (v1.2.3–v1.2.4)
 

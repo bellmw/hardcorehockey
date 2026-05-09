@@ -81,7 +81,7 @@
     <div class="screen-inner centered">
       <div class="title-block">
         <h1 class="game-title">Hockey GM</h1>
-        <div id="title-app-version" class="title-version">v1.2.4</div>
+        <div id="title-app-version" class="title-version">v1.2.8</div>
         <p class="game-subtitle">Three leagues. 36 cities. One impossible job.</p>
       </div>
       <div id="team-select-leagues">
@@ -116,7 +116,7 @@
           <span class="record-label">RECORD</span>
           <span id="hdr-record" class="record-value">0-0-0</span>
         </div>
-        <span id="hdr-app-version" class="version-badge">v1.2.4</span>
+        <span id="hdr-app-version" class="version-badge">v1.2.8</span>
         <span id="hdr-year" class="year-badge">Year 1</span>
         <span id="save-indicator" class="save-indicator"></span>
         <button class="btn-restart" onclick="hockeyGM.restartGame()" title="Abandon save and start over">↺ New Game</button>
@@ -124,28 +124,9 @@
     </header>
 
     <main class="dashboard-main">
-      <!-- Left panel: team summary + standings snippet -->
+      <!-- Left panel: THIS WEEK action zone + sim controls + team info -->
       <section class="panel panel-left">
-        <div class="panel-section">
-          <h2 class="panel-label">Your team</h2>
-          <div id="dash-team-summary"><!-- JS renders --></div>
-        </div>
-        <div class="panel-section">
-          <h2 class="panel-label">Roster breakdown</h2>
-          <div id="dash-roster-breakdown"><!-- JS renders --></div>
-        </div>
-        <div class="panel-section">
-          <h2 class="panel-label">League standings</h2>
-          <div id="dash-standings-snippet"><!-- JS renders --></div>
-        </div>
-        <div class="panel-section">
-          <h2 class="panel-label">Salary cap</h2>
-          <div id="dash-cap-bar"><!-- JS renders --></div>
-        </div>
-      </section>
-
-      <!-- Centre panel: sim controls + next games -->
-      <section class="panel panel-centre">
+        <div id="dash-this-week"><!-- JS renders urgent context --></div>
         <div class="sim-controls">
           <button id="btn-sim-next" class="btn-primary" onclick="hockeyGM.simToMyNextGame()">
             Sim my next game
@@ -163,17 +144,39 @@
             End season →
           </button>
         </div>
-        <h2 class="panel-label" style="margin-top:16px">Upcoming games</h2>
-        <div id="dash-schedule"><!-- JS renders next 5 games --></div>
+        <div id="game-mode-toggle"><!-- JS renders watch mode toggle --></div>
+        <div class="panel-section panel-section--divider">
+          <h2 class="panel-label">Your team</h2>
+          <div id="dash-team-summary"><!-- JS renders --></div>
+        </div>
+        <div class="panel-section">
+          <h2 class="panel-label">Roster <span class="panel-label-hint">OVR /99</span></h2>
+          <div id="dash-roster-breakdown"><!-- JS renders --></div>
+        </div>
       </section>
 
-      <!-- Right panel: news feed + league leaders -->
-      <section class="panel panel-right">
-        <h2 class="panel-label">News feed</h2>
+      <!-- Centre panel: news feed (primary) + upcoming games -->
+      <section class="panel panel-centre">
+        <h2 class="panel-label">Latest news</h2>
         <div id="dash-news" class="news-feed"><!-- JS renders --></div>
-        
+        <div class="panel-section panel-section--divider">
+          <h2 class="panel-label">Upcoming games</h2>
+          <div id="dash-schedule"><!-- JS renders next 5 games --></div>
+        </div>
+      </section>
+
+      <!-- Right panel: standings + cap + league leaders -->
+      <section class="panel panel-right">
+        <div class="panel-section">
+          <h2 class="panel-label">League standings</h2>
+          <div id="dash-standings-snippet"><!-- JS renders --></div>
+        </div>
+        <div class="panel-section">
+          <h2 class="panel-label">Salary cap</h2>
+          <div id="dash-cap-bar"><!-- JS renders --></div>
+        </div>
         <!-- League leaders carousel -->
-        <div class="panel-section" style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+        <div class="panel-section panel-section--divider">
           <div class="leaders-carousel-header">
             <h2 class="panel-label">League leaders</h2>
             <div class="leaders-carousel-nav">

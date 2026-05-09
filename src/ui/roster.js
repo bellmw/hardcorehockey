@@ -14,6 +14,12 @@ const GROUPS = [
   { label: 'Goalies',    positions: ['G'],              posClass: 'goal' },
 ];
 
+// Sort state persists across re-renders (column key + direction 1=asc / -1=desc)
+const statsSort = {
+  skaters: { key: 'pts', dir: -1 },
+  goalies:  { key: 'gaa', dir:  1 },
+};
+
 // ─── Main render ──────────────────────────────────────────────────────────────
 
 function renderRoster(state) {
@@ -275,20 +281,18 @@ function renderStatsView(state) {
     .map(id => state.allPlayers[id])
     .filter(Boolean);
 
-  const skaters = roster.filter(p => p.position !== 'G')
-    .sort((a, b) => ((b.seasonStats?.pts ?? 0) - (a.seasonStats?.pts ?? 0)) || (b.overall - a.overall));
+  const skaters = roster.filter(p => p.position !== 'G');
+  const goalies  = roster.filter(p => p.position === 'G');
 
-  const goalies = roster.filter(p => p.position === 'G')
-    .sort((a, b) => {
-      const safeGAA = (p) => {
-        const s = p.seasonStats;
-        if (!s || !s.gp) return 99;
-        return (s.ga / s.gp) * 3; // goals per game × 3 periods ≈ GAA
-      };
-      return safeGAA(a) - safeGAA(b);
-    });
+  // ── Skater sort ──────────────────────────────────────────────────────────────
+  const skaterKeys = { gp: s => s.gp ?? 0, g: s => s.g ?? 0, a: s => s.a ?? 0, pts: s => s.pts ?? 0, pm: s => s.pm ?? 0 };
+  const sk = statsSort.skaters;
+  const sortedSkaters = [...skaters].sort((a, b) => {
+    const fn = skaterKeys[sk.key] ?? (s => s.pts ?? 0);
+    return sk.dir * (fn(b.seasonStats || {}) - fn(a.seasonStats || {}));
+  });
 
-  const skaterRows = skaters.map(p => {
+  const skaterRows = sortedSkaters.map(p => {
     const s = p.seasonStats || {};
     const posClass = ['LD','RD'].includes(p.position) ? 'def' : 'fwd';
     return `
@@ -303,9 +307,24 @@ function renderStatsView(state) {
       </tr>`;
   }).join('');
 
-  const goalieRows = goalies.map(p => {
+  // ── Goalie sort ───────────────────────────────────────────────────────────────
+  const goalieGet = {
+    gp:  (s) => s.gp ?? 0,
+    w:   (s) => s.w  ?? 0,
+    ga:  (s) => s.ga ?? 0,
+    sa:  (s) => s.sa ?? 0,
+    svp: (s) => s.sa ? (s.sv ?? 0) / s.sa : 0,
+    gaa: (s) => s.gp ? (s.ga ?? 0) / s.gp : 99,
+  };
+  const gl = statsSort.goalies;
+  const sortedGoalies = [...goalies].sort((a, b) => {
+    const fn = goalieGet[gl.key] ?? goalieGet.gaa;
+    return gl.dir * (fn(a.seasonStats || {}) - fn(b.seasonStats || {}));
+  });
+
+  const goalieRows = sortedGoalies.map(p => {
     const s = p.seasonStats || {};
-    const gaa = s.gp ? ((s.ga ?? 0) / s.gp * 3).toFixed(2) : '—';
+    const gaa   = s.gp ? ((s.ga ?? 0) / s.gp * 3).toFixed(2) : '—';
     const svPct = s.sa ? ((s.sv ?? 0) / s.sa).toFixed(3).replace('0.', '.') : '—';
     return `
       <tr>
@@ -320,17 +339,25 @@ function renderStatsView(state) {
       </tr>`;
   }).join('');
 
+  // ── Sort indicator helper ─────────────────────────────────────────────────────
+  const ind = (table, key) => {
+    const s = table === 'skaters' ? statsSort.skaters : statsSort.goalies;
+    return s.key === key ? (s.dir === -1 ? ' ▼' : ' ▲') : '';
+  };
+  const th = (table, key, label, title = '') =>
+    `<th class="stats-th-sortable" onclick="window.rosterSortStats('${table}','${key}')" title="${title || label}">${label}${ind(table, key)}</th>`;
+
   container.innerHTML = `
     <table class="standings-table roster-table stats-table">
       <thead>
         <tr class="roster-group-header"><td colspan="7">SKATERS</td></tr>
         <tr>
           <th>POS</th><th>Name</th>
-          <th title="Games Played">GP</th>
-          <th title="Goals">G</th>
-          <th title="Assists">A</th>
-          <th title="Points">PTS</th>
-          <th title="Plus/Minus">+/-</th>
+          ${th('skaters','gp','GP','Games Played')}
+          ${th('skaters','g','G','Goals')}
+          ${th('skaters','a','A','Assists')}
+          ${th('skaters','pts','PTS','Points')}
+          ${th('skaters','pm','+/-','Plus/Minus')}
         </tr>
       </thead>
       <tbody>${skaterRows || '<tr><td colspan="7" class="text-3" style="padding:.75rem">No games played yet.</td></tr>'}</tbody>
@@ -341,18 +368,25 @@ function renderStatsView(state) {
         <tr class="roster-group-header"><td colspan="8">GOALIES</td></tr>
         <tr>
           <th>POS</th><th>Name</th>
-          <th title="Games Played">GP</th>
-          <th title="Wins">W</th>
-          <th title="Goals Against">GA</th>
-          <th title="Shots Against">SA</th>
-          <th title="Save Percentage">SV%</th>
-          <th title="Goals Against Average">GAA</th>
+          ${th('goalies','gp','GP','Games Played')}
+          ${th('goalies','w','W','Wins')}
+          ${th('goalies','ga','GA','Goals Against')}
+          ${th('goalies','sa','SA','Shots Against')}
+          ${th('goalies','svp','SV%','Save Percentage')}
+          ${th('goalies','gaa','GAA','Goals Against Average')}
         </tr>
       </thead>
       <tbody>${goalieRows}</tbody>
     </table>` : ''}
   `;
 }
+
+window.rosterSortStats = function(table, key) {
+  const s = statsSort[table];
+  if (!s) return;
+  if (s.key === key) { s.dir *= -1; } else { s.key = key; s.dir = -1; }
+  window._renderRosterStats?.();
+};
 
 // ─── Release player ───────────────────────────────────────────────────────────
 

@@ -12,6 +12,21 @@ const LEAGUES = [
   { id: 'rc',  name: 'Regional Circuit',      shortName: 'RC'  },
 ];
 
+// Sort state per league — persists across re-renders
+const standingsSort = {
+  phl: { key: 'pts', dir: -1 },
+  cd:  { key: 'pts', dir: -1 },
+  rc:  { key: 'pts', dir: -1 },
+};
+
+window.standingsSortBy = function(leagueId, key) {
+  const s = standingsSort[leagueId];
+  if (!s) return;
+  if (s.key === key) { s.dir *= -1; } else { s.key = key; s.dir = -1; }
+  const state = window.hockeyGM?.getState?.();
+  if (state) renderStandings(state);
+};
+
 // ─── Main render ──────────────────────────────────────────────────────────────
 
 function renderStandings(state) {
@@ -29,36 +44,45 @@ function renderLeagueBlock(state, league) {
   const standings = state.standings[league.id];
   if (!standings) return '';
 
-  const sorted = sortStandings(standings);
-  const teamCount = sorted.length;
+  const lid = league.id;
+  const ss  = standingsSort[lid] ?? { key: 'pts', dir: -1 };
+
+  // Apply custom sort on top of the default PTS sort
+  const base = sortStandings(standings); // always default-sorted first for zone lines
+  const sortKeys = {
+    pts: e => e.pts,
+    w:   e => e.w,
+    l:   e => e.l,
+    otl: e => e.otl,
+    gp:  e => e.gp,
+    gd:  e => e.gd ?? (e.gf - e.ga),
+  };
+  const sorted = ss.key === 'pts'
+    ? base // default: already pts-sorted with tiebreakers
+    : [...base].sort((a, b) => ss.dir * ((sortKeys[ss.key]?.(b) ?? 0) - (sortKeys[ss.key]?.(a) ?? 0)));
+
+  const teamCount = base.length; // use base for zone boundaries
 
   // Zone boundaries (0-based last index in each zone)
   const playoffCutoff  = 3;   // top 4 qualify
   const safeBottom     = teamCount - 3; // index of last safe team (bottom 2 go down)
 
   const rows = sorted.map((entry, idx) => {
+    const baseIdx  = base.findIndex(e => e.teamId === entry.teamId);
     const team     = state.teams[entry.teamId] ?? {};
     const isPlayer = entry.teamId === state.playerTeamId;
 
     const rowClasses = ['standings-row'];
-    if (isPlayer)      rowClasses.push('standings-player-row');
-    if (idx < 4)       rowClasses.push('standings-playoff-zone');
-    if (idx >= safeBottom) rowClasses.push('standings-danger-zone');
+    if (isPlayer)          rowClasses.push('standings-player-row');
+    if (baseIdx < 4)       rowClasses.push('standings-playoff-zone');
+    if (baseIdx >= safeBottom) rowClasses.push('standings-danger-zone');
 
     const gd = entry.gd ?? (entry.gf - entry.ga);
     const gdStr = gd > 0 ? `+${gd}` : String(gd);
 
-    // Separator rows: after position 4 (playoff cut) and after last-safe position
-    const playoffLine = idx === playoffCutoff
-      ? `<tr class="standings-playoff-line"><td colspan="9"></td></tr>`
-      : '';
-    const relegateLine = idx === safeBottom
-      ? `<tr class="standings-relegate-line"><td colspan="9"></td></tr>`
-      : '';
-
-    return `${playoffLine}
+    return `
       <tr class="${rowClasses.join(' ')}">
-        <td class="standings-pos">${idx + 1}</td>
+        <td class="standings-pos">${baseIdx + 1}</td>
         <td class="standings-team-name">${team.fullName ?? entry.teamId}</td>
         <td class="standings-abbrev">${team.abbrev ?? ''}</td>
         <td>${entry.gp}</td>
@@ -67,8 +91,13 @@ function renderLeagueBlock(state, league) {
         <td>${entry.otl}</td>
         <td class="standings-pts">${entry.pts}</td>
         <td class="standings-gd">${gdStr}</td>
-      </tr>${relegateLine}`;
+      </tr>`;
   }).join('');
+
+  // Sort indicator helper
+  const ind = key => ss.key === key ? (ss.dir === -1 ? ' ▼' : ' ▲') : '';
+  const th  = (key, label, title) =>
+    `<th class="stats-th-sortable" onclick="window.standingsSortBy('${lid}','${key}')" title="${title ?? label}">${label}${ind(key)}</th>`;
 
   return `
     <section class="standings-league standings-league-${league.id}">
@@ -82,12 +111,12 @@ function renderLeagueBlock(state, league) {
             <th>#</th>
             <th class="standings-th-name">Team</th>
             <th></th>
-            <th>GP</th>
-            <th>W</th>
-            <th>L</th>
-            <th>OTL</th>
-            <th>PTS</th>
-            <th>GD</th>
+            ${th('gp','GP','Games Played')}
+            ${th('w','W','Wins')}
+            ${th('l','L','Losses')}
+            ${th('otl','OTL','Overtime Losses')}
+            ${th('pts','PTS','Points')}
+            ${th('gd','GD','Goal Differential')}
           </tr>
         </thead>
         <tbody>${rows}</tbody>

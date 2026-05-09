@@ -263,6 +263,19 @@ export async function simNextGame(silent = false, skipEvents = false) {
     // Heal player injuries at the start of each week
     healInjuries(state);
     closeTradeMarketIfNeeded(state);
+    // Warn exactly one week before the trade deadline (fire once per season)
+    if (!state.tradeMarketClosed &&
+        state.week === state.tradeDeadlineWeek - 1 &&
+        state._deadlineWarnYear !== state.year) {
+      state._deadlineWarnYear = state.year;
+      addNews({
+        type: 'commissioner',
+        text: `⚠️ TRADE DEADLINE: One week remaining (closes after Week ${state.tradeDeadlineWeek}). Last chance to reshape your roster before the window slams shut.`,
+        week: state.week,
+      });
+    }
+    // Resolve pending contract extensions after 3 weeks
+    processContractResponses(state);
   }
 
   if (state.phase === 'season' && !skipEvents) {
@@ -366,6 +379,13 @@ export async function simNextGame(silent = false, skipEvents = false) {
     state.phase = 'playoffs';
     addNews({ type: 'league', text: 'Regular season complete. Playoffs begin!', week: state.week });
     initPlayoffsState(state);
+    // Check if player's team is in the top 8
+    const pLid = ['phl', 'cd', 'rc'].find(lid => state.leagues[lid].teamIds.includes(state.playerTeamId));
+    const ppo  = state.playoffs[pLid];
+    state._playerMissedPlayoffs = !['q1','q2','q3','q4'].some(k => {
+      const s = ppo[k];
+      return s && (s.teamA === state.playerTeamId || s.teamB === state.playerTeamId);
+    });
     state.playoffBracketPending = true;
   }
 
@@ -400,49 +420,56 @@ function buildBracketHTML(state) {
   return ['phl', 'cd', 'rc'].map(lid => {
     const po = state.playoffs?.[lid];
     if (!po) return '';
-    const teamName = id => state.teams[id]?.fullName ?? id;
-    const abbrev   = id => state.teams[id];
+    const t   = id => id ? (state.teams[id] ?? null) : null;
+    const pid = state.playerTeamId;
+    const isPlayerLeague = state.leagues[lid].teamIds.includes(pid);
 
-    const sf1tA = abbrev(po.sf1.teamA), sf1tB = abbrev(po.sf1.teamB);
-    const sf2tA = abbrev(po.sf2.teamA), sf2tB = abbrev(po.sf2.teamB);
-    const isPlayerLeague = state.leagues[lid].teamIds.includes(state.playerTeamId);
-
-    const finalistA = po._sf1Winner ? abbrev(po._sf1Winner) : null;
-    const finalistB = po._sf2Winner ? abbrev(po._sf2Winner) : null;
-    const finalSeries = po.final;
-    const champion   = po.champion ? abbrev(po.champion) : null;
-
-    const sf1Done = po.sf1.winsA >= 4 || po.sf1.winsB >= 4;
-    const sf2Done = po.sf2.winsA >= 4 || po.sf2.winsB >= 4;
-
-    const matchup = (s, tA, tB, label) => {
-      if (!tA || !tB) return `<div class="po-matchup po-matchup-tbd"><span class="po-round-label">${label}</span><span class="text-3">TBD</span></div>`;
-      const wA = s?.winsA ?? 0, wB = s?.winsB ?? 0;
+    // Helper: render one matchup box
+    const matchup = (series, label) => {
+      if (!series || !series.teamA || !series.teamB) {
+        return `<div class="po-matchup po-matchup-tbd"><span class="po-round-label">${label}</span><span class="text-3">TBD</span></div>`;
+      }
+      const tA = t(series.teamA), tB = t(series.teamB);
+      const wA = series.winsA ?? 0, wB = series.winsB ?? 0;
       const done = wA >= 4 || wB >= 4;
-      const winnerId = wA >= 4 ? tA.id : wB >= 4 ? tB.id : null;
-      const playerIn  = tA.id === state.playerTeamId || tB.id === state.playerTeamId;
+      const winnerId = wA >= 4 ? series.teamA : wB >= 4 ? series.teamB : null;
+      const playerIn = series.teamA === pid || series.teamB === pid;
+      const elim = id => done && id !== winnerId;
       return `
         <div class="po-matchup ${playerIn ? 'po-matchup-player' : ''}">
           <span class="po-round-label">${label}</span>
-          <div class="po-seed ${done && tA.id !== winnerId ? 'po-eliminated' : ''}">${teamLabel(tA)} <small class="text-3">${teamName(tA.id)}</small></div>
+          <div class="po-seed ${elim(series.teamA) ? 'po-eliminated' : ''}">
+            ${tA ? teamLabel(tA) : '?'} <small class="text-3">${tA?.fullName ?? series.teamA}</small>
+          </div>
           <div class="po-vs">vs</div>
-          <div class="po-seed ${done && tB.id !== winnerId ? 'po-eliminated' : ''}">${teamLabel(tB)} <small class="text-3">${teamName(tB.id)}</small></div>
-          ${seriesScoreLine(s, tA, tB)}
+          <div class="po-seed ${elim(series.teamB) ? 'po-eliminated' : ''}">
+            ${tB ? teamLabel(tB) : '?'} <small class="text-3">${tB?.fullName ?? series.teamB}</small>
+          </div>
+          ${seriesScoreLine(series, tA ?? { abbrev: '?' }, tB ?? { abbrev: '?' })}
         </div>`;
     };
+
+    const champion = po.champion ? t(po.champion) : null;
 
     return `
       <div class="po-league-bracket ${isPlayerLeague ? 'po-player-league' : ''}">
         <h3 class="po-league-title ${lid}">${leagueLabels[lid]}</h3>
         <div class="po-bracket-grid">
+          <div class="po-col po-col-qf">
+            <div class="po-col-label">Quarter-Finals</div>
+            ${matchup(po.q1, '1 vs 8')}
+            ${matchup(po.q2, '2 vs 7')}
+            ${matchup(po.q3, '3 vs 6')}
+            ${matchup(po.q4, '4 vs 5')}
+          </div>
           <div class="po-col po-col-semis">
-            <div class="po-col-label">Semifinals</div>
-            ${matchup(po.sf1, sf1tA, sf1tB, '1 vs 4')}
-            ${matchup(po.sf2, sf2tA, sf2tB, '2 vs 3')}
+            <div class="po-col-label">Semi-Finals</div>
+            ${matchup(po.sf1, 'SF1')}
+            ${matchup(po.sf2, 'SF2')}
           </div>
           <div class="po-col po-col-final">
             <div class="po-col-label">Final</div>
-            ${matchup(finalSeries, finalistA, finalistB, 'Championship')}
+            ${matchup(po.final, 'Championship')}
           </div>
           <div class="po-col po-col-champ">
             <div class="po-col-label">Champion</div>
@@ -463,51 +490,75 @@ export function showPlayoffBracket() {
   const content = document.getElementById('playoff-bracket-content');
   if (!overlay || !content) return;
   content.innerHTML = buildBracketHTML(state);
+  const startBtn = document.getElementById('playoff-bracket-start');
+  if (startBtn) {
+    startBtn.textContent = state._playerMissedPlayoffs ? 'End Season →' : "Let's Play →";
+  }
   overlay.style.display = '';
-  // Close button
   document.getElementById('playoff-bracket-close').onclick = () => closePlayoffBracket();
   overlay.addEventListener('click', e => { if (e.target === overlay) closePlayoffBracket(); }, { once: true });
 }
 
-export function closePlayoffBracket() {
+export async function closePlayoffBracket() {
   const overlay = document.getElementById('playoff-bracket-overlay');
   if (overlay) overlay.style.display = 'none';
   GAME_STATE.playoffBracketPending = false;
+  if (GAME_STATE._playerMissedPlayoffs) {
+    GAME_STATE._playerMissedPlayoffs = false;
+    // Auto-sim all playoffs silently then show summary
+    await simPlayoffs();
+    return;
+  }
   saveGame();
   renderCurrentScreen();
 }
 
 // ─── Playoff state helpers ───────────────────────────────────────────────────
 
-/** Builds best-of-7 series brackets for all leagues from current standings. */
+/** Builds best-of-7 series brackets for all leagues from current standings (top 8 teams). */
 function initPlayoffsState(state) {
   state.playoffs = {};
   for (const leagueId of ['phl', 'cd', 'rc']) {
-    const bracket = buildPlayoffBracket(state.standings[leagueId]);
+    const sorted = sortStandings(state.standings[leagueId]);
+    const seeds  = sorted.slice(0, 8).map(e => e.teamId);
+    // QF: 1v8, 2v7, 3v6, 4v5
     state.playoffs[leagueId] = {
-      round:      'semis',  // 'semis' | 'final' | 'complete'
-      sf1:        { teamA: bracket.semifinalA.topSeed,  teamB: bracket.semifinalA.bottomSeed, winsA: 0, winsB: 0, gameNum: 0 },
-      sf2:        { teamA: bracket.semifinalB.topSeed,  teamB: bracket.semifinalB.bottomSeed, winsA: 0, winsB: 0, gameNum: 0 },
-      final:      null,
-      _sf1Winner: null,
-      _sf2Winner: null,
-      champion:   null,
+      round:       'qf',
+      q1:          { teamA: seeds[0], teamB: seeds[7], winsA: 0, winsB: 0, gameNum: 0 },
+      q2:          { teamA: seeds[1], teamB: seeds[6], winsA: 0, winsB: 0, gameNum: 0 },
+      q3:          { teamA: seeds[2], teamB: seeds[5], winsA: 0, winsB: 0, gameNum: 0 },
+      q4:          { teamA: seeds[3], teamB: seeds[4], winsA: 0, winsB: 0, gameNum: 0 },
+      sf1:         null,   // winner q1 vs winner q4
+      sf2:         null,   // winner q2 vs winner q3
+      final:       null,
+      champion:    null,
+      _qfWinners:  {},
+      _sfWinners:  {},
     };
   }
 }
 
-/** Returns 'sf1', 'sf2', 'final', or null — the player team's active series. */
+/** Returns the series key the player's team is currently active in, or null. */
 function getPlayerSeriesKey(state, leagueId) {
   const po  = state.playoffs[leagueId];
   const pid = state.playerTeamId;
-  if (po.round === 'semis') {
-    if ((po.sf1.teamA === pid || po.sf1.teamB === pid) && po.sf1.winsA < 4 && po.sf1.winsB < 4) return 'sf1';
-    if ((po.sf2.teamA === pid || po.sf2.teamB === pid) && po.sf2.winsA < 4 && po.sf2.winsB < 4) return 'sf2';
+  if (po.round === 'qf') {
+    for (const k of ['q1', 'q2', 'q3', 'q4']) {
+      const s = po[k];
+      if (s && (s.teamA === pid || s.teamB === pid) && s.winsA < 4 && s.winsB < 4) return k;
+    }
+  }
+  if (po.round === 'sf') {
+    for (const k of ['sf1', 'sf2']) {
+      const s = po[k];
+      if (s && (s.teamA === pid || s.teamB === pid) && s.winsA < 4 && s.winsB < 4) return k;
+    }
   }
   if (po.round === 'final' && po.final) {
-    if ((po.final.teamA === pid || po.final.teamB === pid) && po.final.winsA < 4 && po.final.winsB < 4) return 'final';
+    const s = po.final;
+    if ((s.teamA === pid || s.teamB === pid) && s.winsA < 4 && s.winsB < 4) return 'final';
   }
-  return null; // eliminated or league playoffs done
+  return null;
 }
 
 /**
@@ -521,61 +572,34 @@ function getPlayerPlayoffResult(state) {
   );
   if (!playerLeagueId) return 'missed';
 
-  const po = state.playoffs[playerLeagueId];
+  const po  = state.playoffs?.[playerLeagueId];
+  if (!po)  return 'missed';
   const pid = state.playerTeamId;
 
-  // Check if player won the championship (first round -> semis -> final -> champion)
-  if (po.final && po.final.champion === pid) {
-    return 'champion';
+  if (po.champion === pid) return 'champion';
+  if (po.final  && (po.final.teamA  === pid || po.final.teamB  === pid)) return 'finals';
+  if (po.sf1    && (po.sf1.teamA    === pid || po.sf1.teamB    === pid)) return 'semifinals';
+  if (po.sf2    && (po.sf2.teamA    === pid || po.sf2.teamB    === pid)) return 'semifinals';
+  for (const k of ['q1', 'q2', 'q3', 'q4']) {
+    const s = po[k];
+    if (s && (s.teamA === pid || s.teamB === pid)) return 'first_round';
   }
-
-  // Check if player made finals but didn't win
-  if (po.final && (po.final.teamA === pid || po.final.teamB === pid)) {
-    return 'finals';
-  }
-
-  // Check if player is in semis or was in semis
-  if (po.sf1 && (po.sf1.teamA === pid || po.sf1.teamB === pid)) {
-    if (po.sf1.champion === pid || (po.sf1.winsA === 4 && po.sf1.teamA === pid) || (po.sf1.winsB === 4 && po.sf1.teamB === pid)) {
-      return 'semifinals'; // Won semis, lost in finals or still playing
-    } else if (po.sf1.winsA >= 4 || po.sf1.winsB >= 4) {
-      return 'first_round'; // Lost semis
-    }
-  }
-  if (po.sf2 && (po.sf2.teamA === pid || po.sf2.teamB === pid)) {
-    if (po.sf2.champion === pid || (po.sf2.winsA === 4 && po.sf2.teamA === pid) || (po.sf2.winsB === 4 && po.sf2.teamB === pid)) {
-      return 'semifinals'; // Won semis, lost in finals or still playing
-    } else if (po.sf2.winsA >= 4 || po.sf2.winsB >= 4) {
-      return 'first_round'; // Lost semis
-    }
-  }
-
-  // Check if player is/was in first round
-  if (po.round === 'first_round' || po.round === 'semis' || po.round === 'final') {
-    // Player was in playoffs at some point but not in current round
-    // This means they lost in first round or earlier
-    if (po.first_round) {
-      for (const skKey of ['q1', 'q2', 'q3', 'q4']) {
-        const series = po.first_round[skKey];
-        if (series && (series.teamA === pid || series.teamB === pid)) {
-          if (series.winsA >= 4 || series.winsB >= 4) {
-            // Series is over, player lost
-            return 'first_round';
-          }
-        }
-      }
-    }
-  }
-
-  // Player didn't make playoffs or missed early
   return 'missed';
 }
 
-/** Returns the key of the first incomplete series in a league playoff object. */
+/** Returns the key of the first incomplete series in the current round. */
 function getActiveSeries(po) {
-  if (po.round === 'semis') {
-    if (po.sf1 && po.sf1.winsA < 4 && po.sf1.winsB < 4) return 'sf1';
-    if (po.sf2 && po.sf2.winsA < 4 && po.sf2.winsB < 4) return 'sf2';
+  if (po.round === 'qf') {
+    for (const k of ['q1', 'q2', 'q3', 'q4']) {
+      const s = po[k];
+      if (s && s.winsA < 4 && s.winsB < 4) return k;
+    }
+  }
+  if (po.round === 'sf') {
+    for (const k of ['sf1', 'sf2']) {
+      const s = po[k];
+      if (s && s.winsA < 4 && s.winsB < 4) return k;
+    }
   }
   if (po.round === 'final' && po.final && po.final.winsA < 4 && po.final.winsB < 4) return 'final';
   return null;
@@ -628,7 +652,9 @@ function simSeriesGame(leagueId, seriesKey, silent = true) {
 
   // News
   const lgName  = leagueId.toUpperCase();
-  const round   = seriesKey === 'final' ? 'Final' : 'Semis';
+  const round = seriesKey === 'final' ? 'Final'
+              : seriesKey.startsWith('sf') ? 'Semis'
+              : 'QF';
   const leader  = series.winsA > series.winsB ? state.teams[series.teamA]
                 : series.winsA < series.winsB ? state.teams[series.teamB] : null;
   const seriesNote = leader
@@ -663,16 +689,27 @@ function _advanceSeriesWinner(state, leagueId, seriesKey, winnerId) {
   const loserId = po[seriesKey].teamA === winnerId ? po[seriesKey].teamB : po[seriesKey].teamA;
   const loser   = state.teams[loserId];
 
-  if (seriesKey === 'sf1' || seriesKey === 'sf2') {
-    if (seriesKey === 'sf1') po._sf1Winner = winnerId;
-    else                     po._sf2Winner = winnerId;
+  if (['q1', 'q2', 'q3', 'q4'].includes(seriesKey)) {
+    po._qfWinners[seriesKey] = winnerId;
+    addNews({ type: 'league', text: `${winner.fullName} eliminate ${loser.fullName} and advance to the ${lgName} Semifinals!`, week: state.week });
+    const w = po._qfWinners;
+    if (w.q1 && w.q2 && w.q3 && w.q4) {
+      po.round = 'sf';
+      po.sf1 = { teamA: w.q1, teamB: w.q4, winsA: 0, winsB: 0, gameNum: 0 };
+      po.sf2 = { teamA: w.q2, teamB: w.q3, winsA: 0, winsB: 0, gameNum: 0 };
+      const t1A = state.teams[w.q1], t1B = state.teams[w.q4];
+      const t2A = state.teams[w.q2], t2B = state.teams[w.q3];
+      addNews({ type: 'league', text: `${lgName} Semis set: ${t1A.abbrev} vs ${t1B.abbrev} · ${t2A.abbrev} vs ${t2B.abbrev}`, week: state.week });
+    }
+  } else if (['sf1', 'sf2'].includes(seriesKey)) {
+    po._sfWinners[seriesKey] = winnerId;
     addNews({ type: 'league', text: `${winner.fullName} defeat ${loser.fullName} and advance to the ${lgName} Final!`, week: state.week });
-    if (po._sf1Winner && po._sf2Winner) {
+    const w = po._sfWinners;
+    if (w.sf1 && w.sf2) {
       po.round = 'final';
-      po.final = { teamA: po._sf1Winner, teamB: po._sf2Winner, winsA: 0, winsB: 0, gameNum: 0 };
-      const t1 = state.teams[po._sf1Winner];
-      const t2 = state.teams[po._sf2Winner];
-      addNews({ type: 'league', text: `${lgName} Final set: ${t1.fullName} vs ${t2.fullName}`, week: state.week });
+      po.final = { teamA: w.sf1, teamB: w.sf2, winsA: 0, winsB: 0, gameNum: 0 };
+      const t1 = state.teams[w.sf1], t2 = state.teams[w.sf2];
+      addNews({ type: 'league', text: `${lgName} Final: ${t1.fullName} vs ${t2.fullName}`, week: state.week });
     }
   } else if (seriesKey === 'final') {
     po.champion = winnerId;
@@ -724,8 +761,14 @@ export async function simToMyNextGame() {
     return;
   }
 
-  // Show game mode selection modal
-  showGameModeModal();
+  // Use persisted preference if available, otherwise show modal
+  const persistedMode = localStorage.getItem('hgm-game-mode');
+  if (persistedMode) {
+    PENDING_GAME_MODE = persistedMode;
+    await continueSimToMyNextGame();
+  } else {
+    showGameModeModal();
+  }
 }
 
 /**
@@ -788,8 +831,17 @@ function closeGameModeModal() {
  */
 export async function setGameMode(mode) {
   PENDING_GAME_MODE = mode;
+  localStorage.setItem('hgm-game-mode', mode);
   closeGameModeModal();
   await continueSimToMyNextGame();
+}
+
+/**
+ * Sets the game mode preference without triggering a sim (used by inline toggle).
+ */
+export function setPersistedGameMode(mode) {
+  localStorage.setItem('hgm-game-mode', mode);
+  renderCurrentScreen();
 }
 
 // ─── Playoffs ─────────────────────────────────────────────────────────────────
@@ -836,27 +888,33 @@ export async function simMyNextPlayoffGame() {
   );
   if (!playerLeagueId) return;
 
-  // Silently advance all other leagues one game
+  // Advance all other leagues one game silently
   for (const lid of ['phl', 'cd', 'rc']) {
     if (lid === playerLeagueId) continue;
     const sk = getActiveSeries(state.playoffs[lid]);
     if (sk) simSeriesGame(lid, sk, true);
   }
 
+  const po = state.playoffs[playerLeagueId];
   const seriesKey = getPlayerSeriesKey(state, playerLeagueId);
   if (seriesKey) {
-    // Also advance the OTHER semi in player's league silently (they run in parallel)
-    if (state.playoffs[playerLeagueId].round === 'semis') {
-      const otherSk = seriesKey === 'sf1' ? 'sf2' : 'sf1';
-      const other = state.playoffs[playerLeagueId][otherSk];
-      if (other && other.winsA < 4 && other.winsB < 4) simSeriesGame(playerLeagueId, otherSk, true);
+    // Advance all parallel series in the same round silently
+    const parallelKeys = po.round === 'qf' ? ['q1','q2','q3','q4']
+                       : po.round === 'sf' ? ['sf1','sf2']
+                       : [];
+    for (const k of parallelKeys) {
+      if (k === seriesKey) continue;
+      const s = po[k];
+      if (s && s.winsA < 4 && s.winsB < 4) simSeriesGame(playerLeagueId, k, true);
     }
     // Sim player's game — fires popup
     simSeriesGame(playerLeagueId, seriesKey, false);
-  } else {
-    // Player eliminated — silently advance their league
-    const sk = getActiveSeries(state.playoffs[playerLeagueId]);
-    if (sk) simSeriesGame(playerLeagueId, sk, true);
+
+    // If player was just eliminated, auto-sim the rest and go to summary
+    if (!getPlayerSeriesKey(state, playerLeagueId) && po.round !== 'complete') {
+      await simPlayoffs();
+      return;
+    }
   }
 
   const allComplete = ['phl', 'cd', 'rc'].every(lid => state.playoffs[lid].round === 'complete');
@@ -885,26 +943,35 @@ export async function simPlayerSeries() {
   if (!playerLeagueId) return;
 
   let seriesKey = getPlayerSeriesKey(state, playerLeagueId);
-  if (!seriesKey) return; // eliminated
+  if (!seriesKey) return; // player eliminated
 
   let safety = 7;
   while (safety-- > 0) {
     const series = state.playoffs[playerLeagueId][seriesKey];
     if (!series || series.winsA >= 4 || series.winsB >= 4) break;
 
-    simSeriesGame(playerLeagueId, seriesKey, false); // popup for player games
-
-    // Advance other leagues and the other semi silently
+    const po = state.playoffs[playerLeagueId];
+    const parallelKeys = po.round === 'qf' ? ['q1','q2','q3','q4']
+                       : po.round === 'sf' ? ['sf1','sf2']
+                       : [];
+    for (const k of parallelKeys) {
+      if (k === seriesKey) continue;
+      const s = po[k];
+      if (s && s.winsA < 4 && s.winsB < 4) simSeriesGame(playerLeagueId, k, true);
+    }
     for (const lid of ['phl', 'cd', 'rc']) {
       if (lid === playerLeagueId) continue;
       const sk = getActiveSeries(state.playoffs[lid]);
       if (sk) simSeriesGame(lid, sk, true);
     }
-    if (state.playoffs[playerLeagueId].round === 'semis') {
-      const otherSk = seriesKey === 'sf1' ? 'sf2' : 'sf1';
-      const other = state.playoffs[playerLeagueId][otherSk];
-      if (other && other.winsA < 4 && other.winsB < 4) simSeriesGame(playerLeagueId, otherSk, true);
-    }
+    simSeriesGame(playerLeagueId, seriesKey, false);
+  }
+
+  // If player was eliminated during the series, auto-sim the rest and go to summary
+  const po = state.playoffs[playerLeagueId];
+  if (!getPlayerSeriesKey(state, playerLeagueId) && po.round !== 'complete') {
+    await simPlayoffs();
+    return;
   }
 
   const allComplete = ['phl', 'cd', 'rc'].every(lid => state.playoffs[lid].round === 'complete');
@@ -1890,6 +1957,43 @@ export function toggleTradeBlock(playerId) {
   saveGame();
 }
 
+/**
+ * Resolves pending contract extensions after 3 weeks.
+ * Peak-age stars (24–30) are pickier (65% accept). Others accept 82% of the time.
+ */
+function processContractResponses(state) {
+  const team = state.teams?.[state.playerTeamId];
+  if (!team) return;
+
+  (team.rosterIds || []).forEach(pid => {
+    const p = state.allPlayers?.[pid];
+    if (!p || !p.pendingExtension || p.pendingExtension.status !== 'pending') return;
+
+    const weeksWaiting = (state.week ?? 0) - (p.pendingExtension.offeredWeek ?? 0);
+    if (weeksWaiting < 3) return;
+
+    const isPeakAge  = p.age >= 24 && p.age <= 30;
+    const isElite    = p.overall >= 80;
+    const acceptProb = (isPeakAge && isElite) ? 0.65 : 0.82;
+
+    if (Math.random() < acceptProb) {
+      p.pendingExtension.status = 'accepted';
+      addNews({
+        type: 'commissioner',
+        text: `\u2705 ${p.fullName} has ACCEPTED the extension: ${p.pendingExtension.years} years at ${formatSalary(p.pendingExtension.salary)}/yr. He'll be on the books next season.`,
+        week: state.week,
+      });
+    } else {
+      p.pendingExtension = null;
+      addNews({
+        type: 'commissioner',
+        text: `\u274c ${p.fullName} has REJECTED the extension offer. He will enter free agency at season's end.`,
+        week: state.week,
+      });
+    }
+  });
+}
+
 export function renegotiatePlayer(playerId) {
   const state = GAME_STATE;
   const player = state?.allPlayers?.[playerId];
@@ -1913,10 +2017,10 @@ export function renegotiatePlayer(playerId) {
   );
   if (!confirmed) return;
 
-  player.pendingExtension = offer;
+  player.pendingExtension = { ...offer, offeredWeek: state.week, status: 'pending' };
   addNews({
     type: 'league',
-    text: `Extension agreed in principle: ${player.fullName} (${player.position}) for ${offer.years} years at ${formatSalary(offer.salary)} per season.`,
+    text: `Extension offer sent to ${player.fullName} (${player.position}): ${offer.years} years at ${formatSalary(offer.salary)} / season. Awaiting response.`,
     week: state.week,
   });
   saveGame();
@@ -2255,7 +2359,7 @@ export async function endSeason() {
       p.contractYears--;
     }
     if (p.contractYears === 0) {
-      if (p.pendingExtension) {
+      if (p.pendingExtension && (p.pendingExtension.status === 'accepted' || !p.pendingExtension.status)) {
         applyContract(p, p.pendingExtension.salary, p.pendingExtension.years, 'standard');
         p.pendingExtension = null;
         return;
@@ -2510,6 +2614,14 @@ export function showScreen(screenId) {
   document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
   const el = document.getElementById(`screen-${screenId}`);
   if (el) el.classList.add('active');
+
+  // Update active nav button
+  document.querySelectorAll('.header-nav button').forEach(btn => {
+    btn.classList.remove('active');
+    const oc = btn.getAttribute('onclick') || '';
+    if (oc.includes(`'${screenId}'`)) btn.classList.add('active');
+  });
+
   renderCurrentScreen();
 }
 
@@ -2555,6 +2667,7 @@ window.hockeyGM = {
   deleteSave,
   restartGame,
   setGameMode,
+  setPersistedGameMode,
   getState: () => GAME_STATE,
 };
 

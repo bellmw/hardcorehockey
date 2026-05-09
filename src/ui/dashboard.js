@@ -39,7 +39,8 @@ function renderDashboard(state) {
   const teamEntry = standings?.[state.playerTeamId] ?? { w: 0, l: 0, otl: 0 };
 
   renderHeader(state, team, teamEntry, leagueId);
-  renderTeamSummary(team);
+  renderThisWeek(state, team);
+  renderTeamSummary(team, state);
   renderRosterBreakdown(state, team);
   renderStandingsSnippet(state, leagueId, standings);
   renderCapBar(state, team);
@@ -47,6 +48,7 @@ function renderDashboard(state) {
   renderLeagueLeaders(state, team);
   renderNews(state);
   renderSimControls(state.phase);
+  renderGameModeToggle();
 
   // Auto-open bracket if we just entered playoffs
   if (state.playoffBracketPending && window.hockeyGM?.showPlayoffBracket) {
@@ -86,13 +88,32 @@ function renderHeader(state, team, teamEntry, leagueId) {
 
 // ─── Team summary ─────────────────────────────────────────────────────────────
 
-function renderTeamSummary(team) {
+function renderTeamSummary(team, state) {
   const container = el('dash-team-summary');
   if (!container) return;
 
+  // Build narrative voice from roster strengths
+  const roster = (team.rosterIds || [])
+    .map(id => state?.allPlayers?.[id])
+    .filter(Boolean);
+  const avg = arr => arr.length ? Math.round(arr.reduce((s, p) => s + p.overall, 0) / arr.length) : 0;
+  const fwdAvg  = avg(roster.filter(p => ['C','LW','RW'].includes(p.position)));
+  const defAvg  = avg(roster.filter(p => ['LD','RD'].includes(p.position)));
+  const goalAvg = avg(roster.filter(p => p.position === 'G'));
+  const groups  = [
+    { label: 'forwards',    avg: fwdAvg  },
+    { label: 'defence',     avg: defAvg  },
+    { label: 'goaltending', avg: goalAvg },
+  ].filter(g => g.avg > 0).sort((a, b) => b.avg - a.avg);
+  const strength = groups[0];
+  const weakness = groups[groups.length - 1];
+  const narrative = (strength && weakness && strength.label !== weakness.label)
+    ? `Your ${strength.label} are your foundation. Your ${weakness.label} needs work.`
+    : '';
+
   container.innerHTML = `
+    ${narrative ? `<div class="team-narrative">${narrative}</div>` : ''}
     <div class="team-summary">
-      <div class="team-summary-name">${team.fullName}</div>
       <div class="team-summary-row"><span class="label">City</span><span>${team.city}</span></div>
       <div class="team-summary-row"><span class="label">Arena</span><span>${team.arena}</span></div>
       <div class="team-summary-row"><span class="label">GM</span><span>${team.gmName}</span></div>
@@ -470,6 +491,133 @@ window.dashboardLeadersNext = function() {
   const state = window.hockeyGM?.getState?.();
   if (state) renderLeaderboardCategory(el('dash-league-leaders'), state, state.playerTeamId);
 };
+// ─── This Week zone ──────────────────────────────────────────────────────────
+
+function renderThisWeek(state, team) {
+  const container = el('dash-this-week');
+  if (!container) return;
+
+  const phase    = state.phase;
+  const leagueId = team.leagueId;
+  const standings = state.standings?.[leagueId];
+  const sorted = standings
+    ? Object.values(standings).sort((a, b) => {
+        if (b.pts !== a.pts) return b.pts - a.pts;
+        if (b.w   !== a.w)   return b.w   - a.w;
+        return (b.gf - b.ga) - (a.gf - a.ga);
+      })
+    : [];
+  const rank        = sorted.findIndex(e => e.teamId === state.playerTeamId) + 1;
+  const inPlayoffs  = rank > 0 && rank <= 4;
+
+  const pendingTrades = (state.pendingTrades || []).filter(t => t.status === 'pending');
+
+  const weeksToDeadline = (state.phase === 'season' && !state.tradeMarketClosed)
+    ? Math.max(0, (state.tradeDeadlineWeek ?? 14) - (state.week ?? 0))
+    : null;
+
+  const injuries = Object.values(state.allPlayers || {})
+    .filter(p => (team.rosterIds || []).includes(p.id) && p.injured);
+
+  const expiringContracts = (team.rosterIds || [])
+    .map(id => state.allPlayers?.[id])
+    .filter(p => p && p.contractYears <= 1 && p.overall >= 70);
+
+  const schedule  = state.leagues?.[leagueId]?.schedule ?? [];
+  const nextGame  = schedule
+    .filter(g => !g.played && (g.homeTeamId === team.id || g.awayTeamId === team.id))
+    .sort((a, b) => (a.week ?? 0) - (b.week ?? 0))[0];
+
+  let urgency  = 'info';
+  let headline = '';
+  let detail   = '';
+  let action   = '';
+
+  if (phase === 'offseason') {
+    urgency  = 'gold';
+    headline = 'Off-season';
+    detail   = 'Review your roster and prepare for next year.';
+  } else if (phase === 'preseason_draft') {
+    urgency  = 'ice';
+    headline = 'Draft day';
+    detail   = 'Your first pick is waiting. Choose wisely.';
+  } else if (phase === 'playoffs') {
+    urgency  = 'gold';
+    headline = 'Playoffs';
+    detail   = inPlayoffs
+      ? 'Your team is in. Every game is elimination.'
+      : 'Your season is over. Study your rivals.';
+  } else if (pendingTrades.length > 0) {
+    urgency  = 'accent';
+    headline = `${pendingTrades.length} trade offer${pendingTrades.length > 1 ? 's' : ''} waiting`;
+    const fromName = pendingTrades[0].fromTeamId
+      ? (state.teams?.[pendingTrades[0].fromTeamId]?.fullName ?? 'A GM')
+      : 'A GM';
+    detail = `${fromName} wants to deal. Don't leave them hanging.`;
+    action = `<button class="this-week-action-btn" onclick="hockeyGM.showScreen('trade')">Review offers →</button>`;
+  } else if (weeksToDeadline === 1) {
+    urgency  = 'accent';
+    headline = 'Trade deadline: next week';
+    detail   = `Window closes after Week ${state.tradeDeadlineWeek}. Last chance to make a move.`;
+    action   = `<button class="this-week-action-btn" onclick="hockeyGM.showScreen('trade')">Go to trade desk →</button>`;
+  } else if (injuries.length > 0) {
+    urgency  = 'warn';
+    headline = `${injuries.length} player${injuries.length > 1 ? 's' : ''} injured`;
+    detail   = `${injuries[0].fullName} is out. Your depth is being tested.`;
+    action   = `<button class="this-week-action-btn" onclick="hockeyGM.showScreen('roster')">Check roster →</button>`;
+  } else if (expiringContracts.length > 0) {
+    urgency  = 'warn';
+    headline = `${expiringContracts.length} key contract${expiringContracts.length > 1 ? 's' : ''} expiring`;
+    detail   = `${expiringContracts[0].fullName} (OVR ${expiringContracts[0].overall}) hits free agency this offseason.`;
+    action   = `<button class="this-week-action-btn" onclick="hockeyGM.showScreen('roster')">Manage contracts →</button>`;
+  } else if (nextGame) {
+    const isHome  = nextGame.homeTeamId === team.id;
+    const oppId   = isHome ? nextGame.awayTeamId : nextGame.homeTeamId;
+    const opp     = state.teams?.[oppId];
+    const venue   = isHome ? 'vs' : '@';
+    const suffix  = rank === 1 ? 'st' : rank === 2 ? 'nd' : rank === 3 ? 'rd' : 'th';
+    const rankStr = rank > 0
+      ? (inPlayoffs ? `You are ${rank}${suffix} — in a playoff spot.` : `You are ${rank}${suffix} — outside the playoffs.`)
+      : '';
+    urgency  = inPlayoffs ? 'ice' : 'warn';
+    headline = `Week ${nextGame.week ?? '?'} — ${venue} ${opp?.fullName ?? oppId}`;
+    detail   = rankStr;
+  } else {
+    urgency  = 'info';
+    headline = 'Regular season';
+    const suffix = rank === 1 ? 'st' : rank === 2 ? 'nd' : rank === 3 ? 'rd' : 'th';
+    detail   = rank > 0 ? `You are ${rank}${suffix} in your league.` : '';
+  }
+
+  container.innerHTML = `
+    <div class="this-week-zone this-week--${urgency}">
+      <div class="this-week-label">This week</div>
+      <div class="this-week-headline">${headline}</div>
+      ${detail ? `<div class="this-week-detail">${detail}</div>` : ''}
+      ${action}
+    </div>
+  `;
+}
+
+// ─── Game mode toggle ─────────────────────────────────────────────────────────
+
+function renderGameModeToggle() {
+  const container = el('game-mode-toggle');
+  if (!container) return;
+  const current = localStorage.getItem('hgm-game-mode') ?? 'quick';
+  container.innerHTML = `
+    <div class="game-mode-toggle-row">
+      <span class="game-mode-toggle-label">Watch mode</span>
+      <div class="game-mode-toggle-btns">
+        <button class="gm-toggle-btn ${current === 'quick' ? 'gm-toggle-btn--active' : ''}"
+          onclick="hockeyGM.setPersistedGameMode('quick')" title="Jump to final score">⚡ Quick</button>
+        <button class="gm-toggle-btn ${current === 'watch' ? 'gm-toggle-btn--active' : ''}"
+          onclick="hockeyGM.setPersistedGameMode('watch')" title="Period by period">🎬 Watch</button>
+      </div>
+    </div>
+  `;
+}
+
 // ─── News feed ────────────────────────────────────────────────────────────────
 
 function renderNews(state) {
@@ -536,7 +684,7 @@ function renderNews(state) {
     </div>
   `;
 
-  const items = news.slice(0, 5);
+  const items = news.slice(0, 10);
 
   if (items.length === 0) {
     container.innerHTML = tradeWidget + '<p class="news-empty">No news yet.</p>';
