@@ -6,6 +6,7 @@
  * Container: #team-select-leagues
  * On team click → calls window.hockeyGM.newGame(teamId)
  */
+import { teamLogoSvg, teamColorVars } from './teamLogo.js';
 
 const LEAGUES = [
   { id: 'phl', name: 'Premier Hockey League', shortName: 'PHL', tier: 1 },
@@ -52,11 +53,18 @@ function buildScreen(container, data) {
       </button>
     `).join('');
 
-    const cards = teamsData.map(team => `
-      <button class="team-card" data-team-id="${team.id}">
-        <div class="team-card-header">
-          <span class="team-card-abbrev">${team.abbrev}</span>
-          <span class="team-card-city">${team.city}</span>
+    const cards = teamsData.map(team => {
+      const logo = teamLogoSvg(team.abbrev, team.primaryColor, team.secondaryColor, 56);
+      const colorVars = teamColorVars(team.primaryColor, team.secondaryColor);
+      return `
+      <button class="team-card" data-team-id="${team.id}"
+        style="${colorVars}; border-color: var(--team-primary); --sega-border: var(--team-primary);">
+        <div class="team-card-logo-row">
+          <div class="team-card-logo">${logo}</div>
+          <div class="team-card-header-info">
+            <span class="team-card-abbrev" style="color:var(--team-secondary);text-shadow:0 0 12px var(--team-glow)">${team.abbrev}</span>
+            <span class="team-card-city">${team.city}</span>
+          </div>
         </div>
         <div class="team-card-name">${team.name}</div>
         <div class="team-card-arena">${team.arena}</div>
@@ -65,7 +73,8 @@ function buildScreen(container, data) {
         </div>
         <div class="team-card-flavour">${team.flavour}</div>
       </button>
-    `).join('');
+      `;
+    }).join('');
 
     container.innerHTML = `
       <div class="team-select-tabs">${tabs}</div>

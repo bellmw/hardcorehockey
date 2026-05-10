@@ -101,7 +101,7 @@ function renderPlayerTable(state) {
       Dressed tonight: <strong>${dressedCounts.total}</strong>/20
       <span>(${dressedCounts.forwards}F · ${dressedCounts.defence}D · ${dressedCounts.goalies}G)</span>
     </div>
-    <table class="standings-table roster-table">
+    <table class="standings-table roster-table" style="min-width:700px">
       <thead>
         <tr>
           <th>POS</th>
@@ -168,9 +168,16 @@ function playerRow(player, posClass, dressedIds) {
     <tr>
       <td><span class="pos-badge ${posClass}">${player.position}</span></td>
       <td class="td-name">${player.fullName}${injFlag}${susFlag}<div class="roster-player-flags">${lineupBadge}${tradeBlockBadge}${extensionBadge}</div></td>
-      <td>${player.age}</td>
-      <td class="${ovrClass}">${player.overall}</td>
-      <td>${formatMoney(player.salary ?? 0)}</td>
+      <td class="td-num">${player.age}</td>
+      <td class="td-num ${ovrClass}">
+        ${player.overall}
+        <div class="stat-bar-row" style="margin-top:3px;min-width:70px">
+          <div class="stat-bar-track" style="flex:1;height:6px">
+            <div class="stat-bar-fill ${player.overall>=82?'stat-bar-fill--elite':player.overall>=74?'stat-bar-fill--good':player.overall>=66?'stat-bar-fill--avg':'stat-bar-fill--poor'}" style="width:${player.overall}%"></div>
+          </div>
+        </div>
+      </td>
+      <td class="td-num">${formatMoney(player.salary ?? 0)}</td>
       <td>${contractBadge}</td>
       <td><span class="trait-chip" title="${player.trait ?? ''}">${player.trait ?? '—'}</span></td>
       <td class="roster-actions-cell">
@@ -181,7 +188,7 @@ function playerRow(player, posClass, dressedIds) {
         <button class="btn-extend"
           data-player-id="${player.id}"
           ${canExtend ? '' : `disabled title="${extendTitle}"`}>
-          Extend
+          EXTEND
         </button>
         <button class="btn-release"
           data-player-id="${player.id}"
@@ -229,12 +236,12 @@ function renderFreeAgents(state) {
       <tr>
         <td><span class="pos-badge ${posClass}">${p.position}</span></td>
         <td class="td-name">${p.fullName}</td>
-        <td>${p.age}</td>
-        <td class="${ovrClass}">${p.overall}</td>
-        <td>${formatMoney(askingSalary)}</td>
-        <td>${askingYears}y</td>
+        <td class="td-num">${p.age}</td>
+        <td class="td-num ${ovrClass}">${p.overall}</td>
+        <td class="td-num">${formatMoney(askingSalary)}</td>
+        <td class="td-num">${askingYears}y</td>
         <td><span class="trait-chip">${p.trait ?? '—'}</span></td>
-        <td>
+        <td class="roster-actions-cell">
           <button class="btn-sign"
             data-player-id="${p.id}"
             ${canSign ? '' : 'disabled title="Not enough cap space"'}>

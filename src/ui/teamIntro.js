@@ -5,6 +5,7 @@
  *
  * Triggered by 'render-screen' CustomEvent with detail.screen === 'team-intro'.
  */
+import { teamLogoSvg, applyTeamColors } from './teamLogo.js';
 
 // ─── Main render ──────────────────────────────────────────────────────────────
 
@@ -15,6 +16,10 @@ function renderTeamIntro(state) {
   const team   = state.teams[state.playerTeamId];
   if (!team) return;
 
+  // Apply team colors and generate logo
+  if (team.primaryColor) applyTeamColors(team.primaryColor, team.secondaryColor || '#FFFFFF');
+  const logo = teamLogoSvg(team.abbrev, team.primaryColor, team.secondaryColor || '#FFFFFF', 96);
+
   const roster = (team.rosterIds || [])
     .map(id => state.allPlayers[id])
     .filter(Boolean);
@@ -23,10 +28,11 @@ function renderTeamIntro(state) {
 
   container.innerHTML = `
     <div class="intro-header">
+      <div class="intro-team-logo-display">${logo}</div>
       <div class="intro-header-league">
         <span class="league-badge ${team.leagueId}">${team.leagueId.toUpperCase()}</span>
       </div>
-      <h1 class="intro-team-name">${team.fullName}</h1>
+      <h1 class="intro-team-name" style="color:var(--team-secondary,#FFFF00);text-shadow:0 0 20px var(--team-glow)">${team.fullName}</h1>
       <p class="intro-arena">${team.arena} · Est. ${team.founded}</p>
       <p class="intro-flavour">"${team.flavour}"</p>
       <p class="intro-gm">Outgoing GM: <strong>${team.gmName}</strong>

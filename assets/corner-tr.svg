@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+  <!-- Top-right L-bracket -->
+  <path d="M20,0 L0,0 L0,4 L16,4 L16,20 L20,20 Z" fill="#0055CC"/>
+  <path d="M20,0 L2,0 L2,2 L18,2 L18,18 L20,18 Z" fill="#0077FF" opacity="0.5"/>
+  <path d="M16,4 L0,4 L0,4.5 L15.5,4.5 L15.5,20 L16,20 Z" fill="#001144"/>
+</svg>

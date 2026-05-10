@@ -3,6 +3,7 @@
  * Renders the dashboard screen.
  * Triggered by 'render-screen' CustomEvent on document with detail.screen === 'dashboard'.
  */
+import { teamLogoSvg, applyTeamColors } from './teamLogo.js';
 
 // ─── Carousel State ───────────────────────────────────────────────────────────
 
@@ -59,8 +60,15 @@ function renderDashboard(state) {
 // ─── Header ───────────────────────────────────────────────────────────────────
 
 function renderHeader(state, team, teamEntry, leagueId) {
+  // Apply team colors globally to CSS variables
+  if (team.primaryColor) applyTeamColors(team.primaryColor, team.secondaryColor || '#FFFFFF');
+
   const nameEl = el('hdr-team-name');
-  if (nameEl) nameEl.textContent = team.fullName;
+  if (nameEl) {
+    // Add mini logo before team name
+    const logo = teamLogoSvg(team.abbrev, team.primaryColor, team.secondaryColor || '#FFFFFF', 28);
+    nameEl.innerHTML = `<span class="hdr-team-logo">${logo}</span>${team.fullName}`;
+  }
 
   const recordEl = el('hdr-record');
   if (recordEl) recordEl.textContent = `${teamEntry.w}-${teamEntry.l}-${teamEntry.otl}`;
@@ -111,10 +119,44 @@ function renderTeamSummary(team, state) {
     ? `Your ${strength.label} are your foundation. Your ${weakness.label} needs work.`
     : '';
 
+  const allAvg = roster.length ? Math.round(roster.reduce((s,p) => s + p.overall, 0) / roster.length) : 0;
+  const fwdAvg2  = avg(roster.filter(p => ['C','LW','RW'].includes(p.position)));
+  const defAvg2  = avg(roster.filter(p => ['LD','RD'].includes(p.position)));
+  const goalAvg2 = avg(roster.filter(p => p.position === 'G'));
+
+  function ovrLed(val) {
+    if (val >= 82) return 'led-good';
+    if (val >= 74) return 'led-okay';
+    if (val >= 66) return 'led-poor';
+    return 'led-critical';
+  }
+
   container.innerHTML = `
     ${narrative ? `<div class="team-narrative">${narrative}</div>` : ''}
-    <div class="team-summary">
-      <div class="team-summary-row"><span class="label">City</span><span>${team.city}</span></div>
+    <div class="team-record-bar">
+      <div class="team-record-stat">
+        <span class="team-record-stat-label">TEAM OVR</span>
+        <span class="team-record-stat-value">${allAvg || '—'}</span>
+      </div>
+      <div class="team-record-stat">
+        <span class="team-record-stat-label">FWD</span>
+        <span class="team-record-stat-value">${fwdAvg2 || '—'}</span>
+      </div>
+      <div class="team-record-stat">
+        <span class="team-record-stat-label">DEF</span>
+        <span class="team-record-stat-value">${defAvg2 || '—'}</span>
+      </div>
+      <div class="team-record-stat">
+        <span class="team-record-stat-label">G</span>
+        <span class="team-record-stat-value">${goalAvg2 || '—'}</span>
+      </div>
+    </div>
+    <div class="led-indicator-row" style="margin-top:8px">
+      <span class="led-indicator ${ovrLed(fwdAvg2)}">FWD ${fwdAvg2}</span>
+      <span class="led-indicator ${ovrLed(defAvg2)}">DEF ${defAvg2}</span>
+      <span class="led-indicator ${ovrLed(goalAvg2)}">G ${goalAvg2}</span>
+    </div>
+    <div class="team-summary" style="margin-top:10px">
       <div class="team-summary-row"><span class="label">Arena</span><span>${team.arena}</span></div>
       <div class="team-summary-row"><span class="label">GM</span><span>${team.gmName}</span></div>
     </div>

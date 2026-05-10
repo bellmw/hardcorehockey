@@ -4,6 +4,7 @@
  * whenever the player's team finishes a game.
  * Listens for the 'game-result' CustomEvent dispatched by simNextGame().
  */
+import { teamLogoSvg } from './teamLogo.js';
 
 const overlay = document.getElementById('game-result-overlay');
 const content = document.getElementById('game-result-content');
@@ -35,12 +36,27 @@ function renderGameResult({ result, home, away, allPlayers, socialFeed = [] }) {
 
   const finalLabel = overtimeType ? `FINAL / ${overtimeType}` : 'FINAL';
 
+  // Generate logos for each team
+  const awayLogo = teamLogoSvg(
+    away.abbrev,
+    away.primaryColor || '#0055CC',
+    away.secondaryColor || '#FFFFFF',
+    52
+  );
+  const homeLogo = teamLogoSvg(
+    home.abbrev,
+    home.primaryColor || '#0055CC',
+    home.secondaryColor || '#FFFFFF',
+    52
+  );
+
   // Header score
   const homeWin = homeGoals > awayGoals;
   const scoreHtml = `
     <div class="gr-scoreboard">
       <div class="gr-team ${!homeWin ? 'gr-winner' : 'gr-loser'}">
-        <div class="gr-team-name">${away.abbrev}</div>
+        <div class="gr-team-logo">${awayLogo}</div>
+        <div class="gr-team-name" style="color:${!homeWin ? (away.secondaryColor||'#FFFF00') : '#444488'}">${away.abbrev}</div>
         <div class="gr-team-full">${away.fullName}</div>
       </div>
       <div class="gr-score-center">
@@ -52,7 +68,8 @@ function renderGameResult({ result, home, away, allPlayers, socialFeed = [] }) {
         <div class="gr-final-label">${finalLabel}</div>
       </div>
       <div class="gr-team ${homeWin ? 'gr-winner' : 'gr-loser'}">
-        <div class="gr-team-name">${home.abbrev}</div>
+        <div class="gr-team-logo">${homeLogo}</div>
+        <div class="gr-team-name" style="color:${homeWin ? (home.secondaryColor||'#FFFF00') : '#444488'}">${home.abbrev}</div>
         <div class="gr-team-full">${home.fullName}</div>
       </div>
     </div>

@@ -6,39 +6,39 @@
 
 /* ─── Variables ─────────────────────────────────── */
 :root {
-  --bg:         #0a0a0c;
-  --bg-2:       #141416;
-  --bg-3:       #1e1e21;
-  --border:     #2a2a2e;
-  --border-2:   #3a3a3f;
+  --bg:         #020208;
+  --bg-2:       #060614;
+  --bg-3:       #0c0c24;
+  --border:     #0000aa;
+  --border-2:   #0000ff;
 
-  --text:       #eae8e2;
-  --text-2:     #9a9893;
-  --text-3:     #5a5955;
+  --text:       #e8e8ff;   /* bright blue-white — high contrast */
+  --text-2:     #9999dd;
+  --text-3:     #4444aa;
 
-  --accent:     #ff1e3c;   /* hot neon red */
-  --accent-2:   #ff6b35;   /* warning orange */
-  --ice:        #a8d8f0;   /* electric ice */
-  --gold:       #f0c030;   /* championship gold — brighter */
+  --accent:     #FF00FF;   /* Sega Magenta */
+  --accent-2:   #FFFF00;   /* Neon Yellow */
+  --ice:        #00FFFF;   /* Cyan */
+  --gold:       #FFFF00;   /* Neon Yellow as gold */
 
-  --neon-green: #39ff14;   /* stat elite */
-  --neon-red:   #ff1e3c;   /* stat danger */
-  --neon-blue:  #00d4ff;   /* electric ice accent */
+  --neon-green: #00FF00;   /* Sega Green */
+  --neon-red:   #FF0000;   /* Red */
+  --neon-blue:  #0000FF;   /* Sega Blue */
 
-  --glow-red:   0 0 10px rgba(255, 30, 60, 0.55);
-  --glow-ice:   0 0 10px rgba(0, 212, 255, 0.4);
-  --glow-gold:  0 0 10px rgba(240, 192, 48, 0.45);
-  --glow-green: 0 0 10px rgba(57, 255, 20, 0.4);
+  --glow-red:   0 0 12px rgba(255, 0, 255, 0.8);
+  --glow-ice:   0 0 12px rgba(0, 255, 255, 0.6);
+  --glow-gold:  0 0 14px rgba(255, 255, 0, 0.8);
+  --glow-green: 0 0 12px rgba(0, 255, 0, 0.6);
 
-  --phl-color:  #9B7FFF;   /* PHL purple — more electric */
-  --cd-color:   #3dcc8f;   /* CD teal-green */
-  --rc-color:   #ff7733;   /* RC orange */
+  --phl-color:  #FF00FF;   /* Magenta */
+  --cd-color:   #00FF00;   /* Green */
+  --rc-color:   #FFFF00;   /* Yellow */
 
-  --font-display: 'Syne', sans-serif;
-  --font-mono:    'Space Mono', monospace;
+  --font-display: 'Press Start 2P', monospace;
+  --font-mono:    'Share Tech Mono', monospace;
 
-  --radius:     4px;
-  --radius-lg:  8px;
+  --radius:     2px;
+  --radius-lg:  4px;
 }
 
 /* ─── Reset ─────────────────────────────────────── */
@@ -3255,5 +3255,1991 @@ tr:hover td { background: var(--bg-2); }
 .gm-toggle-btn--active {
   border-color: var(--ice);
   color: var(--ice);
-  background: rgba(0, 212, 255, 0.08);
+  background: rgba(0, 255, 255, 0.08);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SEGA GENESIS / 90s ARCADE CRT RESKIN
+   Visual Language: Skeuomorphic CRT Scoreboard + Plastic Console Hardware
+   Palette: Sega Blue #0000FF · Neon Yellow #FFFF00 · Green #00FF00 · Magenta #FF00FF
+═══════════════════════════════════════════════════════════════════════ */
+
+/* ─── CRT Scanline body overlay ─────────────────────────────────────── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.15) 2px,
+    rgba(0, 0, 0, 0.15) 4px
+  );
+  pointer-events: none;
+  z-index: 99998;
+  animation: scanline-drift 12s linear infinite;
+}
+@keyframes scanline-drift {
+  from { background-position: 0 0; }
+  to   { background-position: 0 100px; }
+}
+
+/* ─── Scoreboard container style — CRT bezel ────────────────────────── */
+.panel {
+  background: #060614 !important;
+  border-right: 2px solid #0000aa !important;
+  border-bottom: 2px solid #0000aa !important;
+  box-shadow:
+    inset 0 0 40px rgba(0, 0, 255, 0.07),
+    inset 0 1px 0 rgba(80, 80, 255, 0.3) !important;
+}
+
+.modal-box,
+.game-mode-box,
+.event-box {
+  background: #06061a !important;
+  border: 3px solid #0000FF !important;
+  box-shadow:
+    inset 0 0 50px rgba(0, 0, 255, 0.1),
+    0 0 30px rgba(0, 0, 255, 0.5),
+    inset 0 2px 0 rgba(100, 100, 255, 0.4),
+    inset 0 -2px 0 rgba(0, 0, 80, 0.6) !important;
+  border-radius: 4px !important;
+}
+
+.team-card {
+  background: #06060f !important;
+  border: 2px solid #0000aa !important;
+  box-shadow:
+    inset 2px 2px 0 rgba(100, 100, 255, 0.2),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.7) !important;
+  border-radius: 2px !important;
+  transition: border-color 0.12s, box-shadow 0.12s !important;
+}
+.team-card:hover {
+  border-color: #00FFFF !important;
+  box-shadow:
+    inset 2px 2px 0 rgba(0, 255, 255, 0.25),
+    0 0 20px rgba(0, 255, 255, 0.5) !important;
+}
+.team-card--selected {
+  border-color: #FF00FF !important;
+  box-shadow:
+    inset 2px 2px 0 rgba(255, 0, 255, 0.25),
+    0 0 20px rgba(255, 0, 255, 0.6) !important;
+}
+
+/* ─── App header: scoreboard marquee bar ────────────────────────────── */
+.app-header {
+  background: #020210 !important;
+  border-bottom: 3px solid #0000FF !important;
+  box-shadow: 0 3px 0 #000066, 0 0 24px rgba(0, 0, 255, 0.45) !important;
+}
+
+.screen-header {
+  background: #020210 !important;
+  border-bottom: 3px solid #0000FF !important;
+  box-shadow: 0 3px 0 #000066 !important;
+}
+
+.dashboard-main {
+  background: #0000aa !important; /* border lines between panels */
+}
+
+/* ─── Typography: team anchors — pixel art broadcast font ───────────── */
+.header-team-name {
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 12px !important;
+  font-style: italic !important;
+  color: #FFFF00 !important;
+  text-shadow: 0 0 12px rgba(255, 255, 0, 0.8), 2px 2px 0 #000 !important;
+  letter-spacing: 0.04em !important;
+}
+
+.game-title {
+  font-family: 'Press Start 2P', monospace !important;
+  color: #FFFF00 !important;
+  text-shadow:
+    0 0 24px rgba(255, 255, 0, 0.9),
+    0 0 60px rgba(255, 255, 0, 0.4),
+    4px 4px 0 #0000CC !important;
+  letter-spacing: 0.04em !important;
+}
+
+.game-subtitle {
+  font-family: 'Share Tech Mono', monospace !important;
+  color: #00FFFF !important;
+  letter-spacing: 0.1em !important;
+}
+
+.screen-title {
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 11px !important;
+  color: #00FFFF !important;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.7) !important;
+}
+
+.panel-label {
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 7px !important;
+  color: #00FF00 !important;
+  text-shadow: 0 0 8px rgba(0, 255, 0, 0.6) !important;
+  border-bottom: 1px solid #00AA00 !important;
+  letter-spacing: 0.12em !important;
+}
+
+/* Team abbreviation anchors — the "SUD, TBT" broadcast font */
+.team-card-abbrev,
+.gr-team-name,
+.gw-team-abbrev,
+.po-team-name {
+  font-family: 'Press Start 2P', monospace !important;
+  font-style: italic !important;
+  color: #FFFF00 !important;
+  text-shadow: 2px 2px 0 #0000CC, 0 0 12px rgba(255, 255, 0, 0.7) !important;
+}
+.gr-team-name { font-size: 16px !important; }
+.gw-team-abbrev { font-size: 14px !important; }
+.po-team-name { font-size: 11px !important; color: #00FFFF !important; text-shadow: 0 0 8px rgba(0, 255, 255, 0.6) !important; }
+
+.team-card-name,
+.team-card-city {
+  font-family: 'Share Tech Mono', monospace !important;
+}
+
+/* ─── Numerical values — monospaced tabular figures ─────────────────── */
+.cap-value,
+.record-value,
+.gw-period-goals,
+.gw-running-total,
+.leaders-stat,
+.draft-stat-value,
+.breakdown-avg,
+.intro-group-avg,
+.gr-score,
+.tip-record,
+.tip-pts,
+.po-series-score {
+  font-family: 'Share Tech Mono', monospace !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+.cap-value {
+  color: #FFFF00 !important;
+  text-shadow: 0 0 10px rgba(255, 255, 0, 0.7) !important;
+  font-size: 20px !important;
+}
+
+.record-value {
+  color: #00FFFF !important;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.6) !important;
+}
+
+/* ─── Data tables: right-align all quantitative columns ─────────────── */
+/* Roster table: cols 3-6 (Age, OVR, Salary, Contract) are numeric */
+.roster-table th:nth-child(3),
+.roster-table td:nth-child(3),
+.roster-table th:nth-child(4),
+.roster-table td:nth-child(4),
+.roster-table th:nth-child(5),
+.roster-table td:nth-child(5),
+.roster-table th:nth-child(6),
+.roster-table td:nth-child(6) {
+  text-align: right !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* Text columns stay left-aligned: POS(1), Name(2), Trait(7), Actions(8) */
+.roster-table th:nth-child(1),
+.roster-table td:nth-child(1),
+.roster-table th:nth-child(2),
+.roster-table td:nth-child(2),
+.roster-table th:nth-child(7),
+.roster-table td:nth-child(7),
+.roster-table th:nth-child(8),
+.roster-table td:nth-child(8) {
+  text-align: left !important;
+}
+
+/* Standings numeric columns (right of team name) */
+.standings-table td:not(:first-child):not(:nth-child(2)),
+.standings-table th:not(:first-child):not(:nth-child(2)) {
+  text-align: right !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* Stats table numeric columns */
+.stats-table td:not(:first-child):not(:nth-child(2)),
+.stats-table th:not(:first-child):not(:nth-child(2)) {
+  text-align: right !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* ─── Sticky roster header + frozen name column ─────────────────────── */
+#roster-table-container {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  max-height: calc(100vh - 150px) !important;
+  position: relative !important;
+}
+
+.roster-table thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background: #020210 !important;
+  border-bottom: 2px solid #0000FF !important;
+  box-shadow: 0 2px 0 #000066 !important;
+}
+
+/* Frozen POS column */
+.roster-table th:nth-child(1),
+.roster-table td:nth-child(1) {
+  position: sticky !important;
+  left: 0 !important;
+  z-index: 5 !important;
+  background: #06060f !important;
+}
+
+/* Frozen Name column */
+.roster-table th:nth-child(2),
+.roster-table td:nth-child(2) {
+  position: sticky !important;
+  left: 44px !important;
+  z-index: 5 !important;
+  background: #06060f !important;
+  border-right: 1px solid #0000aa !important;
+}
+
+/* Intersection: sticky header + frozen col */
+.roster-table thead th:nth-child(1),
+.roster-table thead th:nth-child(2) {
+  z-index: 11 !important;
+  background: #020210 !important;
+}
+
+/* ─── Hover-reveal row actions (Noise Reduction) ────────────────────── */
+.roster-actions-cell {
+  opacity: 0 !important;
+  transition: opacity 0.18s ease !important;
+  min-width: 160px;
+}
+tr:hover .roster-actions-cell {
+  opacity: 1 !important;
+}
+/* Always show for keyboard / accessibility */
+.roster-actions-cell:focus-within {
+  opacity: 1 !important;
+}
+
+/* ─── Button micro-interactions ─────────────────────────────────────── */
+@keyframes btn-bounce {
+  0%   { transform: scale(1) translateY(0); }
+  25%  { transform: scale(0.91) translateY(3px); }
+  65%  { transform: scale(1.06) translateY(-2px); }
+  100% { transform: scale(1) translateY(0); }
+}
+@keyframes btn-flash {
+  0%   { filter: brightness(1); }
+  25%  { filter: brightness(2.8) saturate(1.5); }
+  100% { filter: brightness(1); }
+}
+.btn-click-anim {
+  animation: btn-bounce 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97),
+             btn-flash  0.32s ease-out;
+}
+
+/* ─── Primary button — chunky plastic arcade bevel ──────────────────── */
+.btn-primary {
+  background: #0000CC !important;
+  border: none !important;
+  box-shadow:
+    inset 3px 3px 0 rgba(120, 120, 255, 0.5),
+    inset -3px -3px 0 rgba(0, 0, 60, 0.9),
+    0 5px 0 #000055,
+    0 0 14px rgba(0, 0, 255, 0.5) !important;
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 9px !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  color: #FFFF00 !important;
+  text-shadow: 0 0 10px rgba(255, 255, 0, 0.9), 1px 1px 0 #000 !important;
+  border-radius: 2px !important;
+  transition: box-shadow 0.1s, transform 0.1s !important;
+  line-height: 1.6 !important;
+}
+.btn-primary:hover {
+  background: #0000EE !important;
+  box-shadow:
+    inset 3px 3px 0 rgba(120, 120, 255, 0.6),
+    inset -3px -3px 0 rgba(0, 0, 60, 0.9),
+    0 5px 0 #000077,
+    0 0 28px rgba(0, 0, 255, 0.75) !important;
+}
+.btn-primary:active {
+  box-shadow:
+    inset -2px -2px 0 rgba(120, 120, 255, 0.3),
+    inset 2px 2px 0 rgba(0, 0, 0, 0.9),
+    0 1px 0 #000055,
+    0 0 8px rgba(0, 0, 255, 0.4) !important;
+  transform: translateY(4px) !important;
+}
+
+/* Sim-to-playoffs — Magenta variant */
+#btn-sim-playoffs,
+#btn-sim-series {
+  background: #880088 !important;
+  box-shadow:
+    inset 3px 3px 0 rgba(255, 100, 255, 0.4),
+    inset -3px -3px 0 rgba(0, 0, 0, 0.8),
+    0 5px 0 #440044,
+    0 0 14px rgba(255, 0, 255, 0.4) !important;
+  color: #FFFF00 !important;
+}
+#btn-sim-playoffs:hover,
+#btn-sim-series:hover {
+  background: #aa00aa !important;
+  box-shadow:
+    inset 3px 3px 0 rgba(255, 100, 255, 0.5),
+    inset -3px -3px 0 rgba(0, 0, 0, 0.8),
+    0 5px 0 #660066,
+    0 0 28px rgba(255, 0, 255, 0.7) !important;
+}
+
+/* End season button — Neon Yellow */
+#btn-end-season {
+  background: #999900 !important;
+  color: #000 !important;
+  box-shadow:
+    inset 3px 3px 0 rgba(255, 255, 100, 0.4),
+    inset -3px -3px 0 rgba(0, 0, 0, 0.7),
+    0 5px 0 #444400,
+    0 0 14px rgba(255, 255, 0, 0.5) !important;
+  text-shadow: none !important;
+}
+
+/* Secondary buttons */
+.btn-secondary {
+  background: #030318 !important;
+  border: 1px solid #0000aa !important;
+  color: #9999dd !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  font-size: 11px !important;
+  letter-spacing: 0.08em !important;
+  border-radius: 2px !important;
+  transition: all 0.12s !important;
+}
+.btn-secondary:hover {
+  border-color: #00FFFF !important;
+  color: #00FFFF !important;
+  background: #001a1a !important;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.35) !important;
+}
+
+/* ─── Animated Salary Cap Bar ────────────────────────────────────────── */
+@keyframes cap-grow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@keyframes cap-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(0, 0, 255, 0.7), 0 0 2px rgba(0, 200, 255, 0.4); }
+  50%       { box-shadow: 0 0 22px rgba(0, 0, 255, 0.95), 0 0 40px rgba(0, 255, 255, 0.3); }
+}
+
+.cap-bar-track {
+  height: 12px !important;
+  background: #000018 !important;
+  border: 2px solid #0000aa !important;
+  border-radius: 2px !important;
+  box-shadow: inset 0 0 10px rgba(0, 0, 100, 0.5) !important;
+  overflow: visible !important;
+}
+.cap-bar-fill {
+  transform-origin: left center !important;
+  height: 8px !important;
+  margin: 0 !important;
+  border-radius: 1px !important;
+  background: linear-gradient(90deg, #0000FF 0%, #0066FF 60%, #00FFFF 100%) !important;
+  animation:
+    cap-grow 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+    cap-pulse 2.8s ease-in-out 1.1s infinite !important;
+}
+.cap-bar-fill.over-cap {
+  background: linear-gradient(90deg, #FF0000 0%, #FF00FF 100%) !important;
+  animation: cap-grow 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+/* Cap bar inline in roster header */
+.cap-bar-track--inline {
+  height: 8px !important;
+  min-width: 80px;
+}
+
+/* ─── Nav buttons — arcade selector style ───────────────────────────── */
+.header-nav button {
+  border: 1px solid #0000aa !important;
+  color: #6666cc !important;
+  background: #010110 !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  font-size: 11px !important;
+  letter-spacing: 0.08em !important;
+  border-radius: 2px !important;
+  transition: all 0.1s !important;
+}
+.header-nav button:hover {
+  border-color: #00FFFF !important;
+  color: #00FFFF !important;
+  background: #001a1a !important;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.45) !important;
+}
+.header-nav button.active {
+  border-color: #FFFF00 !important;
+  color: #FFFF00 !important;
+  background: #101000 !important;
+  box-shadow: 0 0 12px rgba(255, 255, 0, 0.45) !important;
+}
+
+/* Back button */
+.back-btn {
+  border: 1px solid #0000aa !important;
+  color: #6666cc !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background: transparent !important;
+  border-radius: 2px !important;
+}
+.back-btn:hover {
+  border-color: #00FFFF !important;
+  color: #00FFFF !important;
+}
+
+/* ─── Table global overrides — scoreboard aesthetic ─────────────────── */
+table th {
+  font-family: 'Share Tech Mono', monospace !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  color: #00FF00 !important;
+  background: #020210 !important;
+  border-bottom: 2px solid #0000FF !important;
+  text-transform: uppercase !important;
+}
+
+table td {
+  border-bottom: 1px solid #0000aa !important;
+  color: #9999dd !important;
+  font-family: 'Share Tech Mono', monospace !important;
+}
+
+tr:hover td {
+  background: #000033 !important;
+}
+
+.td-name {
+  color: #e8e8ff !important;
+  font-weight: 700 !important;
+  font-family: 'Share Tech Mono', monospace !important;
+}
+
+/* ─── Position badges — neon arcade labels ──────────────────────────── */
+.pos-badge {
+  font-family: 'Share Tech Mono', monospace !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  background: #000011 !important;
+}
+.pos-badge.fwd  {
+  border-color: #FF00FF !important;
+  color: #FF00FF !important;
+  box-shadow: 0 0 6px rgba(255, 0, 255, 0.5) !important;
+}
+.pos-badge.def  {
+  border-color: #00FFFF !important;
+  color: #00FFFF !important;
+  box-shadow: 0 0 6px rgba(0, 255, 255, 0.5) !important;
+}
+.pos-badge.goal {
+  border-color: #FFFF00 !important;
+  color: #FFFF00 !important;
+  box-shadow: 0 0 6px rgba(255, 255, 0, 0.5) !important;
+}
+
+/* ─── OVR rating tiers — high chroma ───────────────────────────────── */
+.ovr-elite {
+  color: #00FF00 !important;
+  text-shadow: 0 0 10px rgba(0, 255, 0, 0.8) !important;
+  font-weight: 700 !important;
+}
+.ovr-good  { color: #00FFFF !important; font-weight: 700 !important; }
+.ovr-avg   { color: #9999dd !important; }
+.ovr-poor  { color: #4444aa !important; }
+.ovr-bust  { color: #660022 !important; }
+
+/* ─── Roster group header — neon section divider ────────────────────── */
+.roster-group-header td {
+  color: #00FF00 !important;
+  text-shadow: 0 0 8px rgba(0, 255, 0, 0.6) !important;
+  border-top: 2px solid #0000FF !important;
+  border-bottom: 2px solid #0000FF !important;
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 7px !important;
+  background: #030318 !important;
+  letter-spacing: 0.2em !important;
+}
+
+/* ─── Roster flags ──────────────────────────────────────────────────── */
+.roster-flag--dressed { border-color: #00FF00 !important; color: #00FF00 !important; text-shadow: 0 0 6px rgba(0,255,0,0.7) !important; }
+.roster-flag--out     { border-color: #FF00FF !important; color: #FF00FF !important; }
+.roster-flag--trade   { border-color: #FFFF00 !important; color: #FFFF00 !important; }
+.roster-flag--extension { border-color: #00FFFF !important; color: #00FFFF !important; }
+
+/* ─── Roster action buttons ─────────────────────────────────────────── */
+.btn-release {
+  border: 1px solid #880000 !important;
+  color: #cc0000 !important;
+  background: #0a0000 !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  border-radius: 2px !important;
+}
+.btn-release:hover {
+  background: rgba(255, 0, 255, 0.15) !important;
+  border-color: #FF00FF !important;
+  color: #FF00FF !important;
+  box-shadow: 0 0 10px rgba(255, 0, 255, 0.5) !important;
+}
+
+.btn-trade-block,
+.btn-extend {
+  border: 1px solid #0000aa !important;
+  color: #6666cc !important;
+  background: #010110 !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  border-radius: 2px !important;
+}
+.btn-trade-block:hover {
+  border-color: #FFFF00 !important;
+  color: #FFFF00 !important;
+  box-shadow: 0 0 8px rgba(255, 255, 0, 0.5) !important;
+}
+.btn-extend:hover:not(:disabled) {
+  border-color: #00FFFF !important;
+  color: #00FFFF !important;
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.5) !important;
+}
+
+.btn-sign {
+  border: 1px solid #008800 !important;
+  color: #00aa00 !important;
+  background: #000a00 !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  border-radius: 2px !important;
+}
+.btn-sign:hover:not(:disabled) {
+  background: rgba(0, 255, 0, 0.1) !important;
+  border-color: #00FF00 !important;
+  color: #00FF00 !important;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.5) !important;
+}
+
+/* ─── Trade accept/decline ──────────────────────────────────────────── */
+.btn-accept {
+  background: #003300 !important;
+  color: #00FF00 !important;
+  border: 1px solid #00AA00 !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  border-radius: 2px !important;
+}
+.btn-accept:hover { background: #005500 !important; box-shadow: 0 0 10px rgba(0,255,0,0.4) !important; }
+
+.btn-decline {
+  border: 1px solid #0000aa !important;
+  color: #6666cc !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  border-radius: 2px !important;
+}
+.btn-decline:hover { color: #FF00FF !important; border-color: #FF00FF !important; }
+
+/* ─── Roster view tabs ──────────────────────────────────────────────── */
+.roster-tab {
+  border: 1px solid #0000aa !important;
+  color: #6666cc !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background: #010110 !important;
+  border-radius: 2px !important;
+  letter-spacing: 0.1em !important;
+}
+.roster-tab:hover {
+  border-color: #00FF00 !important;
+  color: #00FF00 !important;
+}
+.roster-tab.active {
+  background: rgba(0, 255, 0, 0.08) !important;
+  border-color: #00FF00 !important;
+  color: #00FF00 !important;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.25) !important;
+}
+
+/* ─── League badges ─────────────────────────────────────────────────── */
+.league-badge {
+  background: #FF00FF !important;
+  color: #000 !important;
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 7px !important;
+  box-shadow: 0 0 8px rgba(255, 0, 255, 0.5) !important;
+}
+.league-badge.cd { background: #00CC00 !important; color: #000 !important; box-shadow: 0 0 8px rgba(0,255,0,0.4) !important; }
+.league-badge.rc { background: #CCCC00 !important; color: #000 !important; box-shadow: 0 0 8px rgba(255,255,0,0.4) !important; }
+
+/* ─── News items — broadcast ticker look ────────────────────────────── */
+.news-item {
+  border-bottom: 1px solid #0000aa !important;
+  padding: 10px 0 !important;
+}
+
+.news-headline {
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 8px !important;
+  line-height: 1.7 !important;
+  color: #e8e8ff !important;
+}
+
+.news-type-event .news-headline,
+.news-type-event_static .news-headline { color: #FFFF00 !important; }
+.news-type-commissioner .news-headline,
+.news-type-retirement .news-headline   { color: #00FFFF !important; }
+.news-type-trade_offer .news-headline,
+.news-type-trade_complete .news-headline { color: #FF00FF !important; }
+.news-type-social .news-headline { color: #00FF00 !important; }
+
+/* ─── Draft clock — maximum juice ───────────────────────────────────── */
+@keyframes draft-pulse {
+  0%, 100% { box-shadow: 0 0 14px rgba(255, 0, 255, 0.7); }
+  50%       { box-shadow: 0 0 32px rgba(255, 0, 255, 1), 0 0 60px rgba(255, 0, 255, 0.3); }
+}
+.draft-clock--player {
+  border-color: #FF00FF !important;
+  color: #FF00FF !important;
+  background: rgba(255, 0, 255, 0.1) !important;
+  text-shadow: 0 0 14px rgba(255, 0, 255, 0.9) !important;
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 9px !important;
+  animation: draft-pulse 1.1s ease-in-out infinite !important;
+}
+
+/* ─── Standings league titles ────────────────────────────────────────── */
+.standings-league-title.phl { color: #FF00FF !important; text-shadow: 0 0 10px rgba(255,0,255,0.6) !important; }
+.standings-league-title.cd  { color: #00FF00 !important; text-shadow: 0 0 10px rgba(0,255,0,0.6) !important; }
+.standings-league-title.rc  { color: #FFFF00 !important; text-shadow: 0 0 10px rgba(255,255,0,0.6) !important; }
+
+/* ─── Game result scoreboard ─────────────────────────────────────────── */
+.gr-scoreboard { background: #020210 !important; }
+.gr-score-win  { color: #00FF00 !important; text-shadow: 0 0 16px rgba(0,255,0,0.8) !important; }
+.gr-score-loss { color: #4444aa !important; }
+.gr-final-label { color: #00FFFF !important; letter-spacing: 0.2em !important; font-family: 'Press Start 2P', monospace !important; font-size: 7px !important; }
+
+.gr-section { border-top: 1px solid #0000aa !important; }
+.gr-section-title { color: #00FF00 !important; font-family: 'Press Start 2P', monospace !important; font-size: 7px !important; }
+
+/* ─── Game watch progress bar ────────────────────────────────────────── */
+.gw-progress-fill {
+  background: linear-gradient(90deg, #0000FF, #00FFFF) !important;
+  animation: cap-pulse 1.5s ease-in-out infinite !important;
+}
+.gw-period-goals { color: #FFFF00 !important; text-shadow: 0 0 12px rgba(255,255,0,0.7) !important; }
+.gw-running-total { color: #00FFFF !important; }
+
+/* ─── Playoff bracket ────────────────────────────────────────────────── */
+.po-matchup {
+  background: #06060f !important;
+  border: 1px solid #0000aa !important;
+}
+.po-matchup-player {
+  border-color: #00FF00 !important;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.2) !important;
+}
+.po-champion-slot {
+  border-color: #FFFF00 !important;
+  box-shadow: 0 0 20px rgba(255, 255, 0, 0.35) !important;
+}
+.po-champion-name { color: #FFFF00 !important; text-shadow: 0 0 10px rgba(255,255,0,0.7) !important; }
+
+/* ─── Trait chip ─────────────────────────────────────────────────────── */
+.trait-chip {
+  color: #4444aa !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  font-style: italic !important;
+}
+
+/* ─── Trade cards & controls ─────────────────────────────────────────── */
+.trade-card {
+  background: #06060f !important;
+  border: 1px solid #0000aa !important;
+  border-radius: 2px !important;
+}
+.trade-shortcut-btn {
+  border: 1px solid #0000aa !important;
+  color: #6666cc !important;
+  background: #010110 !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  border-radius: 2px !important;
+}
+.trade-shortcut-btn:hover {
+  border-color: #FF00FF !important;
+  color: #FF00FF !important;
+  box-shadow: 0 0 12px rgba(255, 0, 255, 0.5) !important;
+}
+
+/* ─── Leaders carousel ───────────────────────────────────────────────── */
+.leaders-category-label { color: #00FFFF !important; font-family: 'Press Start 2P', monospace !important; font-size: 8px !important; }
+.leaders-nav-btn {
+  border: 1px solid #0000aa !important;
+  color: #6666cc !important;
+  background: #010110 !important;
+  border-radius: 2px !important;
+}
+.leaders-nav-btn:hover { border-color: #00FFFF !important; color: #00FFFF !important; }
+.leaders-stat { color: #FFFF00 !important; text-shadow: 0 0 8px rgba(255,255,0,0.6) !important; }
+.leaders-table-row--my-team { background: rgba(0,255,255,0.05) !important; border-left: 3px solid #00FFFF !important; }
+.leaders-player--my-team { color: #00FFFF !important; }
+
+/* ─── This-week zone ─────────────────────────────────────────────────── */
+.this-week-zone { background: #06060f !important; border-left-color: #0000FF !important; }
+.this-week-zone.this-week--ice   { border-left-color: #00FFFF !important; background: rgba(0,255,255,0.04) !important; }
+.this-week-zone.this-week--gold  { border-left-color: #FFFF00 !important; background: rgba(255,255,0,0.04) !important; }
+.this-week-zone.this-week--accent { border-left-color: #FF00FF !important; background: rgba(255,0,255,0.04) !important; }
+.this-week-headline { font-family: 'Press Start 2P', monospace !important; font-size: 9px !important; line-height: 1.7 !important; }
+.this-week-zone.this-week--ice    .this-week-headline { color: #00FFFF !important; }
+.this-week-zone.this-week--gold   .this-week-headline { color: #FFFF00 !important; }
+.this-week-zone.this-week--accent .this-week-headline { color: #FF00FF !important; }
+
+/* ─── Schedule rows ──────────────────────────────────────────────────── */
+.sched-row {
+  background: #06060f !important;
+  border: 1px solid #0000aa !important;
+  border-radius: 2px !important;
+}
+.sched-opp { color: #00FFFF !important; font-family: 'Share Tech Mono', monospace !important; font-weight: 700 !important; }
+.sched-home { color: #00FF00 !important; }
+
+/* ─── Team intro screen ──────────────────────────────────────────────── */
+.intro-team-name { color: #FFFF00 !important; text-shadow: 0 0 20px rgba(255,255,0,0.7) !important; font-family: 'Press Start 2P', monospace !important; font-size: 22px !important; }
+.intro-report { background: #06060f !important; border: 2px solid #0000FF !important; border-radius: 2px !important; }
+
+/* ─── Season summary ─────────────────────────────────────────────────── */
+.season-summary-container { border-color: #0000FF !important; background: linear-gradient(135deg, #060614 0%, #0c0c24 100%) !important; }
+.season-summary-header h1 { color: #FFFF00 !important; text-shadow: 0 0 20px rgba(255,255,0,0.7) !important; }
+
+/* ─── Event modal ────────────────────────────────────────────────────── */
+.event-header { border-left-color: #00FFFF !important; }
+.event-title  { color: #FFFF00 !important; font-family: 'Press Start 2P', monospace !important; font-size: 14px !important; line-height: 1.7 !important; }
+
+/* ─── Filter buttons ─────────────────────────────────────────────────── */
+.filter-btn {
+  border: 1px solid #0000aa !important;
+  color: #4444aa !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background: #010110 !important;
+  border-radius: 2px !important;
+}
+.filter-btn:hover { border-color: #00FFFF !important; color: #00FFFF !important; }
+.filter-btn.active { border-color: #00FF00 !important; color: #00FF00 !important; background: rgba(0,255,0,0.06) !important; }
+
+/* ─── Version badge / save indicator ────────────────────────────────── */
+.version-badge {
+  border: 1px solid #0000FF !important;
+  color: #00FF00 !important;
+  background: rgba(0, 255, 0, 0.07) !important;
+  font-family: 'Share Tech Mono', monospace !important;
+}
+.title-version {
+  border-color: #0000FF !important;
+  color: #00FFFF !important;
+  background: rgba(0, 0, 255, 0.1) !important;
+  font-family: 'Share Tech Mono', monospace !important;
+}
+
+/* ─── Scrollbar — Sega blue ──────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #010108; border: 1px solid #0000aa; }
+::-webkit-scrollbar-thumb { background: #0000FF; border-radius: 1px; }
+::-webkit-scrollbar-thumb:hover { background: #00FFFF; box-shadow: 0 0 6px rgba(0,255,255,0.6); }
+
+/* ─── Tooltip styling ────────────────────────────────────────────────── */
+.team-tooltip,
+.leaders-player-tooltip {
+  background: #06060f !important;
+  border: 2px solid #0000FF !important;
+  box-shadow: 0 0 16px rgba(0,0,255,0.5) !important;
+}
+.tip-name { color: #FFFF00 !important; font-family: 'Press Start 2P', monospace !important; font-size: 9px !important; }
+.tip-record { color: #00FFFF !important; }
+
+/* ─── Modal close button ─────────────────────────────────────────────── */
+.gr-close { color: #4444aa !important; }
+.gr-close:hover { color: #FF00FF !important; text-shadow: 0 0 8px rgba(255,0,255,0.6) !important; }
+
+/* ─── Breakdown bars ─────────────────────────────────────────────────── */
+.breakdown-bar-track,
+.intro-group-bar-track { background: #000018 !important; border: 1px solid #0000aa !important; border-radius: 1px !important; }
+.breakdown-bar.ovr-elite,
+.intro-group-bar.ovr-elite { background: #00FF00 !important; box-shadow: 0 0 6px rgba(0,255,0,0.5) !important; }
+.breakdown-bar.ovr-good,
+.intro-group-bar.ovr-good  { background: #00FFFF !important; }
+.breakdown-bar.ovr-avg,
+.intro-group-bar.ovr-avg   { background: #4444aa !important; }
+.breakdown-bar.ovr-poor,
+.intro-group-bar.ovr-poor  { background: #880000 !important; }
+
+/* ─── SW pills ───────────────────────────────────────────────────────── */
+.strength-label { background: rgba(0,255,0,0.15) !important; color: #00FF00 !important; border-color: rgba(0,255,0,0.4) !important; }
+.weakness-label { background: rgba(255,0,255,0.12) !important; color: #FF00FF !important; border-color: rgba(255,0,255,0.35) !important; }
+
+/* ─── Contract pills ─────────────────────────────────────────────────── */
+.contract-pill { background: #010110 !important; border-color: #0000aa !important; font-family: 'Share Tech Mono', monospace !important; }
+.contract-pill--entry    { border-color: rgba(0,255,0,0.35) !important; color: #00FF00 !important; }
+.contract-pill--expiring { border-color: rgba(255,255,0,0.35) !important; color: #FFFF00 !important; }
+
+/* ─── Contract badge ─────────────────────────────────────────────────── */
+.contract-badge.entry-deal    { background: rgba(0,255,0,0.15) !important; color: #00FF00 !important; }
+.contract-badge.standard-deal { background: rgba(255,0,255,0.12) !important; color: #FF00FF !important; }
+
+/* ─── Stats sort indicators ──────────────────────────────────────────── */
+.stats-th-sortable:hover { color: #00FFFF !important; }
+.stats-pm-pos { color: #00FF00 !important; }
+.stats-pm-neg { color: #FF00FF !important; }
+
+/* ─── Round badges ───────────────────────────────────────────────────── */
+.rd-1 { background: rgba(255,255,0,0.15) !important; color: #FFFF00 !important; border-color: rgba(255,255,0,0.35) !important; }
+.rd-2 { background: rgba(255,0,255,0.12) !important; color: #FF00FF !important; border-color: rgba(255,0,255,0.3) !important; }
+.rd-3 { background: #0c0c24 !important; color: #4444aa !important; border-color: #0000aa !important; }
+
+/* ─── Social posts ───────────────────────────────────────────────────── */
+.news-social-post { background: #06060f !important; border: 1px solid #0000aa !important; }
+.news-social-post--fan       { border-left-color: #00FFFF !important; }
+.news-social-post--insider   { border-left-color: #FFFF00 !important; }
+.news-social-post--analytics { border-left-color: #0000FF !important; }
+.news-social-post--pressure  { border-left-color: #FFFF00 !important; }
+.news-social-post--rumor     { border-left-color: #FF00FF !important; }
+.news-social-handle { color: #00FFFF !important; font-family: 'Share Tech Mono', monospace !important; }
+
+/* ─── Trade status badges ────────────────────────────────────────────── */
+.trade-status-badge--accepted { background: #003300 !important; color: #00FF00 !important; }
+.trade-status-badge--pending  { background: #1a1a00 !important; color: #FFFF00 !important; }
+.trade-status-badge--declined { background: #0c0c24 !important; color: #4444aa !important; }
+.trade-status-badge--expired  { background: #1a001a !important; color: #ff6699 !important; }
+
+/* ─── Value colors ───────────────────────────────────────────────────── */
+.value-good    { color: #00FF00 !important; }
+.value-bad     { color: #FF00FF !important; }
+.value-robbery { color: #FF00FF !important; font-weight: 700 !important; }
+
+/* ─── Restart button ─────────────────────────────────────────────────── */
+.btn-restart {
+  border: 1px solid #880000 !important;
+  color: #cc0000 !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background: transparent !important;
+  border-radius: 2px !important;
+}
+.btn-restart:hover { border-color: #FF00FF !important; color: #FF00FF !important; background: rgba(255,0,255,0.08) !important; }
+
+/* ─── Inline-link button ─────────────────────────────────────────────── */
+.btn-inline-link { color: #FFFF00 !important; }
+
+/* ─── Player tooltip border ──────────────────────────────────────────── */
+.leaders-player-tooltip .tip-name { color: #FFFF00 !important; }
+.leaders-player-tooltip .tip-salary span:first-child { color: #FFFF00 !important; }
+
+/* ─── Game mode toggle ───────────────────────────────────────────────── */
+.gm-toggle-btn {
+  background: #010110 !important;
+  border: 1px solid #0000aa !important;
+  color: #4444aa !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  border-radius: 2px !important;
+}
+.gm-toggle-btn:hover { border-color: #00FFFF !important; color: #00FFFF !important; }
+.gm-toggle-btn--active {
+  border-color: #00FFFF !important;
+  color: #00FFFF !important;
+  background: rgba(0,255,255,0.08) !important;
+}
+
+/* ─── Draft prospect card ────────────────────────────────────────────── */
+.draft-prospect-card,
+.prospect-card {
+  background: #06060f !important;
+  border: 2px solid #0000aa !important;
+  border-radius: 2px !important;
+}
+.prospect-name { color: #FFFF00 !important; text-shadow: 0 0 12px rgba(255,255,0,0.6) !important; font-family: 'Press Start 2P', monospace !important; font-size: 14px !important; }
+.draft-lobby-title { color: #FFFF00 !important; text-shadow: 0 0 20px rgba(255,255,0,0.7) !important; font-family: 'Press Start 2P', monospace !important; font-size: 20px !important; }
+.draft-prospect-selected td { background: rgba(0,255,255,0.06) !important; }
+
+/* ─── Chaos slider ───────────────────────────────────────────────────── */
+.chaos-slider::-webkit-slider-thumb { background: #00FFFF !important; border-color: #0000FF !important; }
+.chaos-display { color: #00FFFF !important; }
+.chaos-display strong { color: #FFFF00 !important; }
+
+/* ─── Nav button active state ────────────────────────────────────────── */
+.trade-browser-view-toggle .is-active { border-color: #FFFF00 !important; color: #FFFF00 !important; }
+
+/* ─── Selector inputs ────────────────────────────────────────────────── */
+select, input[type="text"], input[type="search"] {
+  background: #010110 !important;
+  border: 1px solid #0000aa !important;
+  color: #e8e8ff !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  border-radius: 2px !important;
+}
+select:focus, input:focus {
+  outline: none !important;
+  border-color: #00FFFF !important;
+  box-shadow: 0 0 8px rgba(0,255,255,0.35) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   REFERENCE IMAGE — SECOND PASS ENHANCEMENTS
+   Based on DALL-E UI mockup: embedded panel titles, LED indicators,
+   stat bars, wireframe arena, refined buttons, tab bar
+═══════════════════════════════════════════════════════════════════════ */
+
+/* ─── Color palette refinement (closer to reference) ────────────────── */
+:root {
+  --sega-border:  #0055CC;   /* reference panel border blue */
+  --sega-accent:  #00CCFF;   /* reference cyan accent */
+  --sega-gold:    #FFCC00;   /* reference gold/yellow */
+  --sega-green:   #00FF44;   /* reference green */
+  --sega-red:     #FF2200;   /* reference red */
+  --sega-orange:  #FF8800;   /* reference orange */
+  --sega-magenta: #FF00CC;   /* reference magenta */
+}
+
+/* ─── Wireframe arena background on body ────────────────────────────── */
+body {
+  background-color: #020208 !important;
+  background-image:
+    /* Perspective grid lines — horizontal */
+    linear-gradient(rgba(0, 80, 200, 0.18) 1px, transparent 1px),
+    /* Perspective grid lines — vertical */
+    linear-gradient(90deg, rgba(0, 80, 200, 0.18) 1px, transparent 1px),
+    /* Radial arena glow */
+    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(0, 50, 180, 0.25) 0%, transparent 70%);
+  background-size: 60px 60px, 60px 60px, 100% 100%;
+  background-attachment: fixed;
+}
+
+/* ─── Panel label — embedded-in-border "LEAGUE HUB" style ──────────── */
+/* Wrap each panel-label in a fieldset-like presentation */
+.panel-label {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 7px !important;
+  color: var(--sega-accent) !important;
+  text-shadow: 0 0 10px rgba(0, 200, 255, 0.8) !important;
+  border: none !important;
+  border-bottom: none !important;
+  padding: 6px 10px 6px !important;
+  margin-bottom: 10px !important;
+  letter-spacing: 0.18em !important;
+  text-transform: uppercase !important;
+  background: #010118 !important;
+  border-top: 2px solid var(--sega-border) !important;
+  border-bottom: 2px solid var(--sega-border) !important;
+  margin-left: -1.25rem !important;
+  margin-right: -1.25rem !important;
+}
+
+/* Dot decorators before/after text — ● ● ● title ● ● ● */
+.panel-label::before,
+.panel-label::after {
+  content: '● ●' !important;
+  font-size: 5px !important;
+  color: var(--sega-border) !important;
+  letter-spacing: 3px !important;
+  opacity: 0.8 !important;
+  font-family: monospace !important;
+}
+.panel-label::before { margin-right: 4px !important; }
+.panel-label::after  { margin-left: 4px !important; }
+
+/* Screen header title — embedded border style */
+.screen-title {
+  position: relative !important;
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 10px !important;
+  color: var(--sega-accent) !important;
+  text-shadow: 0 0 12px rgba(0, 200, 255, 0.9), 0 0 24px rgba(0, 100, 255, 0.4) !important;
+  letter-spacing: 0.2em !important;
+}
+
+/* ─── App header — "LEAGUE HUB" marquee ────────────────────────────── */
+.app-header::before {
+  content: '● ●' !important;
+  font-size: 8px !important;
+  color: var(--sega-border) !important;
+  letter-spacing: 4px !important;
+  position: absolute !important;
+  left: 8px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+.app-header {
+  position: relative !important;
+  padding-left: 40px !important;
+}
+
+/* ─── Panel sections — raised card with embedded top title strip ────── */
+.panel-section {
+  position: relative !important;
+  border: 2px solid var(--sega-border) !important;
+  border-radius: 2px !important;
+  padding: 0 0 10px 0 !important;
+  margin-bottom: 14px !important;
+  background: #03030f !important;
+  box-shadow:
+    inset 2px 2px 0 rgba(0, 100, 255, 0.15),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(0, 50, 200, 0.2) !important;
+}
+.panel-section .panel-label {
+  margin: 0 !important;
+  padding: 5px 10px !important;
+  background: #010128 !important;
+}
+.panel-section--divider {
+  border-top: 2px solid var(--sega-border) !important;
+  padding-top: 0 !important;
+  margin-top: 14px !important;
+}
+
+/* ─── LED Status Indicators ─────────────────────────────────────────── */
+/* Player status flags become LED-style pills */
+.roster-flag {
+  font-family: 'Share Tech Mono', monospace !important;
+  font-size: 8px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  padding: 2px 7px !important;
+  border-radius: 2px !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+/* LED glow bar inside flags */
+.roster-flag::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 3px !important;
+  border-radius: 0 !important;
+}
+.roster-flag--dressed::after { background: #00FF44 !important; box-shadow: 0 0 6px #00FF44 !important; }
+.roster-flag--scratch::after { background: #4444aa !important; }
+.roster-flag--out::after     { background: #FF2200 !important; box-shadow: 0 0 6px #FF2200 !important; }
+.roster-flag--trade::after   { background: #FFCC00 !important; box-shadow: 0 0 6px #FFCC00 !important; }
+
+/* LED indicator legend (add to dash) */
+.led-indicator-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 6px 0;
+}
+.led-indicator {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border: 1px solid;
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+.led-indicator::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+}
+.led-good     { border-color: #007700; color: #00FF44; background: #001a00; }
+.led-good::after { background: #00FF44; box-shadow: 0 0 8px #00FF44; }
+.led-okay     { border-color: #887700; color: #FFCC00; background: #1a1500; }
+.led-okay::after { background: #FFCC00; box-shadow: 0 0 8px #FFCC00; }
+.led-poor     { border-color: #884400; color: #FF8800; background: #1a0a00; }
+.led-poor::after { background: #FF8800; box-shadow: 0 0 8px #FF8800; }
+.led-critical { border-color: #880000; color: #FF2200; background: #1a0000; }
+.led-critical::after { background: #FF2200; box-shadow: 0 0 8px #FF2200; }
+
+/* ─── Player stat bars (OVR/SKT/SHT style) ─────────────────────────── */
+.stat-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 3px 0;
+}
+.stat-bar-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  color: #6688cc;
+  letter-spacing: 0.1em;
+  width: 28px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+.stat-bar-track {
+  flex: 1;
+  height: 8px;
+  background: #000018;
+  border: 1px solid #002266;
+  border-radius: 1px;
+  overflow: hidden;
+  position: relative;
+}
+/* Segmented bar effect */
+.stat-bar-track::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 9px,
+    rgba(0, 0, 20, 0.8) 9px,
+    rgba(0, 0, 20, 0.8) 10px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+.stat-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #004400, #00FF44);
+  border-radius: 0;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.stat-bar-fill--elite { background: linear-gradient(90deg, #004400, #00FF44); box-shadow: 0 0 6px rgba(0,255,68,0.6); }
+.stat-bar-fill--good  { background: linear-gradient(90deg, #002244, #00CCFF); }
+.stat-bar-fill--avg   { background: linear-gradient(90deg, #333300, #CCAA00); }
+.stat-bar-fill--poor  { background: linear-gradient(90deg, #330000, #882200); }
+.stat-bar-value {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: #e8e8ff;
+  width: 22px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ─── Refined button styles — match reference SELECT/CONFIRM ────────── */
+/* Primary = SELECT style (blue border, dark fill) */
+.btn-primary {
+  background: #000033 !important;
+  border: 2px solid #0055CC !important;
+  box-shadow:
+    inset 2px 2px 0 rgba(0, 150, 255, 0.3),
+    inset -2px -2px 0 rgba(0, 0, 40, 0.8),
+    0 4px 0 #000022,
+    0 0 12px rgba(0, 80, 200, 0.5) !important;
+  color: #00CCFF !important;
+  text-shadow: 0 0 10px rgba(0, 200, 255, 0.9) !important;
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 8px !important;
+  letter-spacing: 0.1em !important;
+  border-radius: 2px !important;
+  line-height: 1.8 !important;
+}
+.btn-primary:hover {
+  background: #00004a !important;
+  border-color: #00AAFF !important;
+  box-shadow:
+    inset 2px 2px 0 rgba(0, 180, 255, 0.4),
+    inset -2px -2px 0 rgba(0, 0, 40, 0.8),
+    0 4px 0 #000033,
+    0 0 22px rgba(0, 150, 255, 0.7) !important;
+}
+.btn-primary:active {
+  transform: translateY(3px) !important;
+  box-shadow:
+    inset -1px -1px 0 rgba(0, 150, 255, 0.2),
+    inset 1px 1px 0 rgba(0, 0, 0, 0.9),
+    0 1px 0 #000022 !important;
+}
+
+/* CONFIRM variant — solid red (use on end-season, critical actions) */
+#btn-end-season {
+  background: #330000 !important;
+  border: 2px solid #CC1100 !important;
+  color: #FF4422 !important;
+  text-shadow: 0 0 10px rgba(255, 50, 20, 0.9) !important;
+  box-shadow:
+    inset 2px 2px 0 rgba(255, 80, 40, 0.2),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.8),
+    0 4px 0 #1a0000,
+    0 0 14px rgba(200, 20, 0, 0.5) !important;
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 8px !important;
+  letter-spacing: 0.1em !important;
+}
+
+/* Sim-playoffs/series — magenta CONFIRM-style */
+#btn-sim-playoffs,
+#btn-sim-series {
+  background: #220022 !important;
+  border: 2px solid #AA0088 !important;
+  color: #FF00CC !important;
+  text-shadow: 0 0 10px rgba(255, 0, 200, 0.9) !important;
+  box-shadow:
+    inset 2px 2px 0 rgba(255, 0, 200, 0.2),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.8),
+    0 4px 0 #110011,
+    0 0 14px rgba(200, 0, 150, 0.5) !important;
+}
+
+/* ─── Tab bar — OVERVIEW/ROSTER/LINES style ─────────────────────────── */
+.roster-view-toggle {
+  gap: 2px !important;
+  padding: 0 0 0 0 !important;
+  background: #010118 !important;
+  border-top: 2px solid var(--sega-border) !important;
+  border-bottom: 2px solid var(--sega-border) !important;
+  margin-bottom: 0 !important;
+}
+.roster-tab {
+  border: none !important;
+  border-right: 1px solid var(--sega-border) !important;
+  border-radius: 0 !important;
+  padding: 8px 20px !important;
+  background: #010118 !important;
+  color: #4466aa !important;
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 7px !important;
+  letter-spacing: 0.12em !important;
+  transition: all 0.1s !important;
+}
+.roster-tab:first-child { border-left: none !important; }
+.roster-tab:hover {
+  background: #001a00 !important;
+  color: #00FF44 !important;
+  border-color: var(--sega-border) !important;
+}
+.roster-tab.active {
+  background: #001a44 !important;
+  color: #00CCFF !important;
+  text-shadow: 0 0 10px rgba(0, 200, 255, 0.8) !important;
+  box-shadow: none !important;
+  border-bottom: 3px solid #00CCFF !important;
+}
+
+/* Header nav — tab bar style matching reference bottom tabs */
+.header-nav {
+  gap: 0 !important;
+  border: 1px solid var(--sega-border) !important;
+  border-radius: 2px !important;
+  overflow: hidden !important;
+  background: #010118 !important;
+}
+.header-nav button {
+  border: none !important;
+  border-right: 1px solid var(--sega-border) !important;
+  border-radius: 0 !important;
+  padding: 6px 12px !important;
+  background: transparent !important;
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 7px !important;
+  letter-spacing: 0.08em !important;
+}
+.header-nav button:last-child { border-right: none !important; }
+.header-nav button:hover {
+  background: #001a44 !important;
+  color: #00CCFF !important;
+  box-shadow: none !important;
+}
+.header-nav button.active {
+  background: #001a44 !important;
+  color: #00CCFF !important;
+  text-shadow: 0 0 10px rgba(0,200,255,0.8) !important;
+  box-shadow: inset 0 -3px 0 #00CCFF !important;
+}
+
+/* ─── Game title screen — wireframe arena feel ──────────────────────── */
+#screen-team-select {
+  background-image:
+    radial-gradient(ellipse 70% 45% at 50% 90%, rgba(0, 40, 160, 0.35) 0%, transparent 65%),
+    linear-gradient(rgba(0, 50, 180, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 50, 180, 0.12) 1px, transparent 1px) !important;
+  background-size: 100% 100%, 50px 50px, 50px 50px !important;
+}
+
+/* ─── Stats panel numbers — gold tint ───────────────────────────────── */
+.cap-value {
+  color: var(--sega-gold) !important;
+  text-shadow: 0 0 14px rgba(255, 200, 0, 0.8) !important;
+}
+
+/* ─── Player OVR on dash — large amber number ────────────────────────── */
+.draft-stat-value,
+.trade-widget-value {
+  color: var(--sega-gold) !important;
+  text-shadow: 0 0 10px rgba(255, 200, 0, 0.7) !important;
+}
+
+/* ─── Next game matchup — VS card ─────────────────────────────────────  */
+.sched-row {
+  position: relative !important;
+}
+.sched-opp::before {
+  content: 'VS ' !important;
+  color: #FF2200 !important;
+  font-weight: 700 !important;
+  font-size: 9px !important;
+}
+
+/* ─── Team finances / salary bar — reference color ──────────────────── */
+.cap-bar-fill {
+  background: linear-gradient(90deg, #003399 0%, #0055CC 50%, #00CCFF 100%) !important;
+}
+
+/* ─── Score display — reference gold numbers ─────────────────────────── */
+.gr-score-win {
+  color: var(--sega-gold) !important;
+  text-shadow: 0 0 20px rgba(255, 200, 0, 0.9), 0 0 40px rgba(255, 200, 0, 0.4) !important;
+}
+
+/* ─── Team card — reference border refinement ────────────────────────── */
+.team-card {
+  border-color: var(--sega-border) !important;
+}
+.team-card:hover {
+  border-color: var(--sega-accent) !important;
+  box-shadow: 0 0 20px rgba(0, 180, 255, 0.5), inset 2px 2px 0 rgba(0, 180, 255, 0.15) !important;
+}
+
+/* ─── Standings — highlight row for player team ──────────────────────── */
+.standings-player-row td {
+  color: var(--sega-gold) !important;
+  text-shadow: 0 0 6px rgba(255, 200, 0, 0.5) !important;
+  background: rgba(255, 200, 0, 0.05) !important;
+}
+
+/* ─── Standings relegate / promote lines ─────────────────────────────── */
+.standings-relegate-line td {
+  border-top: 2px solid #FF2200 !important;
+  box-shadow: 0 -2px 8px rgba(255, 34, 0, 0.4) !important;
+}
+.standings-promote-line td {
+  border-bottom: 2px dashed var(--sega-gold) !important;
+}
+
+/* ─── Game watch period label ─────────────────────────────────────────── */
+.gw-period-label {
+  color: var(--sega-accent) !important;
+  text-shadow: 0 0 12px rgba(0, 200, 255, 0.8) !important;
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 9px !important;
+  letter-spacing: 0.15em !important;
+}
+
+/* ─── Cap summary row label refinement ───────────────────────────────── */
+.cap-label {
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 7px !important;
+  color: var(--sega-accent) !important;
+  text-shadow: 0 0 8px rgba(0, 200, 255, 0.6) !important;
+}
+.cap-over-flag {
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 6px !important;
+  color: #FF2200 !important;
+  text-shadow: 0 0 8px rgba(255, 34, 0, 0.8) !important;
+  animation: draft-pulse 0.8s ease-in-out infinite !important;
+}
+
+/* ─── Trade value colors — reference palette ─────────────────────────── */
+.value-good    { color: var(--sega-green) !important; }
+.value-bad     { color: #FF2200 !important; }
+.value-robbery { color: #FF2200 !important; font-weight: 700 !important; }
+.value-fair    { color: #FFCC00 !important; }
+
+/* ─── Inbox-style news items ──────────────────────────────────────────── */
+.news-item {
+  border-left: 3px solid transparent !important;
+  padding-left: 8px !important;
+  transition: border-color 0.12s !important;
+}
+.news-item:hover {
+  border-left-color: var(--sega-accent) !important;
+  background: rgba(0, 80, 200, 0.06) !important;
+}
+
+/* ─── Franchise / season summary grade — big gold number ─────────────── */
+.season-summary-grade {
+  color: var(--sega-gold) !important;
+  text-shadow: 0 0 30px rgba(255, 200, 0, 0.9), 0 0 60px rgba(255, 200, 0, 0.4) !important;
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 80px !important;
+  line-height: 1.1 !important;
+}
+
+/* ─── Draft lobby title ───────────────────────────────────────────────── */
+.draft-lobby-title {
+  color: var(--sega-accent) !important;
+  text-shadow: 0 0 20px rgba(0, 200, 255, 0.9), 0 0 40px rgba(0, 100, 255, 0.4) !important;
+  font-size: 18px !important;
+  line-height: 1.8 !important;
+}
+
+/* ─── Round indicator ─────────────────────────────────────────────────── */
+#draft-round-indicator {
+  color: var(--sega-gold) !important;
+  text-shadow: 0 0 10px rgba(255, 200, 0, 0.7) !important;
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 8px !important;
+  letter-spacing: 0.12em !important;
+}
+
+/* ─── Standings table numbers — high precision tabular ───────────────── */
+.standings-table td,
+.standings-table th {
+  font-family: 'Share Tech Mono', monospace !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* ─── Sim controls — reference-inspired group box ────────────────────── */
+.sim-controls {
+  border: 2px solid var(--sega-border) !important;
+  border-radius: 2px !important;
+  padding: 12px 10px 10px !important;
+  background: #03030f !important;
+  position: relative !important;
+  box-shadow: inset 0 0 20px rgba(0, 30, 100, 0.3) !important;
+}
+.sim-controls::before {
+  content: 'SIMULATE' !important;
+  position: absolute !important;
+  top: -8px !important;
+  left: 10px !important;
+  background: var(--bg) !important;
+  padding: 0 6px !important;
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 6px !important;
+  color: var(--sega-accent) !important;
+  text-shadow: 0 0 8px rgba(0, 200, 255, 0.7) !important;
+  letter-spacing: 0.15em !important;
+}
+
+/* ─── Game mode toggle group box ──────────────────────────────────────── */
+#game-mode-toggle {
+  border: 1px solid var(--sega-border) !important;
+  border-radius: 2px !important;
+  padding: 8px 10px !important;
+  background: #03030f !important;
+  margin-top: 8px !important;
+}
+
+/* ─── Modal header refinement ─────────────────────────────────────────── */
+.gr-header {
+  background: #010128 !important;
+  border-bottom: 2px solid var(--sega-border) !important;
+}
+.gr-title,
+.gr-header-label {
+  font-family: 'Press Start 2P', monospace !important;
+  color: var(--sega-accent) !important;
+  text-shadow: 0 0 10px rgba(0, 200, 255, 0.7) !important;
+  font-size: 9px !important;
+  letter-spacing: 0.15em !important;
+}
+
+/* ─── Event type label — reference color ─────────────────────────────── */
+.event-type-label {
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 7px !important;
+  letter-spacing: 0.08em !important;
+  border-radius: 2px !important;
+}
+
+/* ─── Player profile card (trade / draft detail) ──────────────────────── */
+.draft-prospect-card,
+.prospect-card,
+.trade-card {
+  border: 2px solid var(--sega-border) !important;
+  background: #030310 !important;
+  box-shadow:
+    inset 2px 2px 0 rgba(0, 80, 200, 0.2),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.7),
+    0 0 10px rgba(0, 50, 180, 0.25) !important;
+}
+
+/* ─── Playoff champion slot — gold trophy style ──────────────────────── */
+.po-champion-slot {
+  border: 2px solid var(--sega-gold) !important;
+  background: #1a1500 !important;
+  box-shadow: 0 0 24px rgba(255, 200, 0, 0.5), inset 0 0 20px rgba(255, 200, 0, 0.07) !important;
+}
+
+/* ─── Status bar at bottom of panels (chemistry/morale style) ────────── */
+.team-record-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 6px 0;
+}
+.team-record-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 50px;
+}
+.team-record-stat-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  color: #4466aa;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.team-record-stat-value {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--sega-gold);
+  text-shadow: 0 0 10px rgba(255,200,0,0.6);
+}
+
+/* ─── Pixel corner decoration on cards ───────────────────────────────── */
+.panel-section::before,
+.panel-section::after {
+  content: '' !important;
+  position: absolute !important;
+  width: 6px !important;
+  height: 6px !important;
+  background: var(--sega-accent) !important;
+}
+.panel-section::before { top: -1px; left: -1px; }
+.panel-section::after  { bottom: -1px; right: -1px; }
+
+/* Remove corner decorations on panel-label itself (was overriding) */
+/* (dot decorators are on .panel-label pseudo-elements — keep those) */
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SVG GRAPHIC ASSETS — Arena background, panel corners, icon buttons
+═══════════════════════════════════════════════════════════════════════ */
+
+/* ─── Arena background on team select screen ────────────────────────── */
+#screen-team-select {
+  background-image: url('../assets/arena-bg.svg') !important;
+  background-size: cover !important;
+  background-position: center top !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+}
+
+/* Overlay to darken arena for readability of cards */
+#screen-team-select .screen-inner {
+  position: relative;
+  z-index: 1;
+}
+#screen-team-select::before {
+  content: '' !important;
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0, 0, 8, 0.45) !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+}
+
+/* ─── Arena background on dashboard left panel ───────────────────────── */
+/* Subtle arena glow behind the sim controls panel */
+.panel-left {
+  background-image: url('../assets/arena-bg.svg') !important;
+  background-size: 200% auto !important;
+  background-position: center -30px !important;
+  background-repeat: no-repeat !important;
+  background-attachment: local !important;
+}
+/* Dark overlay so content stays readable */
+.panel-left::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: rgba(2, 2, 15, 0.82) !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+.panel-left > * {
+  position: relative !important;
+  z-index: 1 !important;
+}
+.panel-left {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+/* ─── Panel corner L-brackets using SVG ─────────────────────────────── */
+/* Applied to every panel-section card via pseudo-elements + box corners */
+.panel-section {
+  /* Remove the plain CSS ::before/::after squares we set earlier */
+}
+.panel-section::before,
+.panel-section::after {
+  content: none !important;
+}
+
+/* Use outline corners via background images at all 4 corners */
+.panel-section,
+.trade-card,
+.draft-prospect-card,
+.prospect-card,
+.modal-box,
+.team-card {
+  --corner-size: 16px;
+  background-image:
+    url('../assets/corner-tl.svg'),
+    url('../assets/corner-tr.svg'),
+    url('../assets/corner-bl.svg'),
+    url('../assets/corner-br.svg') !important;
+  background-repeat: no-repeat !important;
+  background-position:
+    top left,
+    top right,
+    bottom left,
+    bottom right !important;
+  background-size:
+    var(--corner-size) var(--corner-size),
+    var(--corner-size) var(--corner-size),
+    var(--corner-size) var(--corner-size),
+    var(--corner-size) var(--corner-size) !important;
+}
+
+/* Modal box gets larger corners */
+.modal-box {
+  --corner-size: 22px;
+}
+
+/* Team cards get medium corners */
+.team-card {
+  --corner-size: 14px;
+}
+
+/* ─── Game title — arena behind title block ──────────────────────────── */
+.title-block {
+  position: relative;
+  z-index: 2;
+  padding: 3rem 1.5rem 2rem;
+}
+
+/* Dim the grid body background in favour of SVG on key screens */
+#screen-team-select body,
+#screen-team-select {
+  background-color: #010108 !important;
+}
+
+/* ─── Header: arena lights peek through top ──────────────────────────── */
+.app-header {
+  background-image: url('../assets/arena-bg.svg') !important;
+  background-size: 100% 600% !important;
+  background-position: center top !important;
+  background-repeat: no-repeat !important;
+}
+.app-header::after {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: rgba(1, 1, 20, 0.88) !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+.app-header > * {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* ─── Nav button hockey icons via SVG data URIs ─────────────────────── */
+/* Roster button — player silhouette icon */
+.header-nav button[onclick*="roster"]::before {
+  content: '' !important;
+  display: inline-block !important;
+  width: 14px !important;
+  height: 14px !important;
+  margin-right: 5px !important;
+  vertical-align: middle !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='4' r='3' fill='%2300CCFF'/%3E%3Crect x='3' y='8' width='10' height='6' rx='1' fill='%2300CCFF'/%3E%3C/svg%3E") !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Standings — trophy icon */
+.header-nav button[onclick*="standings"]::before {
+  content: '' !important;
+  display: inline-block !important;
+  width: 14px !important;
+  height: 14px !important;
+  margin-right: 5px !important;
+  vertical-align: middle !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 2h10v5a5 5 0 01-10 0V2z' fill='%23FFCC00'/%3E%3Crect x='6' y='10' width='4' height='3' fill='%23FFCC00'/%3E%3Crect x='4' y='13' width='8' height='2' fill='%23FFCC00'/%3E%3Crect x='1' y='2' width='2' height='4' rx='1' fill='%23FFCC00' opacity='.6'/%3E%3Crect x='13' y='2' width='2' height='4' rx='1' fill='%23FFCC00' opacity='.6'/%3E%3C/svg%3E") !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Trades — arrows icon */
+.header-nav button[onclick*="trade"]::before {
+  content: '' !important;
+  display: inline-block !important;
+  width: 14px !important;
+  height: 14px !important;
+  margin-right: 5px !important;
+  vertical-align: middle !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M1 5h11l-3-3 1.5-1.5L15 5l-4.5 4.5L9 8l3-3H1V5z' fill='%2300FF44'/%3E%3Cpath d='M15 11H4l3 3-1.5 1.5L1 11l4.5-4.5L7 8l-3 3h11v0z' fill='%2300FF44'/%3E%3C/svg%3E") !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Draft — star icon */
+.header-nav button[onclick*="draft"]::before {
+  content: '' !important;
+  display: inline-block !important;
+  width: 14px !important;
+  height: 14px !important;
+  margin-right: 5px !important;
+  vertical-align: middle !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1l2 5h5l-4 3 1.5 5L8 11l-4.5 3L5 9 1 6h5z' fill='%23FFCC00'/%3E%3C/svg%3E") !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+}
+
+/* News — envelope icon */
+.header-nav button[onclick*="news"]::before {
+  content: '' !important;
+  display: inline-block !important;
+  width: 14px !important;
+  height: 14px !important;
+  margin-right: 5px !important;
+  vertical-align: middle !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1' y='3' width='14' height='10' rx='1' fill='none' stroke='%2300CCFF' stroke-width='1.5'/%3E%3Cpath d='M1 4l7 5 7-5' fill='none' stroke='%2300CCFF' stroke-width='1.5'/%3E%3C/svg%3E") !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+}
+
+/* ─── Sim controls: hockey puck icon on primary sim button ──────────── */
+#btn-sim-next::before {
+  content: '' !important;
+  display: inline-block !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin-right: 8px !important;
+  vertical-align: middle !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cellipse cx='8' cy='8' rx='7' ry='4' fill='%23222' stroke='%2300CCFF' stroke-width='1.5'/%3E%3Cellipse cx='8' cy='8' rx='5' ry='2.5' fill='none' stroke='%230055CC' stroke-width='0.8'/%3E%3C/svg%3E") !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+}
+
+/* ─── Score modal — use arena bg behind scoreboard ───────────────────── */
+.gr-scoreboard {
+  background-image: url('../assets/arena-bg.svg') !important;
+  background-size: cover !important;
+  background-position: center 20% !important;
+  background-color: #010118 !important;
+  position: relative !important;
+}
+.gr-scoreboard::after {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: rgba(1, 1, 20, 0.75) !important;
+  pointer-events: none !important;
+}
+.gr-scoreboard > * {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* ─── Team select game title — arena glow behind text ───────────────── */
+.game-title {
+  position: relative !important;
+}
+
+/* Animated arena spotlight sweep on title screen */
+@keyframes spotlight-sweep {
+  0%   { opacity: 0.3; transform: translateX(-20px); }
+  50%  { opacity: 0.6; transform: translateX(20px); }
+  100% { opacity: 0.3; transform: translateX(-20px); }
+}
+.title-block::before {
+  content: '' !important;
+  position: absolute !important;
+  top: -40px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 300px !important;
+  height: 200px !important;
+  background: radial-gradient(ellipse, rgba(0, 120, 255, 0.18) 0%, transparent 70%) !important;
+  pointer-events: none !important;
+  animation: spotlight-sweep 4s ease-in-out infinite !important;
+}
+
+/* ─── Body: remove flat CSS grid, defer to SVG on key screens ────────── */
+body {
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 2px,
+      rgba(0, 0, 0, 0.15) 2px,
+      rgba(0, 0, 0, 0.15) 4px
+    ) !important;
+  background-color: #010108 !important;
+  background-size: auto !important;
+  background-attachment: fixed !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   TEAM LOGO & COLOR SYSTEM
+═══════════════════════════════════════════════════════════════════════ */
+
+/* ─── Team card: logo row layout ─────────────────────────────────────── */
+.team-card-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.team-card-logo {
+  flex-shrink: 0;
+  line-height: 0;
+  filter: drop-shadow(0 0 6px var(--team-glow, rgba(0,80,200,0.5)));
+  transition: filter 0.2s;
+}
+.team-card:hover .team-card-logo {
+  filter: drop-shadow(0 0 14px var(--team-glow, rgba(0,150,255,0.8)));
+}
+.team-card-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Team card border uses team primary color */
+.team-card {
+  border-color: var(--team-primary, #0055CC) !important;
+  box-shadow:
+    inset 2px 2px 0 rgba(255,255,255,0.08),
+    inset -2px -2px 0 rgba(0,0,0,0.6) !important;
+  transition: border-color 0.15s, box-shadow 0.15s !important;
+}
+.team-card:hover {
+  border-color: var(--team-secondary, #00CCFF) !important;
+  box-shadow:
+    inset 2px 2px 0 rgba(255,255,255,0.12),
+    0 0 20px var(--team-glow, rgba(0,150,255,0.5)) !important;
+}
+.team-card--selected {
+  border-color: var(--team-secondary, #FFFF00) !important;
+  box-shadow: 0 0 24px var(--team-glow, rgba(255,255,0,0.6)) !important;
+}
+
+/* ─── Team abbrev uses team secondary ────────────────────────────────── */
+.team-card-abbrev {
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 14px !important;
+  font-style: italic !important;
+  color: var(--team-secondary, #FFFF00) !important;
+  text-shadow: 0 0 10px var(--team-glow, rgba(255,255,0,0.7)), 1px 1px 0 #000 !important;
+}
+
+/* ─── App header: team color accent ─────────────────────────────────── */
+.app-header {
+  border-bottom-color: var(--team-primary, #0000FF) !important;
+  box-shadow: 0 3px 0 var(--team-dark, #000066), 0 0 24px var(--team-glow, rgba(0,0,255,0.45)) !important;
+}
+.header-team-name {
+  color: var(--team-secondary, #FFFF00) !important;
+  text-shadow: 0 0 12px var(--team-glow, rgba(255,255,0,0.8)), 2px 2px 0 #000 !important;
+}
+
+/* Mini logo in the header */
+.hdr-team-logo {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+  line-height: 0;
+  filter: drop-shadow(0 0 5px var(--team-glow, rgba(0,80,200,0.5)));
+}
+
+/* ─── Game result scoreboard: team logos ─────────────────────────────── */
+.gr-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.gr-team-logo {
+  line-height: 0;
+  margin-bottom: 4px;
+  filter: drop-shadow(0 0 8px rgba(0,80,200,0.5));
+}
+.gr-winner .gr-team-logo {
+  filter: drop-shadow(0 0 16px var(--team-glow, rgba(0,200,100,0.7)));
+  animation: logo-pulse 2s ease-in-out infinite;
+}
+@keyframes logo-pulse {
+  0%, 100% { filter: drop-shadow(0 0 10px rgba(255,200,0,0.6)); }
+  50%       { filter: drop-shadow(0 0 24px rgba(255,200,0,1)); }
+}
+
+/* ─── Team intro: large centered logo ────────────────────────────────── */
+.intro-team-logo-display {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+  line-height: 0;
+  filter: drop-shadow(0 0 20px var(--team-glow, rgba(0,80,200,0.7)));
+  animation: logo-pulse 3s ease-in-out infinite;
+}
+
+/* ─── CSS custom properties used by team color system ───────────────── */
+:root {
+  --team-primary:   #0055CC;
+  --team-secondary: #00CCFF;
+  --team-dark:      #001144;
+  --team-light:     #4488FF;
+  --team-glow:      rgba(0, 80, 200, 0.6);
+  --team-sec-glow:  rgba(0, 200, 255, 0.45);
+}
+
+/* ─── Nav button active state uses team secondary ────────────────────── */
+.header-nav button.active {
+  border-bottom: 3px solid var(--team-secondary, #00CCFF) !important;
+  color: var(--team-secondary, #00CCFF) !important;
+  text-shadow: 0 0 10px var(--team-sec-glow, rgba(0,200,255,0.8)) !important;
+}
+
+/* ─── Cap bar uses team primary ──────────────────────────────────────── */
+.cap-bar-fill {
+  background: linear-gradient(90deg,
+    var(--team-dark, #001144) 0%,
+    var(--team-primary, #0055CC) 50%,
+    var(--team-secondary, #00CCFF) 100%) !important;
+}
+
+/* ─── Sim controls button uses team primary on hover ─────────────────── */
+.btn-primary:hover {
+  border-color: var(--team-secondary, #00AAFF) !important;
+  box-shadow:
+    inset 2px 2px 0 rgba(255,255,255,0.2),
+    0 0 22px var(--team-glow, rgba(0,150,255,0.7)) !important;
+}
+
+/* ─── OVR tier colors with team accent ───────────────────────────────── */
+.td-ovr { color: var(--team-secondary, #00CCFF) !important; }

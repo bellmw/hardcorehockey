@@ -1,6 +1,6 @@
 # Hockey GM — Personal Hockey Management Sim
 
-Current version: v1.2.8
+Current version: v1.3.0
 
 A stripped-down, goofy hockey GM game. You manage a team, sim seasons, survive
 relegation, and watch Claude-powered AI make absurd trade offers at you.
@@ -18,8 +18,26 @@ random events, draft classes). See **API Setup** below.
 
 ---
 
-## Features (v1.2.8)
+## Features (v1.3.0)
 
+- **90s Sega Genesis / Arcade UI** — Full CRT aesthetic reskin:
+  - `Press Start 2P` pixel-art font + `Share Tech Mono` data font
+  - CRT scanline overlay animation on the body
+  - Beveled arcade-style buttons with bounce+flash micro-interactions
+  - LED indicator dots (good / okay / poor / critical) on team overview
+  - Segmented OVR stat bars on roster rows
+  - Animated salary cap bar (cap-grow + cap-pulse)
+  - Sticky roster table headers with frozen POS+Name columns and hover-reveal actions
+  - Metal corner bracket SVGs on all panels and modals
+  - Perspective ice-rink SVG arena background (stadium lights, vanishing point grid, rink markings)
+  - Nav button hockey icon data URIs (roster, standings, trade, draft, news)
+  - Spotlight sweep animation on title screen
+- **Procedural Team Logo System** — Each of the 36 teams has a unique SVG shield badge:
+  - Generated from each team's `primaryColor` + `secondaryColor` in `teams.json`
+  - Shield with gradient fill, secondary-color stripe, bevel highlight, glow filter, and drop shadow
+  - Team abbreviation rendered in `Press Start 2P` with matching glow
+  - Logos appear on: team select cards, team intro screen (96px), game result modal (52px each), app header (28px mini)
+- **Global team color theming** — After picking a team, CSS custom properties (`--team-primary`, `--team-secondary`, `--team-glow`, etc.) are applied to `:root`, so the header border, cap bar gradient, nav active tab, and button glows all automatically reflect your team's actual colors
 - **Dual Simulation Modes** — Quick Sim (instant result) or Watch Game (period-by-period)
 - **Event System** — Random in-season events with chaos level (0-10)
   - League-wide and team-specific events
@@ -104,10 +122,20 @@ hockey-gm/
 │       ├── news.js              ← Headlines and events feed
 │       ├── gameWatch.js         ← Period-by-period game viewer
 │       ├── teamIntro.js         ← Team intro with chaos selector
+│       ├── teamLogo.js          ← Procedural SVG shield logo generator
+│       ├── teamSelect.js        ← Team selection screen
+│       ├── gameResult.js        ← Game result modal
+│       ├── seasonSummary.js     ← End-of-season report card
+│       ├── standings.js         ← League standings table
 │       └── eventModal.js        ← Event display modal
 │
 └── assets/
-    └── style.css           ← Global styles
+    ├── style.css           ← Global styles (includes full Sega Genesis reskin)
+    ├── arena-bg.svg        ← Perspective ice-rink background illustration
+    ├── corner-tl.svg       ← Metal corner bracket decorators (×4 directions)
+    ├── corner-tr.svg
+    ├── corner-bl.svg
+    └── corner-br.svg
 ```
 
 ---

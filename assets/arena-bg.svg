@@ -1,0 +1,216 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- Deep arena darkness -->
+    <radialGradient id="arenaVoid" cx="50%" cy="100%" r="90%">
+      <stop offset="0%" stop-color="#001055" stop-opacity="1"/>
+      <stop offset="50%" stop-color="#000820" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#000008" stop-opacity="1"/>
+    </radialGradient>
+
+    <!-- Ice surface glow at horizon -->
+    <radialGradient id="iceGlow" cx="50%" cy="0%" r="70%">
+      <stop offset="0%" stop-color="#0044CC" stop-opacity="0.55"/>
+      <stop offset="40%" stop-color="#001888" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Spotlight gradients -->
+    <radialGradient id="spot1" cx="25%" cy="0%" r="35%">
+      <stop offset="0%" stop-color="#88CCFF" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="spot2" cx="75%" cy="0%" r="35%">
+      <stop offset="0%" stop-color="#88CCFF" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="spot3" cx="50%" cy="0%" r="30%">
+      <stop offset="0%" stop-color="#AADDFF" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Ice surface shimmer -->
+    <linearGradient id="iceShimmer" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0066FF" stop-opacity="0.5"/>
+      <stop offset="60%" stop-color="#0033AA" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#001133" stop-opacity="0.05"/>
+    </linearGradient>
+
+    <!-- Clip for ice surface ellipse -->
+    <clipPath id="iceClip">
+      <ellipse cx="400" cy="120" rx="480" ry="140"/>
+    </clipPath>
+
+    <!-- Glow filter for rink lines -->
+    <filter id="lineGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Strong glow for center ice -->
+    <filter id="strongGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Star flare for lights -->
+    <filter id="starFlare" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background void -->
+  <rect width="800" height="500" fill="url(#arenaVoid)"/>
+
+  <!-- Distant upper-arena darkness gradient -->
+  <rect width="800" height="220" fill="url(#spot1)"/>
+  <rect width="800" height="220" fill="url(#spot2)"/>
+  <rect width="800" height="220" fill="url(#spot3)"/>
+
+  <!-- ═══ ARENA STRUCTURE: Upper seating bowl ═══ -->
+  <!-- Left seating block -->
+  <path d="M0,0 L320,160 L320,200 L0,80 Z" fill="none" stroke="#001166" stroke-width="0.5" opacity="0.6"/>
+  <path d="M0,20 L300,168 M0,40 L280,176 M0,60 L260,184 M0,80 L240,192" stroke="#000d44" stroke-width="0.4" opacity="0.5"/>
+
+  <!-- Right seating block -->
+  <path d="M800,0 L480,160 L480,200 L800,80 Z" fill="none" stroke="#001166" stroke-width="0.5" opacity="0.6"/>
+  <path d="M800,20 L500,168 M800,40 L520,176 M800,60 L540,184 M800,80 L560,192" stroke="#000d44" stroke-width="0.4" opacity="0.5"/>
+
+  <!-- Upper arena rim curve -->
+  <path d="M0,10 Q200,-15 400,0 Q600,-15 800,10" fill="none" stroke="#001a77" stroke-width="1" opacity="0.7"/>
+  <path d="M50,30 Q250,10 400,20 Q550,10 750,30" fill="none" stroke="#001166" stroke-width="0.7" opacity="0.5"/>
+
+  <!-- ═══ ARENA LIGHTS ═══ -->
+  <!-- Ceiling light rig horizontal bar -->
+  <line x1="100" y1="15" x2="700" y2="15" stroke="#002288" stroke-width="1.5" opacity="0.6"/>
+  <!-- Vertical light drops -->
+  <line x1="160" y1="15" x2="160" y2="45" stroke="#001177" stroke-width="1" opacity="0.5"/>
+  <line x1="280" y1="15" x2="280" y2="42" stroke="#001177" stroke-width="1" opacity="0.5"/>
+  <line x1="400" y1="15" x2="400" y2="40" stroke="#001177" stroke-width="1" opacity="0.5"/>
+  <line x1="520" y1="15" x2="520" y2="42" stroke="#001177" stroke-width="1" opacity="0.5"/>
+  <line x1="640" y1="15" x2="640" y2="45" stroke="#001177" stroke-width="1" opacity="0.5"/>
+
+  <!-- Light fixtures & flares -->
+  <!-- Left cluster -->
+  <g filter="url(#starFlare)">
+    <circle cx="160" cy="45" r="3" fill="#AACCFF" opacity="0.9"/>
+    <line x1="155" y1="45" x2="165" y2="45" stroke="#AACCFF" stroke-width="0.6" opacity="0.7"/>
+    <line x1="160" y1="40" x2="160" y2="50" stroke="#AACCFF" stroke-width="0.6" opacity="0.7"/>
+  </g>
+  <g filter="url(#starFlare)">
+    <circle cx="280" cy="42" r="3.5" fill="#BBDDFF" opacity="0.9"/>
+    <line x1="274" y1="42" x2="286" y2="42" stroke="#BBDDFF" stroke-width="0.6" opacity="0.7"/>
+    <line x1="280" y1="36" x2="280" y2="48" stroke="#BBDDFF" stroke-width="0.6" opacity="0.7"/>
+  </g>
+  <!-- Center main -->
+  <g filter="url(#starFlare)">
+    <circle cx="400" cy="40" r="5" fill="#DDEEFF" opacity="1"/>
+    <line x1="390" y1="40" x2="410" y2="40" stroke="#DDEEFF" stroke-width="1" opacity="0.8"/>
+    <line x1="400" y1="30" x2="400" y2="50" stroke="#DDEEFF" stroke-width="1" opacity="0.8"/>
+    <line x1="393" y1="33" x2="407" y2="47" stroke="#DDEEFF" stroke-width="0.5" opacity="0.5"/>
+    <line x1="407" y1="33" x2="393" y2="47" stroke="#DDEEFF" stroke-width="0.5" opacity="0.5"/>
+  </g>
+  <g filter="url(#starFlare)">
+    <circle cx="520" cy="42" r="3.5" fill="#BBDDFF" opacity="0.9"/>
+    <line x1="514" y1="42" x2="526" y2="42" stroke="#BBDDFF" stroke-width="0.6" opacity="0.7"/>
+    <line x1="520" y1="36" x2="520" y2="48" stroke="#BBDDFF" stroke-width="0.6" opacity="0.7"/>
+  </g>
+  <g filter="url(#starFlare)">
+    <circle cx="640" cy="45" r="3" fill="#AACCFF" opacity="0.9"/>
+    <line x1="635" y1="45" x2="645" y2="45" stroke="#AACCFF" stroke-width="0.6" opacity="0.7"/>
+    <line x1="640" y1="40" x2="640" y2="50" stroke="#AACCFF" stroke-width="0.6" opacity="0.7"/>
+  </g>
+
+  <!-- Light cones from each fixture -->
+  <path d="M160,48 L80,250 L240,250 Z" fill="url(#iceShimmer)" opacity="0.06"/>
+  <path d="M280,45 L180,260 L380,260 Z" fill="url(#iceShimmer)" opacity="0.07"/>
+  <path d="M400,43 L220,270 L580,270 Z" fill="url(#iceShimmer)" opacity="0.08"/>
+  <path d="M520,45 L420,260 L620,260 Z" fill="url(#iceShimmer)" opacity="0.07"/>
+  <path d="M640,48 L560,250 L720,250 Z" fill="url(#iceShimmer)" opacity="0.06"/>
+
+  <!-- ═══ ICE SURFACE (perspective ellipse) ═══ -->
+  <ellipse cx="400" cy="130" rx="460" ry="120" fill="#000C33" opacity="0.5"/>
+  <ellipse cx="400" cy="130" rx="460" ry="120" fill="none" stroke="#0033BB" stroke-width="1.5" opacity="0.8" filter="url(#lineGlow)"/>
+
+  <!-- Ice glow overlay -->
+  <ellipse cx="400" cy="130" rx="440" ry="110" fill="url(#iceGlow)"/>
+
+  <!-- ═══ PERSPECTIVE GRID ON ICE ═══ -->
+  <g filter="url(#lineGlow)" opacity="0.7">
+    <!-- Longitudinal lines (vanish to horizon at 400,90) -->
+    <line x1="400" y1="90" x2="-60" y2="260" stroke="#0033CC" stroke-width="0.8"/>
+    <line x1="400" y1="90" x2="60"  y2="255" stroke="#0033CC" stroke-width="0.8"/>
+    <line x1="400" y1="90" x2="180" y2="248" stroke="#0033CC" stroke-width="0.8"/>
+    <line x1="400" y1="90" x2="300" y2="243" stroke="#0033CC" stroke-width="0.8"/>
+    <line x1="400" y1="90" x2="400" y2="242" stroke="#0044DD" stroke-width="1.2"/>
+    <line x1="400" y1="90" x2="500" y2="243" stroke="#0033CC" stroke-width="0.8"/>
+    <line x1="400" y1="90" x2="620" y2="248" stroke="#0033CC" stroke-width="0.8"/>
+    <line x1="400" y1="90" x2="740" y2="255" stroke="#0033CC" stroke-width="0.8"/>
+    <line x1="400" y1="90" x2="860" y2="260" stroke="#0033CC" stroke-width="0.8"/>
+
+    <!-- Lateral lines (elliptical cross-sections) -->
+    <ellipse cx="400" cy="105" rx="120" ry="22"  fill="none" stroke="#001FA0" stroke-width="0.6"/>
+    <ellipse cx="400" cy="118" rx="220" ry="38"  fill="none" stroke="#001FA0" stroke-width="0.6"/>
+    <ellipse cx="400" cy="131" rx="310" ry="58"  fill="none" stroke="#002BBB" stroke-width="0.8"/>
+    <ellipse cx="400" cy="147" rx="390" ry="80"  fill="none" stroke="#001FA0" stroke-width="0.6"/>
+    <ellipse cx="400" cy="165" rx="450" ry="104" fill="none" stroke="#001266" stroke-width="0.5"/>
+  </g>
+
+  <!-- ═══ RINK MARKINGS ═══ -->
+  <g filter="url(#strongGlow)">
+    <!-- Center red line -->
+    <ellipse cx="400" cy="131" rx="310" ry="58" fill="none" stroke="#CC0000" stroke-width="1.5" stroke-dasharray="8,4" opacity="0.55"/>
+
+    <!-- Blue lines -->
+    <ellipse cx="400" cy="118" rx="160" ry="28" fill="none" stroke="#0055FF" stroke-width="2" opacity="0.6"/>
+    <ellipse cx="400" cy="144" rx="160" ry="28" fill="none" stroke="#0055FF" stroke-width="2" opacity="0.6"
+             transform="translate(0, 26) scale(1.9, 1.15) translate(0, -26)"/>
+
+    <!-- Center circle -->
+    <ellipse cx="400" cy="131" rx="60" ry="14" fill="none" stroke="#0088FF" stroke-width="1.5" opacity="0.7"/>
+    <!-- Center dot -->
+    <ellipse cx="400" cy="131" rx="6" ry="2" fill="#0099FF" opacity="0.8"/>
+
+    <!-- Goal creases -->
+    <ellipse cx="230" cy="123" rx="28" ry="7" fill="none" stroke="#0055FF" stroke-width="1.2" opacity="0.5"/>
+    <ellipse cx="570" cy="123" rx="28" ry="7" fill="none" stroke="#0055FF" stroke-width="1.2" opacity="0.5"/>
+
+    <!-- Goal lines -->
+    <ellipse cx="230" cy="121" rx="38" ry="9" fill="none" stroke="#CC0000" stroke-width="1" stroke-dasharray="4,2" opacity="0.45"/>
+    <ellipse cx="570" cy="121" rx="38" ry="9" fill="none" stroke="#CC0000" stroke-width="1" stroke-dasharray="4,2" opacity="0.45"/>
+
+    <!-- Face-off circles -->
+    <ellipse cx="280" cy="128" rx="22" ry="6" fill="none" stroke="#CC0000" stroke-width="1" opacity="0.4"/>
+    <ellipse cx="520" cy="128" rx="22" ry="6" fill="none" stroke="#CC0000" stroke-width="1" opacity="0.4"/>
+  </g>
+
+  <!-- ═══ BOARDS / GLASS ═══ -->
+  <!-- Side boards perspective -->
+  <path d="M-60,260 Q50,228 400,222 Q750,228 860,260 L860,280 Q750,246 400,240 Q50,246 -60,280 Z"
+        fill="#000A22" stroke="#002288" stroke-width="1.2" opacity="0.7"/>
+  <!-- Glass shimmer top edge -->
+  <path d="M-60,260 Q400,222 860,260" fill="none" stroke="#3366CC" stroke-width="0.8" opacity="0.5"/>
+
+  <!-- ═══ ICE SURFACE SHINE ═══ -->
+  <!-- Highlight sweep -->
+  <ellipse cx="360" cy="118" rx="80" ry="12" fill="white" opacity="0.04" transform="rotate(-8, 360, 118)"/>
+
+  <!-- ═══ SCAN LINE LAYER ═══ -->
+  <!-- Subtle vignette -->
+  <radialGradient id="vignette" cx="50%" cy="50%" r="70%">
+    <stop offset="0%" stop-color="transparent"/>
+    <stop offset="100%" stop-color="#000008" stop-opacity="0.6"/>
+  </radialGradient>
+  <rect width="800" height="500" fill="url(#vignette)"/>
+</svg>
