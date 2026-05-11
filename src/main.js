@@ -808,6 +808,25 @@ export async function simMyNextFiveGames() {
       detail: { results: multiResults, playerTeamId },
     }));
   }
+
+  // If the player has no more games left but the season is still running,
+  // auto-sim all remaining league games so playoffs can start.
+  if (state.phase === 'season') {
+    const remainingPlayerGames = state.leagues[playerLeagueId].schedule
+      .filter(g => !g.played && (g.homeTeamId === playerTeamId || g.awayTeamId === playerTeamId));
+    if (remainingPlayerGames.length === 0) {
+      let safety = 2000;
+      while (state.phase === 'season' && safety-- > 0) {
+        const anyLeft = ['phl', 'cd', 'rc'].some(lid =>
+          state.leagues[lid].schedule.some(g => !g.played)
+        );
+        if (!anyLeft) break;
+        await simNextGame(true, true);
+      }
+      saveGame();
+      renderCurrentScreen();
+    }
+  }
 }
 
 /**
@@ -838,8 +857,17 @@ export async function simToMyNextGame() {
     .sort((a, b) => a.week - b.week)[0];
 
   if (!playerNextGame) {
-    // No more games — just do a normal sim tick
-    await simNextGame(false);
+    // Player's season is over — sim all remaining league games so playoffs can start
+    let safety = 2000;
+    while (state.phase === 'season' && safety-- > 0) {
+      const anyLeft = ['phl', 'cd', 'rc'].some(lid =>
+        state.leagues[lid].schedule.some(g => !g.played)
+      );
+      if (!anyLeft) break;
+      await simNextGame(true, true);
+    }
+    saveGame();
+    renderCurrentScreen();
     return;
   }
 
