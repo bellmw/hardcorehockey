@@ -1021,6 +1021,142 @@ tr:hover td { background: var(--bg-2); }
 .draft-recap-btn  { max-width: 280px; }
 
 /* Prospect card (detail panel) */
+/* ─── Draft Scout Panel ─────────────────────────── */
+.scout-panel {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.scout-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+
+.scout-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.scout-name {
+  font-family: var(--font-display);
+  font-size: 10px;
+  color: var(--ice);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.scout-title {
+  font-size: 10px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+
+.scout-section {
+  margin-bottom: 10px;
+}
+
+.scout-section-label {
+  font-family: var(--font-display);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 6px;
+}
+
+.scout-roster-stats {
+  display: flex;
+  gap: 6px;
+}
+
+.scout-roster-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 5px 4px;
+}
+
+.scout-stat-label {
+  font-family: var(--font-display);
+  font-size: 7px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.scout-stat-val {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+/* Need priority rows */
+.scout-need-row {
+  display: grid;
+  grid-template-columns: 62px 100px 1fr;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 6px;
+  border-radius: var(--radius);
+  margin-bottom: 3px;
+  font-size: 11px;
+}
+
+.scout-need-row.need-critical { background: rgba(255,0,0,0.08); border-left: 2px solid var(--neon-red); }
+.scout-need-row.need-high     { background: rgba(255,255,0,0.05); border-left: 2px solid var(--gold); }
+.scout-need-row.need-medium   { background: rgba(0,255,255,0.04); border-left: 2px solid var(--ice); }
+
+.scout-need-pos {
+  font-family: var(--font-display);
+  font-size: 8px;
+  color: var(--text);
+  text-transform: uppercase;
+}
+
+.scout-need-label {
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.need-critical .scout-need-label { color: var(--neon-red); }
+.need-high     .scout-need-label { color: var(--gold); }
+.need-medium   .scout-need-label { color: var(--ice); }
+
+.scout-need-reason {
+  font-size: 10px;
+}
+
+/* Gus recommendation */
+.scout-gus-section {
+  background: var(--bg-3);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+}
+
+.scout-gus-text {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-2);
+  font-style: italic;
+}
+
+.scout-gus-text strong {
+  color: var(--ice);
+  font-style: normal;
+}
+
 .draft-prospect-card {
   background: var(--bg-2);
   border: 1px solid var(--border);

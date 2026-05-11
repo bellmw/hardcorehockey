@@ -60,6 +60,232 @@ function renderDraft(state) {
   renderPostDraft(state);
 }
 
+// ─── Team needs analysis ──────────────────────────────────────────────────────
+
+function analyzeTeamNeeds(state) {
+  const team   = state.teams[state.playerTeamId];
+  const roster = (team.rosterIds || []).map(id => state.allPlayers[id]).filter(Boolean);
+
+  const fwd  = roster.filter(p => ['C','LW','RW'].includes(p.position));
+  const def  = roster.filter(p => ['LD','RD'].includes(p.position));
+  const goal = roster.filter(p => p.position === 'G');
+
+  const avg  = arr => arr.length ? Math.round(arr.reduce((s, p) => s + p.overall, 0) / arr.length) : 0;
+  const best = arr => arr.length ? Math.max(...arr.map(p => p.overall)) : 0;
+
+  const fwdAvg  = avg(fwd);
+  const defAvg  = avg(def);
+  const goalBest = best(goal);
+
+  const needs = [];
+
+  // Goalie
+  if (goal.length === 0)       needs.push({ pos: 'Goalie',  priority: 'critical', reason: 'No goalie on roster' });
+  else if (goalBest < 60)      needs.push({ pos: 'Goalie',  priority: 'critical', reason: `Best G is only ${goalBest} OVR` });
+  else if (goalBest < 70)      needs.push({ pos: 'Goalie',  priority: 'high',     reason: `G is weak at ${goalBest} OVR` });
+  else if (goalBest < 78)      needs.push({ pos: 'Goalie',  priority: 'medium',   reason: `G is decent but upgradeable (${goalBest})` });
+
+  // Defence
+  if (def.length < 4)          needs.push({ pos: 'Defence', priority: 'critical', reason: `Only ${def.length} D-men` });
+  else if (defAvg < 60)        needs.push({ pos: 'Defence', priority: 'critical', reason: `Avg D OVR ${defAvg} — bleeding goals` });
+  else if (defAvg < 68)        needs.push({ pos: 'Defence', priority: 'high',     reason: `D needs a boost (avg ${defAvg})` });
+  else if (defAvg < 74)        needs.push({ pos: 'Defence', priority: 'medium',   reason: `D is okay but thin (avg ${defAvg})` });
+
+  // Forwards
+  if (fwd.length < 8)          needs.push({ pos: 'Forward', priority: 'critical', reason: `Only ${fwd.length} forwards` });
+  else if (fwdAvg < 60)        needs.push({ pos: 'Forward', priority: 'high',     reason: `Fwd depth is thin (avg ${fwdAvg})` });
+  else if (fwdAvg < 70)        needs.push({ pos: 'Forward', priority: 'medium',   reason: `Forwards average at ${fwdAvg} OVR` });
+
+  const order = { critical: 0, high: 1, medium: 2 };
+  needs.sort((a, b) => order[a.priority] - order[b.priority]);
+
+  return { needs, fwd, def, goal, fwdAvg, defAvg, goalBest };
+}
+
+// ─── Gus Pawlowski — scout persona ───────────────────────────────────────────
+
+const GUS = {
+  name:  'Gus Pawlowski',
+  title: 'Chief Scout · 38 yrs scouting',
+  icon:  '🧔',
+};
+
+const GUS_OPENERS = [
+  'Listen kid —',
+  'I\'ll be straight with ya —',
+  'Don\'t overthink it —',
+  'Thirty-eight years I\'ve done this —',
+  'Cold coffee, warm opinion —',
+  'You want sugar-coating, call your mother —',
+];
+
+const GUS_MATCH_GOOD = [
+  'exactly what the doctor ordered.',
+  'fills the gap and then some.',
+  'your roster has been crying out for this.',
+  'this is the guy. Don\'t hesitate.',
+  'plug him in and watch the problem disappear.',
+];
+
+const GUS_MATCH_OK = [
+  'not a perfect fit but I\'ve seen worse ideas.',
+  'it\'s not your biggest need, but talent is talent.',
+  'depth never hurt nobody.',
+  'could surprise you. Ceiling\'s there.',
+];
+
+const GUS_MISMATCH = [
+  'you don\'t need this position right now. But if he falls to you — take him.',
+  'wrong position for your needs but I wouldn\'t pass on that potential.',
+  'your needs are elsewhere. That said — I\'d still make the call.',
+];
+
+const GUS_BUST_WARNING = [
+  'He\'s got the tools but I\'ve seen that look before. Protect yourself.',
+  'Something\'s off. Can\'t put my finger on it. Could be nothing.',
+  'Scouts I trust have questions. I have questions. You should have questions.',
+];
+
+const GUS_ELITE_HYPE = [
+  'This kid is the real deal. I don\'t say that twice in a decade.',
+  'Put that name on your jersey and start ordering billboards.',
+  'I called two other picks in my career this early. Both went to the Hall.',
+];
+
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function posMatchesNeed(position, needs) {
+  const posGroup = ['C','LW','RW'].includes(position) ? 'Forward'
+                 : ['LD','RD'].includes(position)      ? 'Defence'
+                 : position === 'G'                    ? 'Goalie'
+                 : null;
+  if (!posGroup) return null;
+  return needs.find(n => n.pos === posGroup) ?? null;
+}
+
+function getGusOpinion(prospect, needs) {
+  const opener = pick(GUS_OPENERS);
+  const need   = posMatchesNeed(prospect.position, needs);
+
+  let body = '';
+  if (prospect.overall >= 82) {
+    body = `${prospect.firstName} is ${pick(GUS_ELITE_HYPE)}`;
+  } else if (prospect.potential <= 55) {
+    body = `${prospect.firstName}? ${pick(GUS_BUST_WARNING)}`;
+  } else if (need?.priority === 'critical' || need?.priority === 'high') {
+    body = `${prospect.firstName} is ${pick(GUS_MATCH_GOOD)}`;
+  } else if (need?.priority === 'medium') {
+    body = `${prospect.firstName}? ${pick(GUS_MATCH_OK)}`;
+  } else {
+    body = `${prospect.firstName} — ${pick(GUS_MISMATCH)}`;
+  }
+
+  return `${opener} ${body}`;
+}
+
+function getGusRecommendation(state, needs) {
+  // Find best available that matches the top need
+  const available = (state.draftClass || []).map(id => state.allPlayers[id]).filter(Boolean);
+  if (!available.length) return 'Board\'s empty. Season starts soon — go get \'em.';
+
+  const topNeed = needs[0];
+  let target = null;
+
+  if (topNeed) {
+    const posMatches = available.filter(p => posMatchesNeed(p.position, [topNeed]));
+    if (posMatches.length) {
+      target = posMatches.reduce((best, p) => draftScore(p) > draftScore(best) ? p : best);
+    }
+  }
+
+  // Fallback to overall best
+  if (!target) {
+    target = available.reduce((best, p) => draftScore(p) > draftScore(best) ? p : best);
+  }
+
+  const opener = pick(GUS_OPENERS);
+  const posLabel = ['C','LW','RW'].includes(target.position) ? 'forward'
+                 : ['LD','RD'].includes(target.position)     ? 'defenceman'
+                 : 'goaltender';
+
+  const urgency = topNeed?.priority === 'critical' ? 'You NEED a ' + topNeed.pos.toLowerCase() + '. '
+                : topNeed?.priority === 'high'     ? 'Your ' + topNeed.pos.toLowerCase() + ' is hurting. '
+                : '';
+
+  return `${opener} ${urgency}My guy is <strong>${target.fullName}</strong> — ${posLabel}, ${target.overall} OVR, ${target.potential} ceiling. ${target.potential >= 80 ? 'Kid\'s got a sky-high ceiling.' : target.overall >= 75 ? 'Ready-now talent.' : 'Needs time but the tools are there.'}`;
+}
+
+// ─── Scout panel render ───────────────────────────────────────────────────────
+
+function renderScoutPanel(state, selectedProspect) {
+  const { needs, fwd, def, goal, fwdAvg, defAvg, goalBest } = analyzeTeamNeeds(state);
+
+  const priorityLabel = { critical: '🔴 CRITICAL', high: '🟡 HIGH', medium: '🔵 MEDIUM' };
+  const priorityCls   = { critical: 'need-critical', high: 'need-high', medium: 'need-medium' };
+
+  const needRows = needs.length
+    ? needs.map(n => `
+        <div class="scout-need-row ${priorityCls[n.priority]}">
+          <span class="scout-need-pos">${n.pos}</span>
+          <span class="scout-need-label">${priorityLabel[n.priority]}</span>
+          <span class="scout-need-reason text-3">${n.reason}</span>
+        </div>`).join('')
+    : `<p class="text-3" style="font-size:11px">Roster is well-rounded — best player available.</p>`;
+
+  const statRows = `
+    <div class="scout-roster-stats">
+      <div class="scout-roster-stat">
+        <span class="scout-stat-label">FWD</span>
+        <span class="scout-stat-val ${overallClass(fwdAvg)}">${fwd.length} · ${fwdAvg} avg</span>
+      </div>
+      <div class="scout-roster-stat">
+        <span class="scout-stat-label">DEF</span>
+        <span class="scout-stat-val ${overallClass(defAvg)}">${def.length} · ${defAvg} avg</span>
+      </div>
+      <div class="scout-roster-stat">
+        <span class="scout-stat-label">G</span>
+        <span class="scout-stat-val ${overallClass(goalBest)}">${goal.length} · ${goalBest} best</span>
+      </div>
+    </div>`;
+
+  const gusText = selectedProspect
+    ? getGusOpinion(selectedProspect, needs)
+    : getGusRecommendation(state, needs);
+
+  const gusLabel = selectedProspect
+    ? `GUS ON ${selectedProspect.firstName.toUpperCase()}`
+    : 'GUS RECOMMENDS';
+
+  return `
+    <div class="scout-panel">
+      <div class="scout-panel-header">
+        <span class="scout-icon">${GUS.icon}</span>
+        <div>
+          <div class="scout-name">${GUS.name}</div>
+          <div class="scout-title">${GUS.title}</div>
+        </div>
+      </div>
+
+      <div class="scout-section">
+        <div class="scout-section-label">YOUR ROSTER</div>
+        ${statRows}
+      </div>
+
+      <div class="scout-section">
+        <div class="scout-section-label">WHAT YOU NEED</div>
+        ${needRows}
+      </div>
+
+      <div class="scout-section scout-gus-section">
+        <div class="scout-section-label">${gusLabel}</div>
+        <p class="scout-gus-text">${gusText}</p>
+      </div>
+    </div>
+  `;
+}
+
 // ─── Pre-season draft complete ────────────────────────────────────────────────
 
 function renderPreseasonComplete(state) {
@@ -170,7 +396,7 @@ function renderPreDraft(state) {
     </div>
   `;
 
-  if (detail) detail.innerHTML = '';
+  if (detail) detail.innerHTML = renderScoutPanel(state, null);
 
   el('btn-start-draft')?.addEventListener('click', async () => {
     const btn = el('btn-start-draft');
@@ -316,6 +542,7 @@ function renderPickDetail(state) {
   // Show history if nothing selected
   if (!selectedProspectId || !state.draftClass?.includes(selectedProspectId)) {
     detail.innerHTML = `
+      ${renderScoutPanel(state, null)}
       <div class="draft-detail-empty">
         <p class="text-3">← Select a prospect to see their card</p>
         ${renderDraftHistorySnippet(state)}
@@ -352,6 +579,7 @@ function renderPickDetail(state) {
     : '';
 
   detail.innerHTML = `
+    ${renderScoutPanel(state, p)}
     <div class="draft-prospect-card">
       <div class="draft-card-pos-row">
         <span class="pos-badge ${posClass} pos-badge--lg">${p.position}</span>
