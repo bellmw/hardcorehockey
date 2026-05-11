@@ -98,6 +98,10 @@ export async function boot() {
  */
 export async function newGame(playerTeamId) {
   const allTeams   = getAllTeams();
+
+  // Randomize league membership — Ottawa, Toronto, Denver always in PHL (tier 1)
+  randomizeLeagues(allTeams);
+
   const allPlayers = {};
 
   // Generate rosters for all 36 teams
@@ -2710,6 +2714,35 @@ function getAllTeams() {
     });
   });
   return all;
+}
+
+/**
+ * Randomly reassigns league membership for all teams.
+ * Ottawa (phl_ott), Toronto (phl_tor), and Denver (cd_den) are always in PHL.
+ * All other teams are shuffled and distributed to fill the remaining slots
+ * while keeping league sizes fixed: PHL=14, CD=14, RC=12.
+ */
+function randomizeLeagues(allTeams) {
+  const FIXED_PHL = new Set(['phl_ott', 'phl_tor', 'cd_den']);
+  const PHL_SIZE = 14, CD_SIZE = 14; // RC gets the rest (12)
+
+  const fixed = allTeams.filter(t => FIXED_PHL.has(t.id));
+  const pool  = allTeams.filter(t => !FIXED_PHL.has(t.id));
+
+  // Fisher-Yates shuffle
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+
+  const phlPool = pool.splice(0, PHL_SIZE - fixed.length); // 11 slots
+  const cdPool  = pool.splice(0, CD_SIZE);                 // 14 slots
+  const rcPool  = pool;                                    // remaining 12
+
+  fixed.forEach(t   => { t.leagueId = 'phl'; t.tier = 1; });
+  phlPool.forEach(t => { t.leagueId = 'phl'; t.tier = 1; });
+  cdPool.forEach(t  => { t.leagueId = 'cd';  t.tier = 2; });
+  rcPool.forEach(t  => { t.leagueId = 'rc';  t.tier = 3; });
 }
 
 // ─── Screen Router ────────────────────────────────────────────────────────────
