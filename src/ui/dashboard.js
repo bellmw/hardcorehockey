@@ -884,6 +884,9 @@ function renderSimControls(phase) {
     const pts       = entry ? `${entry.pts} pts` : '';
     const leagueBadge = leagueId?.toUpperCase() ?? '';
 
+    const logoEl = teamLogoEl(team.id, team.abbrev, team.primaryColor, team.secondaryColor || '#FFFFFF', 40);
+    const logoHtml = logoEl.outerHTML;
+
     // Build roster breakdown
     const roster = (team.rosterIds || [])
       .map(id => _state.allPlayers[id])
@@ -895,11 +898,16 @@ function renderSimControls(phase) {
     const rosterBreakdown = `${fwd.length} Fwd (${avg(fwd)}) · ${def.length} Def (${avg(def)}) · ${goal.length} G (${avg(goal)})`;
 
     tip.innerHTML = `
-      <div class="tip-name">${team.fullName}</div>
-      <div class="tip-meta">
-        <span class="league-badge ${leagueId}">${leagueBadge}</span>
-        <span class="tip-record">${record}</span>
-        ${pts ? `<span class="tip-pts">${pts}</span>` : ''}
+      <div class="tip-header">
+        ${logoHtml}
+        <div>
+          <div class="tip-name">${team.fullName}</div>
+          <div class="tip-meta">
+            <span class="league-badge ${leagueId}">${leagueBadge}</span>
+            <span class="tip-record">${record}</span>
+            ${pts ? `<span class="tip-pts">${pts}</span>` : ''}
+          </div>
+        </div>
       </div>
       <div class="tip-detail">${team.city} · ${team.arena}</div>
       <div class="tip-roster">${rosterBreakdown}</div>
