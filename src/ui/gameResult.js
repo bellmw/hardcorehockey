@@ -4,7 +4,7 @@
  * whenever the player's team finishes a game.
  * Listens for the 'game-result' CustomEvent dispatched by simNextGame().
  */
-import { teamLogoSvg } from './teamLogo.js';
+import { teamLogoEl } from './teamLogo.js';
 
 const overlay = document.getElementById('game-result-overlay');
 const content = document.getElementById('game-result-content');
@@ -37,13 +37,15 @@ function renderGameResult({ result, home, away, allPlayers, socialFeed = [] }) {
   const finalLabel = overtimeType ? `FINAL / ${overtimeType}` : 'FINAL';
 
   // Generate logos for each team
-  const awayLogo = teamLogoSvg(
+  const awayLogo = teamLogoEl(
+    away.id,
     away.abbrev,
     away.primaryColor || '#0055CC',
     away.secondaryColor || '#FFFFFF',
     52
   );
-  const homeLogo = teamLogoSvg(
+  const homeLogo = teamLogoEl(
+    home.id,
     home.abbrev,
     home.primaryColor || '#0055CC',
     home.secondaryColor || '#FFFFFF',

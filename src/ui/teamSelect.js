@@ -6,7 +6,7 @@
  * Container: #team-select-leagues
  * On team click → calls window.hockeyGM.newGame(teamId)
  */
-import { teamLogoSvg, teamColorVars } from './teamLogo.js';
+import { teamLogoEl, teamColorVars } from './teamLogo.js';
 
 const LEAGUES = [
   { id: 'phl', name: 'Premier Hockey League', shortName: 'PHL', tier: 1 },
@@ -54,7 +54,7 @@ function buildScreen(container, data) {
     `).join('');
 
     const cards = teamsData.map(team => {
-      const logo = teamLogoSvg(team.abbrev, team.primaryColor, team.secondaryColor, 56);
+      const logo = teamLogoEl(team.id, team.abbrev, team.primaryColor, team.secondaryColor, 96);
       const colorVars = teamColorVars(team.primaryColor, team.secondaryColor);
       return `
       <button class="team-card" data-team-id="${team.id}"

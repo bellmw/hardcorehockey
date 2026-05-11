@@ -5,7 +5,7 @@
  *
  * Triggered by 'render-screen' CustomEvent with detail.screen === 'team-intro'.
  */
-import { teamLogoSvg, applyTeamColors } from './teamLogo.js';
+import { teamLogoEl, applyTeamColors } from './teamLogo.js';
 
 // ─── Main render ──────────────────────────────────────────────────────────────
 
@@ -18,7 +18,7 @@ function renderTeamIntro(state) {
 
   // Apply team colors and generate logo
   if (team.primaryColor) applyTeamColors(team.primaryColor, team.secondaryColor || '#FFFFFF');
-  const logo = teamLogoSvg(team.abbrev, team.primaryColor, team.secondaryColor || '#FFFFFF', 96);
+  const logo = teamLogoEl(team.id, team.abbrev, team.primaryColor, team.secondaryColor || '#FFFFFF', 96);
 
   const roster = (team.rosterIds || [])
     .map(id => state.allPlayers[id])

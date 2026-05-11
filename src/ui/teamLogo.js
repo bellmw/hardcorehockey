@@ -1,11 +1,53 @@
 /**
  * teamLogo.js
- * Generates inline SVG shield logos from team data.
- * No image files required — works for all 36 teams automatically.
+ * Team logo system: real PNG logos (assets/logos/{ABBREV}.png) with automatic
+ * fallback to procedural SVG shield for any team that doesn't have one yet.
  *
  * Usage:
- *   import { teamLogoSvg, teamColorVars, applyTeamColors } from './teamLogo.js';
+ *   import { teamLogoEl, teamLogoSvg, teamColorVars, applyTeamColors } from './teamLogo.js';
+ *
+ *   teamLogoEl(abbrev, primary, secondary, size)
+ *     → <img> if assets/logos/{ABBREV}.png exists, SVG shield otherwise
  */
+
+// ─── Global onerror fallback (called by img tags in HTML strings) ─────────────
+if (typeof window !== 'undefined') {
+  window.__hgmLogoFallback = function (img) {
+    const abbrev   = img.dataset.abbrev;
+    const primary  = decodeURIComponent(img.dataset.primary);
+    const secondary = decodeURIComponent(img.dataset.secondary);
+    const size     = parseInt(img.dataset.size, 10);
+    // Replace the broken img with the procedural SVG shield
+    const tmp = document.createElement('span');
+    tmp.innerHTML = teamLogoSvg(abbrev, primary, secondary, parseInt(size, 10));
+    img.replaceWith(tmp.firstElementChild);
+  };
+}
+
+/**
+ * Returns an <img> pointing to assets/logos/{teamId}.png (e.g. phl_sud.png).
+ * If the file is missing, onerror swaps it for the procedural SVG shield.
+ * Drop any PNG into assets/logos/ and it is picked up automatically.
+ *
+ * @param {string} teamId    - Team ID used for the filename (e.g. "phl_sud")
+ * @param {string} abbrev    - Short abbreviation for SVG fallback (e.g. "SUD")
+ * @param {string} primary   - Primary color hex
+ * @param {string} secondary - Secondary color hex
+ * @param {number} [size=64] - Width/height in px
+ */
+export function teamLogoEl(teamId, abbrev, primary, secondary, size = 64) {
+  return `<img
+    src="assets/logos/${teamId}.png"
+    width="${size}" height="${size}"
+    style="object-fit:contain;display:block;image-rendering:auto;"
+    data-abbrev="${abbrev}"
+    data-primary="${encodeURIComponent(primary)}"
+    data-secondary="${encodeURIComponent(secondary)}"
+    data-size="${size}"
+    onerror="window.__hgmLogoFallback(this)"
+    alt="${abbrev} logo"
+  >`;
+}
 
 // ─── Shield SVG generator ─────────────────────────────────────────────────────
 

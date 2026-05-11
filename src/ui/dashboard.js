@@ -3,7 +3,7 @@
  * Renders the dashboard screen.
  * Triggered by 'render-screen' CustomEvent on document with detail.screen === 'dashboard'.
  */
-import { teamLogoSvg, applyTeamColors } from './teamLogo.js';
+import { teamLogoEl, applyTeamColors } from './teamLogo.js';
 
 // ─── Carousel State ───────────────────────────────────────────────────────────
 
@@ -66,7 +66,7 @@ function renderHeader(state, team, teamEntry, leagueId) {
   const nameEl = el('hdr-team-name');
   if (nameEl) {
     // Add mini logo before team name
-    const logo = teamLogoSvg(team.abbrev, team.primaryColor, team.secondaryColor || '#FFFFFF', 28);
+    const logo = teamLogoEl(team.id, team.abbrev, team.primaryColor, team.secondaryColor || '#FFFFFF', 28);
     nameEl.innerHTML = `<span class="hdr-team-logo">${logo}</span>${team.fullName}`;
   }
 

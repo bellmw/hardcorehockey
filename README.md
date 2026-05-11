@@ -279,7 +279,12 @@ Player salary range: $500K (rookies) → $6M (stars)
 
 ---
 
-## Recent Features (v1.2.6–v1.2.8)
+## Recent Features (v1.2.8–v1.3.0)
+
+### v1.3.0
+- **90s Sega Genesis / Arcade UI** — Full CRT aesthetic reskin with `Press Start 2P` pixel-art font, scanline overlay, beveled arcade buttons, LED indicator dots, segmented OVR stat bars, animated salary cap bar, sticky frozen roster headers, metal corner bracket SVGs, perspective ice-rink arena background, spotlight sweep on title, and nav hockey icon URIs
+- **Procedural Team Logo System** — Unique SVG shield badge per team generated from `primaryColor` + `secondaryColor`; appears on team select cards, team intro, game result modal, and app header
+- **Global team color theming** — After picking a team, `--team-primary` / `--team-secondary` CSS custom properties propagate to header, cap bar, nav tab, and button glows automatically
 
 ### v1.2.8
 - **8-team playoff bracket** — Quarter-finals (1v8, 2v7, 3v6, 4v5), semis, and final per league

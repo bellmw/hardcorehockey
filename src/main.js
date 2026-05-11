@@ -33,7 +33,7 @@ let NAME_DATA  = null;
 let TEAMS_DATA = null;
 let PENDING_GAME_MODE = null;  // 'quick' or 'watch'
 
-const APP_VERSION = '1.2.7';
+const APP_VERSION = '1.3.0';
 const TRADE_DEADLINE_WEEK = 14;
 const TRADEABLE_PICK_YEARS = 2;
 const TRADEABLE_PICK_ROUNDS = [1, 2, 3];

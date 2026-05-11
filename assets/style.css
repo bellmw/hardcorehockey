@@ -5121,6 +5121,15 @@ body {
   filter: drop-shadow(0 0 6px var(--team-glow, rgba(0,80,200,0.5)));
   transition: filter 0.2s;
 }
+/* Real PNG logos: contain + no pixel-crisp (they're raster art) */
+.team-card-logo img,
+.hdr-team-logo img,
+.gr-team-logo img,
+.intro-team-logo-display img {
+  object-fit: contain !important;
+  display: block !important;
+  image-rendering: auto !important;
+}
 .team-card:hover .team-card-logo {
   filter: drop-shadow(0 0 14px var(--team-glow, rgba(0,150,255,0.8)));
 }
