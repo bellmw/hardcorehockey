@@ -572,7 +572,7 @@ function renderThisWeek(state, team) {
       })
     : [];
   const rank        = sorted.findIndex(e => e.teamId === state.playerTeamId) + 1;
-  const inPlayoffs  = rank > 0 && rank <= 4;
+  const inPlayoffs  = rank > 0 && rank <= 8;
 
   const pendingTrades = (state.pendingTrades || []).filter(t => t.status === 'pending');
 
@@ -713,7 +713,7 @@ function renderNews(state) {
       })
     : [];
   const rank = sortedStandings.findIndex(entry => entry.teamId === state.playerTeamId) + 1;
-  const inPlayoffSpot = rank > 0 && rank <= 4;
+  const inPlayoffSpot = rank > 0 && rank <= 8;
   const playoffValue = rank > 0
     ? (inPlayoffSpot ? `IN (${rank})` : `OUT (${rank})`)
     : '—';
