@@ -33,6 +33,7 @@ let GAME_STATE = null;
 let NAME_DATA  = null;
 let TEAMS_DATA = null;
 let PENDING_GAME_MODE = null;  // 'quick' or 'watch'
+let _previewTeams = null; // pre-randomized league groups shown on team-select
 
 const APP_VERSION = '1.3.2';
 const TRADE_DEADLINE_WEEK = 14;
@@ -86,6 +87,8 @@ export async function boot() {
     GAME_STATE = saved;
     showScreen('dashboard');
   } else {
+    // Pre-randomize league assignments so team-select shows the real starting layout
+    _previewTeams = buildPreviewTeams();
     showScreen('team-select');
   }
 }
@@ -97,10 +100,9 @@ export async function boot() {
  * @param {string} playerTeamId - the team the player chose to manage
  */
 export async function newGame(playerTeamId) {
-  const allTeams   = getAllTeams();
-
-  // Randomize league membership — Ottawa, Toronto, Denver always in PHL (tier 1)
-  randomizeLeagues(allTeams);
+  // Use the pre-randomized layout the player saw on team-select, or build fresh
+  const preview  = _previewTeams || buildPreviewTeams();
+  const allTeams = [...preview.phl, ...preview.cd, ...preview.rc];
 
   const allPlayers = {};
 
@@ -2706,6 +2708,23 @@ function bestAvailableForTeam(teamId, state) {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+/**
+ * Builds a pre-randomized league preview (run before team-select is shown).
+ * Returns { phl: [...teams], cd: [...teams], rc: [...teams] }
+ */
+function buildPreviewTeams() {
+  const allTeams = getAllTeams();
+  randomizeLeagues(allTeams);
+  return {
+    phl: allTeams.filter(t => t.leagueId === 'phl'),
+    cd:  allTeams.filter(t => t.leagueId === 'cd'),
+    rc:  allTeams.filter(t => t.leagueId === 'rc'),
+  };
+}
+
+/** Exposed so teamSelect.js can read the pre-randomized groupings. */
+export function getPreviewTeams() { return _previewTeams; }
+
 function getAllTeams() {
   const all = [];
   Object.entries(TEAMS_DATA.leagues).forEach(([leagueId, league]) => {
@@ -2809,6 +2828,7 @@ window.hockeyGM = {
   restartGame,
   setGameMode,
   setPersistedGameMode,
+  getPreviewTeams,
   getState: () => GAME_STATE,
 };
 

@@ -41,7 +41,13 @@ function renderDraft(state) {
   }
 
   if (phase !== 'draft' && !hasClass) {
-    renderPreDraft(state);
+    // If the draft just completed this year, auto-show the recap
+    const justDrafted = (state.draftHistory || []).some(p => p.year === state.year);
+    if (justDrafted) {
+      renderPostDraft(state);
+    } else {
+      renderPreDraft(state);
+    }
     return;
   }
 
@@ -367,7 +373,7 @@ function renderPreseasonComplete(state) {
     </div>
   `;
 
-  if (detail) detail.innerHTML = '';
+  if (detail) detail.innerHTML = renderDraftGrades(state);
 
   el('btn-begin-season')?.addEventListener('click', () => {
     window.hockeyGM.beginSeason();

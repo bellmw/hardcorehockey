@@ -27,16 +27,80 @@ function renderTeamSelect(state) {
   const container = document.getElementById('team-select-leagues');
   if (!container) return;
 
-  // We read team data from window.hockeyGM indirectly via TEAMS_DATA,
-  // which isn't exposed. Instead we fetch it ourselves (it was already
-  // fetched by boot(), but we can't access NAME_DATA/TEAMS_DATA directly).
-  // Re-fetch is safe — browser will use the cached response.
+  // Use the pre-randomized league layout from main.js if available
+  const preview = window.hockeyGM?.getPreviewTeams?.();
+  if (preview) {
+    buildScreenFromPreview(container, preview);
+    return;
+  }
+
+  // Fallback: fetch raw teams.json (no randomization, used if preview not ready)
   fetch('./data/teams.json')
     .then(r => r.json())
     .then(data => buildScreen(container, data))
     .catch(() => {
       container.innerHTML = '<p class="text-accent">Failed to load teams. Is live-server running?</p>';
     });
+}
+
+function buildScreenFromPreview(container, preview) {
+  // preview = { phl: [...teams], cd: [...teams], rc: [...teams] }
+  let activeLeague = 'phl';
+
+  function render() {
+    const league    = LEAGUES.find(l => l.id === activeLeague);
+    const teamsData = preview[activeLeague] ?? [];
+
+    const tabs = LEAGUES.map(l => {
+      const count = preview[l.id]?.length ?? 0;
+      return `
+        <button class="filter-btn league-tab${l.id === activeLeague ? ' active' : ''}" data-league="${l.id}">
+          <span class="league-badge ${l.id}">${l.shortName}</span>
+          ${l.name}
+        </button>`;
+    }).join('');
+
+    const cards = teamsData.map(team => {
+      const logo = teamLogoEl(team.id, team.abbrev, team.primaryColor, team.secondaryColor, 96);
+      const colorVars = teamColorVars(team.primaryColor, team.secondaryColor);
+      return `
+      <button class="team-card" data-team-id="${team.id}"
+        style="${colorVars}; border-color: var(--team-primary); --sega-border: var(--team-primary);">
+        <div class="team-card-logo-row">
+          <div class="team-card-logo">${logo}</div>
+          <div class="team-card-header-info">
+            <span class="team-card-abbrev" style="color:var(--team-secondary);text-shadow:0 0 12px var(--team-glow)">${team.abbrev}</span>
+            <span class="team-card-city">${team.city}</span>
+          </div>
+        </div>
+        <div class="team-card-name">${team.name}</div>
+        <div class="team-card-arena">${team.arena}</div>
+        <div class="team-card-gm">GM: ${team.gmName}
+          <span class="team-card-personality">${formatPersonality(team.gmPersonality)}</span>
+        </div>
+        <div class="team-card-flavour">${team.flavour}</div>
+      </button>`;
+    }).join('');
+
+    container.innerHTML = `
+      <div class="team-select-tabs">${tabs}</div>
+      <p class="team-select-tier-desc text-3">${TIER_DESC[league.tier]}</p>
+      <div class="team-select-grid">${cards}</div>
+    `;
+
+    container.querySelectorAll('.league-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeLeague = btn.dataset.league;
+        render();
+      });
+    });
+    container.querySelectorAll('.team-card').forEach(btn => {
+      btn.addEventListener('click', () => {
+        window.hockeyGM.newGame(btn.dataset.teamId);
+      });
+    });
+  }
+  render();
 }
 
 function buildScreen(container, data) {
