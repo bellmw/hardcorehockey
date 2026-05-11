@@ -1,6 +1,6 @@
 # Hockey GM — Personal Hockey Management Sim
 
-Current version: v1.3.1
+Current version: v1.3.2
 
 A stripped-down, goofy hockey GM game. You manage a team, sim seasons, survive
 relegation, and watch Claude-powered AI make absurd trade offers at you.
@@ -18,7 +18,7 @@ random events, draft classes). See **API Setup** below.
 
 ---
 
-## Features (v1.3.1)
+## Features (v1.3.2)
 
 - **90s Sega Genesis / Arcade UI** — Full CRT aesthetic reskin:
   - `Press Start 2P` pixel-art font + `Share Tech Mono` data font
@@ -279,7 +279,13 @@ Player salary range: $500K (rookies) → $6M (stars)
 
 ---
 
-## Recent Features (v1.3.0–v1.3.1)
+## Recent Features (v1.3.0–v1.3.2)
+
+### v1.3.2
+- **Draft screen scroll fix** — Draft screen now scrolls to the top on load
+- **Post-draft grade leaderboard** — After the draft completes, the recap panel shows a full league-wide draft grade table (A–F) with winners, losers, and your rank highlighted
+- **Team tooltip logo** — Hovering over any team name now shows the team's procedural SVG logo alongside their record and roster breakdown
+- **Gus Pawlowski scout panel** — Draft screen right panel shows your team's roster needs (critical/high/medium) and Gus's scouting recommendation, updated live as you click prospects
 
 ### v1.3.1
 - **Dashboard scroll preservation** — Panel and window scroll positions are saved and restored on every dashboard re-render, so modals no longer snap you back to the top
