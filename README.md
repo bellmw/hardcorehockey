@@ -1,6 +1,6 @@
 # Hockey GM — Personal Hockey Management Sim
 
-Current version: v1.3.0
+Current version: v1.3.1
 
 A stripped-down, goofy hockey GM game. You manage a team, sim seasons, survive
 relegation, and watch Claude-powered AI make absurd trade offers at you.
@@ -18,7 +18,7 @@ random events, draft classes). See **API Setup** below.
 
 ---
 
-## Features (v1.3.0)
+## Features (v1.3.1)
 
 - **90s Sega Genesis / Arcade UI** — Full CRT aesthetic reskin:
   - `Press Start 2P` pixel-art font + `Share Tech Mono` data font
@@ -279,7 +279,14 @@ Player salary range: $500K (rookies) → $6M (stars)
 
 ---
 
-## Recent Features (v1.2.8–v1.3.0)
+## Recent Features (v1.3.0–v1.3.1)
+
+### v1.3.1
+- **Dashboard scroll preservation** — Panel and window scroll positions are saved and restored on every dashboard re-render, so modals no longer snap you back to the top
+- **Relegation status in dashboard** — The THIS WEEK zone and news widget now show whether you are safe from relegation, in danger (survival playoff spot), or likely being relegated — colour-coded green/yellow/red
+- **Sim 5 games** — "Sim 5 games" button now correctly sims your next 5 matches and shows a combined results modal with W/L/OTL summary and per-game scorelines
+- **Watch mode logos** — Team logos now appear above each team name in the period-by-period game watch view
+- **Draft lottery reveal** — A dramatic slot-machine modal fires before every draft (new game and off-season). Your pick is always 1–5, weighted by your standing. The #1 pick triggers fireworks and a gold-glow presentation
 
 ### v1.3.0
 - **90s Sega Genesis / Arcade UI** — Full CRT aesthetic reskin with `Press Start 2P` pixel-art font, scanline overlay, beveled arcade buttons, LED indicator dots, segmented OVR stat bars, animated salary cap bar, sticky frozen roster headers, metal corner bracket SVGs, perspective ice-rink arena background, spotlight sweep on title, and nav hockey icon URIs
