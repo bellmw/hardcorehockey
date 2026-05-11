@@ -1,6 +1,6 @@
 # Hockey GM — Personal Hockey Management Sim
 
-Current version: v1.3.2
+Current version: v1.3.3
 
 A stripped-down, goofy hockey GM game. You manage a team, sim seasons, survive
 relegation, and watch Claude-powered AI make absurd trade offers at you.
@@ -18,7 +18,7 @@ random events, draft classes). See **API Setup** below.
 
 ---
 
-## Features (v1.3.2)
+## Features (v1.3.3)
 
 - **90s Sega Genesis / Arcade UI** — Full CRT aesthetic reskin:
   - `Press Start 2P` pixel-art font + `Share Tech Mono` data font
@@ -279,7 +279,15 @@ Player salary range: $500K (rookies) → $6M (stars)
 
 ---
 
-## Recent Features (v1.3.0–v1.3.2)
+## Recent Features (v1.3.0–v1.3.3)
+
+### v1.3.3
+- **Randomized starting leagues** — On every new game, all 40 teams are shuffled into leagues randomly. Ottawa, Toronto, and Denver always start in the PHL. The team select screen reflects the randomized layout so you see the real starting positions before you pick
+- **Post-draft grade leaderboard** — After any draft completes the recap panel auto-shows an A–F grade table for all teams, ranked by pick quality. Your team is highlighted and a verdict line summarises where you stand
+- **Playoff spot threshold fixed** — Dashboard "Playoff Spot" widget and This Week zone now correctly show IN/OUT based on top-8 qualification (was incorrectly using top-4)
+- **Playoffs auto-trigger** — When the player finishes their last regular-season game, any remaining CPU games across all leagues are silently auto-simmed so playoffs start immediately without needing extra button presses
+- **Race condition fixed** — The 5-game results modal now appears over the correct final screen (playoff bracket or dashboard) instead of flashing over a stale state
+- **Team tooltip logo** — Hovering a team name now shows the team's SVG logo alongside their record and roster breakdown
 
 ### v1.3.2
 - **Draft screen scroll fix** — Draft screen now scrolls to the top on load
