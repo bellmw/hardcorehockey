@@ -176,16 +176,16 @@
         {
           "id": "phl_tor",
           "city": "Toronto",
-          "name": "Greasers",
-          "fullName": "Toronto Greasers",
+          "name": "Towers",
+          "fullName": "Toronto Towers",
           "abbrev": "TOR",
-          "arena": "The Greasy Barn (Exhibition Grounds Annex)",
-          "primaryColor": "#1a1a2e",
-          "secondaryColor": "#c9a227",
+          "arena": "The Needle (Harbourfront Rink)",
+          "primaryColor": "#6a0dad",
+          "secondaryColor": "#c0c0c0",
           "gmName": "Sandra Kowalczyk",
           "gmPersonality": "win_now",
           "founded": 1977,
-          "flavour": "Toronto's other hockey team. Sandra has been under the most media scrutiny in the league for 20 years and is completely fine, she says."
+          "flavour": "Toronto's other hockey team. Built in the shadow of the CN Tower and just as impossible to ignore. Sandra has been under the most media scrutiny in the league for 20 years and is completely fine, she says."
         },
         {
           "id": "phl_ott",

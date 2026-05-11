@@ -103,10 +103,10 @@
 
 ---
 
-### `phl_tor.png` — Toronto Greasers
-**Colors:** Dark navy (#1a1a2e) + Antique gold (#c9a227)
+### `phl_tor.png` — Toronto Towers
+**Colors:** Purple (#6a0dad) + Silver (#c0c0c0)
 **Prompt:**
-> 90s minor league hockey logo, vintage screen-printed style, bold flat colors, thick black outlines, slight halftone texture, transparent background, centered shield badge. A 1950s greaser with a tall pompadour haircut and leather jacket, holding a hockey stick like a rock-and-roll guitar, cool smirk. Colors: dark navy and antique gold. Text: "GREASERS" arced above in gold block letters, "TORONTO" in a navy banner below. Retro 50s cool meets hockey.
+> 90s minor league hockey logo, vintage screen-printed style, bold flat colors, thick black outlines, slight halftone texture, transparent background, centered shield badge. The CN Tower standing tall and proud, a hockey puck orbiting it like a satellite, lightning bolt crackling from the observation deck. Colors: deep purple and silver. Text: "TOWERS" arced above in silver block letters, "TORONTO" in a purple banner below. Iconic skyline energy.
 
 ---
 
