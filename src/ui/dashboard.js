@@ -35,6 +35,11 @@ function renderDashboard(state) {
   const team = state.teams[state.playerTeamId];
   if (!team) return;
 
+  // Preserve panel and window scroll positions before re-render
+  const panels = Array.from(document.querySelectorAll('.panel'));
+  const panelScrollTops = panels.map(p => p.scrollTop);
+  const winScrollY = window.scrollY;
+
   const leagueId  = team.leagueId;
   const standings = state.standings[leagueId];
   const teamEntry = standings?.[state.playerTeamId] ?? { w: 0, l: 0, otl: 0 };
@@ -50,6 +55,10 @@ function renderDashboard(state) {
   renderNews(state);
   renderSimControls(state.phase);
   renderGameModeToggle();
+
+  // Restore scroll positions after re-render
+  panels.forEach((p, i) => { p.scrollTop = panelScrollTops[i]; });
+  window.scrollTo(0, winScrollY);
 
   // Auto-open bracket if we just entered playoffs
   if (state.playoffBracketPending && window.hockeyGM?.showPlayoffBracket) {
@@ -533,6 +542,19 @@ window.dashboardLeadersNext = function() {
   const state = window.hockeyGM?.getState?.();
   if (state) renderLeaderboardCategory(el('dash-league-leaders'), state, state.playerTeamId);
 };
+// ─── Relegation helper ───────────────────────────────────────────────────────
+
+/**
+ * Returns a relegation status object for the given rank/league, or null for RC.
+ * Bottom 2 → auto-relegated; 3rd from bottom → survival playoff; otherwise safe.
+ */
+function getRelegationStatus(rank, totalTeams, leagueId) {
+  if (leagueId === 'rc' || totalTeams < 3 || rank <= 0) return null;
+  if (rank >= totalTeams - 1) return { label: 'Likely being relegated', cls: 'relegate-danger' };
+  if (rank === totalTeams - 2) return { label: 'In danger of relegation', cls: 'relegate-warn' };
+  return { label: 'Safe from relegation', cls: 'relegate-safe' };
+}
+
 // ─── This Week zone ──────────────────────────────────────────────────────────
 
 function renderThisWeek(state, team) {
@@ -623,12 +645,16 @@ function renderThisWeek(state, team) {
       : '';
     urgency  = inPlayoffs ? 'ice' : 'warn';
     headline = `Week ${nextGame.week ?? '?'} — ${venue} ${opp?.fullName ?? oppId}`;
-    detail   = rankStr;
+    const relSt = getRelegationStatus(rank, sorted.length, leagueId);
+    detail   = rankStr + (relSt ? ` ${relSt.label}.` : '');
   } else {
     urgency  = 'info';
     headline = 'Regular season';
     const suffix = rank === 1 ? 'st' : rank === 2 ? 'nd' : rank === 3 ? 'rd' : 'th';
-    detail   = rank > 0 ? `You are ${rank}${suffix} in your league.` : '';
+    const relSt = getRelegationStatus(rank, sorted.length, leagueId);
+    detail   = rank > 0
+      ? `You are ${rank}${suffix} in your league.${relSt ? ' ' + relSt.label + '.' : ''}`
+      : '';
   }
 
   container.innerHTML = `
@@ -692,6 +718,16 @@ function renderNews(state) {
     ? (inPlayoffSpot ? `IN (${rank})` : `OUT (${rank})`)
     : '—';
 
+  const relegStatus = team ? getRelegationStatus(rank, sortedStandings.length, team.leagueId) : null;
+  const relegRow = relegStatus
+    ? `<div class="trade-widget-row" style="margin-top:4px">
+        <div class="trade-widget-item trade-widget-item--full trade-widget-relegate ${relegStatus.cls}" onclick="hockeyGM.showScreen('standings')">
+          <span class="trade-widget-label">Relegation</span>
+          <span class="trade-widget-value">${relegStatus.label}</span>
+        </div>
+      </div>`
+    : '';
+
   const schedule = team ? (state.leagues?.[team.leagueId]?.schedule ?? []) : [];
   const unplayed = schedule.filter(g => !g.played);
   const lastWeek = unplayed.length ? Math.max(...unplayed.map(g => g.week ?? 0)) : state.week;
@@ -723,6 +759,7 @@ function renderNews(state) {
           <span class="trade-widget-value">${playoffValue}</span>
         </button>
       </div>
+      ${relegRow}
     </div>
   `;
 

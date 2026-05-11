@@ -58,6 +58,11 @@
     </div>
   </div>
 
+  <!-- Draft lottery reveal modal -->
+  <div id="draft-lottery-overlay" class="modal-overlay dl-overlay" style="display:none" role="dialog" aria-modal="true">
+    <div id="draft-lottery-content"><!-- JS renders --></div>
+  </div>
+
   <!-- Playoff bracket modal -->
   <div id="playoff-bracket-overlay" class="modal-overlay" style="display:none" role="dialog" aria-modal="true">
     <div class="modal-box po-bracket-box">
@@ -312,12 +317,11 @@
   <script type="module" src="src/ui/trade.js"></script>
   <script type="module" src="src/ui/draft.js"></script>
   <script type="module" src="src/ui/seasonSummary.js"></script>
+  <script type="module" src="src/ui/draftLottery.js"></script>
   <script>
     // simWeek helper — available globally after main.js boots
     async function simWeek() {
-      for (let i = 0; i < 5; i++) {
-        await hockeyGM.simNextGame();
-      }
+      await hockeyGM.simMyNextFiveGames();
     }
 
     // ── Arcade button micro-interactions ─────────────────────────────────

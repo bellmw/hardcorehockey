@@ -3,6 +3,7 @@
  * Shows a period-by-period progression of a hockey game
  * before displaying the full final result.
  */
+import { teamLogoEl } from './teamLogo.js';
 
 const watchOverlay = document.getElementById('game-watch-overlay');
 const watchContent = document.getElementById('game-watch-content');
@@ -50,14 +51,19 @@ function renderGameWatchPeriod(periodNum) {
   const homeThisPeriod = homePeriods[periodNum] || 0;
   const awayThisPeriod = awayPeriods[periodNum] || 0;
 
+  const awayLogo = teamLogoEl(away.id, away.abbrev, away.primaryColor || '#0055CC', away.secondaryColor || '#FFFFFF', 44);
+  const homeLogo = teamLogoEl(home.id, home.abbrev, home.primaryColor || '#0055CC', home.secondaryColor || '#FFFFFF', 44);
+
   const html = `
     <div class="gw-header">
       <div class="gw-team-header">
+        <div class="gw-team-logo">${awayLogo}</div>
         <div class="gw-team-name">${away.abbrev}</div>
         <div class="gw-team-full">${away.fullName}</div>
       </div>
       <div class="gw-period-label">${periodLabel}</div>
       <div class="gw-team-header">
+        <div class="gw-team-logo">${homeLogo}</div>
         <div class="gw-team-name">${home.abbrev}</div>
         <div class="gw-team-full">${home.fullName}</div>
       </div>

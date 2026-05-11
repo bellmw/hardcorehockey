@@ -210,8 +210,72 @@ function posClass(pos) {
   return 'goal';
 }
 
+// ─── Multi-game result renderer ───────────────────────────────────────────────
+
+function renderMultiGameResult({ results, playerTeamId }) {
+  let wins = 0, losses = 0, otl = 0;
+
+  const rows = results.map(({ result, home, away, week }) => {
+    const isHome      = home.id === playerTeamId;
+    const opp         = isHome ? away : home;
+    const playerGoals = isHome ? result.homeGoals : result.awayGoals;
+    const oppGoals    = isHome ? result.awayGoals : result.homeGoals;
+    const won         = playerGoals > oppGoals;
+    const lost        = playerGoals < oppGoals;
+    const ot          = result.overtimeType;
+
+    if (won) wins++;
+    else if (!lost && ot) otl++;
+    else losses++;
+
+    const resultLabel = won ? 'W' : (ot ? 'OTL' : 'L');
+    const resultCls   = won ? 'mgr-w' : (ot ? 'mgr-otl' : 'mgr-l');
+    const venueTxt    = isHome ? 'vs' : '@';
+    const scoreTxt    = isHome
+      ? `${playerGoals}–${oppGoals}`
+      : `${playerGoals}–${oppGoals}`;
+
+    return `
+      <div class="mgr-row">
+        <span class="mgr-result ${resultCls}">${resultLabel}</span>
+        <span class="mgr-venue">${venueTxt}</span>
+        <span class="mgr-opp">${opp.abbrev}</span>
+        <span class="mgr-score">${scoreTxt}${ot ? ` (${ot})` : ''}</span>
+        <span class="mgr-week">Wk ${week ?? '?'}</span>
+      </div>`;
+  }).join('');
+
+  content.innerHTML = `
+    <div class="gr-header">
+      <span class="gr-header-label">5 Game Results</span>
+      <button class="gr-close" onclick="window.closeGameResultModal?.()" aria-label="Close">✕</button>
+    </div>
+    <div class="mgr-summary">
+      <span class="mgr-sum-w">${wins}W</span>
+      <span class="mgr-sum-sep">–</span>
+      <span class="mgr-sum-l">${losses}L</span>
+      <span class="mgr-sum-sep">–</span>
+      <span class="mgr-sum-otl">${otl}OTL</span>
+    </div>
+    <div class="mgr-list">${rows}</div>
+    <div class="gr-footer">
+      <button class="btn-primary gr-dismiss" onclick="window.closeGameResultModal?.()">
+        Back to Dashboard
+      </button>
+    </div>
+  `;
+
+  if (modal) modal.scrollTop = 0;
+  if (content) content.scrollTop = 0;
+  overlay.style.display = 'flex';
+}
+
 // ─── Event listener ───────────────────────────────────────────────────────────
 
 document.addEventListener('game-result', (e) => {
   renderGameResult(e.detail);
+});
+
+document.addEventListener('multi-game-result', (e) => {
+  renderMultiGameResult(e.detail);
 });

@@ -25,6 +25,7 @@ import { loadEvents, checkForEvent, applyEventEffects } from './engine/eventEngi
 import { showEvent } from './ui/eventModal.js';
 import { healInjuries, canPlayerBeTrade } from './engine/injurySystem.js';
 import { showSeasonSummary } from './ui/seasonSummary.js';
+import { showDraftLottery } from './ui/draftLottery.js';
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
@@ -189,10 +190,23 @@ export async function newGame(playerTeamId) {
     GAME_STATE.allPlayers[p.id] = p;
   });
 
-  // Build draft order: player's team picks first (new GM gets priority), then random
+  // Build draft order: run a weighted lottery for the player (always lands 1-5)
   const otherTeamIds = Object.keys(GAME_STATE.teams).filter(id => id !== playerTeamId);
   otherTeamIds.sort(() => Math.random() - 0.5);
-  const draftOrder = [playerTeamId, ...otherTeamIds];
+
+  // Weighted pick for new GM (first year): 40% #1, 25% #2, 20% #3, 10% #4, 5% #5
+  const lotteryWeights = [40, 25, 20, 10, 5];
+  const roll = Math.random() * 100;
+  let playerPickSlot = 1;
+  let acc = 0;
+  for (let i = 0; i < lotteryWeights.length; i++) {
+    acc += lotteryWeights[i];
+    if (roll < acc) { playerPickSlot = i + 1; break; }
+  }
+
+  // Insert player at lotteried slot, fill rest with shuffled CPU teams
+  const draftOrder = [...otherTeamIds];
+  draftOrder.splice(playerPickSlot - 1, 0, playerTeamId);
 
   GAME_STATE.draftClass       = rawProspects.map(p => p.id);
   GAME_STATE.draftOrder       = draftOrder;
@@ -210,6 +224,7 @@ export async function newGame(playerTeamId) {
   GAME_STATE.preDraftOvr = preDraftOvr;
 
   saveGame();
+  await showDraftLottery(playerPickSlot);
   showScreen('team-intro');
 }
 
@@ -725,6 +740,67 @@ function _advanceSeriesWinner(state, leagueId, seriesKey, winnerId) {
 export async function simToPlayoffs() {
   while (GAME_STATE.phase === 'season') {
     await simNextGame(true, true); // silent + skipEvents — no modals or events during bulk sim
+  }
+}
+
+/**
+ * Silently sims the player's next 5 games, then shows a combined results modal.
+ */
+export async function simMyNextFiveGames() {
+  const state = GAME_STATE;
+  if (state.phase !== 'season') return;
+
+  const playerTeamId   = state.playerTeamId;
+  const playerLeagueId = ['phl', 'cd', 'rc'].find(lid =>
+    state.leagues[lid].teamIds.includes(playerTeamId)
+  );
+  if (!playerLeagueId) return;
+
+  const multiResults = [];
+
+  for (let gameNum = 0; gameNum < 5; gameNum++) {
+    if (state.phase !== 'season') break;
+
+    const playerTargetGame = state.leagues[playerLeagueId].schedule
+      .filter(g => !g.played && (g.homeTeamId === playerTeamId || g.awayTeamId === playerTeamId))
+      .sort((a, b) => a.week - b.week)[0];
+    if (!playerTargetGame) break;
+
+    // Advance silently until the player's game is the very next one in the league
+    let safety = 300;
+    while (safety-- > 0) {
+      const nextInLeague = state.leagues[playerLeagueId].schedule
+        .filter(g => !g.played)
+        .sort((a, b) => a.week - b.week)[0];
+      if (!nextInLeague) break;
+
+      if (nextInLeague.id === playerTargetGame.id) {
+        // Player's game is next — sim it silently
+        await simNextGame(true, true);
+        const played = state.leagues[playerLeagueId].schedule.find(g => g.id === playerTargetGame.id);
+        if (played?.played && played?.result) {
+          multiResults.push({
+            result: played.result,
+            home:   state.teams[played.homeTeamId],
+            away:   state.teams[played.awayTeamId],
+            week:   played.week,
+          });
+        }
+        break;
+      }
+
+      await simNextGame(true, true);
+      if (state.phase !== 'season') break;
+    }
+  }
+
+  saveGame();
+  renderCurrentScreen();
+
+  if (multiResults.length > 0) {
+    document.dispatchEvent(new CustomEvent('multi-game-result', {
+      detail: { results: multiResults, playerTeamId },
+    }));
   }
 }
 
@@ -2441,7 +2517,37 @@ export async function startDraft() {
     const leagueId = state.teams[teamId]?.leagueId;
     return state.standings[leagueId]?.[teamId]?.pts ?? 0;
   };
-  const draftOrder = [...allTeamIds].sort((a, b) => getTeamPts(a) - getTeamPts(b));
+  const baseDraftOrder = [...allTeamIds].sort((a, b) => getTeamPts(a) - getTeamPts(b));
+
+  // Find where the player naturally sits (worst = 1st pick)
+  const naturalSlot = baseDraftOrder.indexOf(state.playerTeamId) + 1; // 1-based
+
+  // Lottery: player always lands 1-5. Weight by how bad they were (lower natural slot = better odds of #1).
+  // Slots 1-5 naturally → keep their natural pick. Slots 6+ → lottery 1-5 (lucky ball).
+  let playerPickSlot;
+  if (naturalSlot >= 1 && naturalSlot <= 5) {
+    // Already in top 5 — small chance to move up or stay
+    const wobble = Math.random();
+    playerPickSlot = wobble < 0.15 ? Math.max(1, naturalSlot - 1)
+                   : wobble < 0.85 ? naturalSlot
+                   : Math.min(5, naturalSlot + 1);
+  } else {
+    // Finished 6th or better — lottery ball gives them a 1-5 pick
+    // Weighted: 20% #1, 25% #2, 25% #3, 20% #4, 10% #5
+    const weights = [20, 25, 25, 20, 10];
+    const roll = Math.random() * 100;
+    playerPickSlot = 5;
+    let acc = 0;
+    for (let i = 0; i < weights.length; i++) {
+      acc += weights[i];
+      if (roll < acc) { playerPickSlot = i + 1; break; }
+    }
+  }
+
+  // Remove player from base order, insert at lotteried slot
+  const withoutPlayer = baseDraftOrder.filter(id => id !== state.playerTeamId);
+  withoutPlayer.splice(playerPickSlot - 1, 0, state.playerTeamId);
+  const draftOrder = withoutPlayer;
 
   // Generate prospects
   const rawProspects = generateDraftClass(NAME_DATA, state.year);
@@ -2457,6 +2563,7 @@ export async function startDraft() {
   state.phase            = 'draft';
 
   saveGame();
+  await showDraftLottery(playerPickSlot);
   showScreen('draft');
 }
 
@@ -2642,6 +2749,7 @@ window.hockeyGM = {
   skipPreseasonDraft,
   simNextGame,
   simToMyNextGame,
+  simMyNextFiveGames,
   simToPlayoffs,
   simPlayoffs,
   simMyNextPlayoffGame,

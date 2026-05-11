@@ -479,8 +479,16 @@ tr:hover td { background: var(--bg-2); }
   font-weight: 800;
   color: var(--ice);
 }
-
-/* ─── News filter buttons ──────────────────────── */
+.trade-widget-item--full {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+.trade-widget-relegate .trade-widget-value {
+  font-size: 13px;
+}
+.trade-widget-relegate.relegate-safe .trade-widget-value   { color: #39ff14; }
+.trade-widget-relegate.relegate-warn .trade-widget-value   { color: var(--gold); }
+.trade-widget-relegate.relegate-danger .trade-widget-value { color: var(--neon-red); }
 .news-filters {
   display: flex;
   gap: 4px;
@@ -2126,7 +2134,192 @@ tr:hover td { background: var(--bg-2); }
 }
 .gr-dismiss { min-width: 160px; }
 
-/* ─── Roster view tabs ──────────────────────────── */
+/* ─── Draft Lottery Modal ───────────────────────── */
+.dl-overlay {
+  background: rgba(0,0,0,0.92) !important;
+  z-index: 20000;
+}
+
+.dl-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  padding: 40px 32px 32px;
+  width: min(560px, 96vw);
+  overflow: hidden;
+  border: 1px solid var(--border-2);
+  background: var(--bg-2);
+  border-radius: var(--radius-lg);
+}
+
+/* Glowing border for #1 */
+.dl-is-one {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 40px rgba(255,255,0,0.35), inset 0 0 60px rgba(255,255,0,0.06);
+}
+
+.dl-crown {
+  font-size: 40px;
+  line-height: 1;
+}
+
+.dl-title {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+
+/* Slot machine */
+.dl-slot-wrap {
+  width: 120px;
+  height: 80px;
+  overflow: hidden;
+  border: 2px solid var(--border-2);
+  border-radius: var(--radius);
+  background: var(--bg-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px 0;
+}
+
+.dl-slot-track {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.dl-slot-num {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--text-3);
+  line-height: 1;
+  transition: color 0.1s, text-shadow 0.1s;
+}
+
+.dl-slot-active {
+  color: var(--ice) !important;
+  text-shadow: 0 0 20px var(--ice);
+}
+
+.dl-slot-winner {
+  color: var(--gold) !important;
+  text-shadow: 0 0 30px var(--gold), 0 0 60px rgba(255,255,0,0.4) !important;
+  animation: dl-winner-pulse 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes dl-winner-pulse {
+  from { transform: scale(1);    }
+  to   { transform: scale(1.12); }
+}
+
+.dl-pick-label {
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: var(--gold);
+  text-shadow: var(--glow-gold);
+  letter-spacing: 0.06em;
+}
+
+.dl-pick-copy {
+  font-family: var(--font-display);
+  font-size: 10px;
+  color: var(--ice);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.dl-urgency--gold .dl-pick-label { color: var(--gold); text-shadow: var(--glow-gold); }
+.dl-urgency--ice  .dl-pick-label { color: var(--ice);  text-shadow: var(--glow-ice); }
+.dl-urgency--accent .dl-pick-label { color: var(--accent); text-shadow: var(--glow-red); }
+
+.dl-pick-sub {
+  font-size: 13px;
+  color: var(--text-2);
+  max-width: 380px;
+  line-height: 1.5;
+}
+
+.dl-cta {
+  margin-top: 8px;
+  min-width: 220px;
+}
+
+/* Fireworks particles */
+.dl-fireworks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.dl-particle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  animation: dl-burst 1s ease-out forwards;
+}
+
+@keyframes dl-burst {
+  0%   { opacity: 1;   transform: translate(0,0)                          scale(1); }
+  60%  { opacity: 0.8; transform: translate(var(--tx), calc(var(--ty) * 0.6)) scale(0.6); }
+  100% { opacity: 0;   transform: translate(var(--tx), var(--ty))         scale(0); }
+}
+
+/* ─── Multi-game result modal ───────────────────── */
+.mgr-summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 20px 10px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  border-bottom: 1px solid var(--border);
+}
+.mgr-sum-w   { color: #39ff14; }
+.mgr-sum-l   { color: var(--neon-red); }
+.mgr-sum-otl { color: var(--gold); }
+.mgr-sum-sep { color: var(--text-3); font-size: 16px; }
+.mgr-list {
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mgr-row {
+  display: grid;
+  grid-template-columns: 36px 28px 48px 1fr 40px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+.mgr-result {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+}
+.mgr-w   { color: #39ff14; }
+.mgr-l   { color: var(--neon-red); }
+.mgr-otl { color: var(--gold); }
+.mgr-venue  { color: var(--text-3); font-size: 11px; text-align: center; }
+.mgr-opp    { color: var(--text-1); font-weight: 700; }
+.mgr-score  { color: var(--ice); font-size: 13px; }
+.mgr-week   { color: var(--text-3); font-size: 11px; text-align: right; }
 .roster-view-toggle {
   display: flex;
   gap: 6px;
@@ -2672,6 +2865,12 @@ tr:hover td { background: var(--bg-2); }
 .gw-team-header {
   flex: 1;
   text-align: center;
+}
+
+.gw-team-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 6px;
 }
 
 .gw-team-name {
