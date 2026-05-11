@@ -19,6 +19,7 @@ let boardSort          = 'score'; // 'score' | 'overall' | 'potential' | 'positi
 // ─── Main render ──────────────────────────────────────────────────────────────
 
 function renderDraft(state) {
+  window.scrollTo(0, 0);
   updateRoundIndicator(state);
 
   const phase = state.phase;
@@ -678,6 +679,96 @@ function renderRecapInDetail(state) {
     <div class="draft-recap">
       <h3 class="draft-recap-title panel-label">Your picks</h3>
       ${renderDraftHistorySnippet(state, true)}
+      ${renderDraftGrades(state)}
+    </div>
+  `;
+}
+
+function renderDraftGrades(state) {
+  const allPicks = (state.draftHistory || []);
+  if (!allPicks.length) return '';
+
+  // Find the most recently drafted year
+  const latestYear = Math.max(...allPicks.map(p => p.year));
+  const picks = allPicks.filter(p => p.year === latestYear);
+
+  // Score each team: sum of pick scores (overall OVR weighted by pick slot)
+  const teamScores = {};
+  const teamBest   = {};
+  for (const pick of picks) {
+    const p = state.allPlayers[pick.prospectId];
+    if (!p) continue;
+    if (!teamScores[pick.teamId]) { teamScores[pick.teamId] = 0; teamBest[pick.teamId] = []; }
+    // Weight: round 1 picks worth more; bonus for high overall
+    const slotBonus = pick.round === 1 ? 15 : pick.round === 2 ? 7 : 2;
+    teamScores[pick.teamId] += p.overall + slotBonus;
+    teamBest[pick.teamId].push({ name: p.fullName, ovr: p.overall, pos: p.position });
+  }
+
+  // Sort teams by score descending
+  const ranked = Object.entries(teamScores)
+    .sort((a, b) => b[1] - a[1])
+    .map(([teamId, score], idx) => ({ teamId, score, rank: idx + 1 }));
+
+  const total = ranked.length;
+  const playerEntry = ranked.find(r => r.teamId === state.playerTeamId);
+  const playerRank  = playerEntry?.rank ?? total;
+
+  // Grades: top 20% = A, next 20% = B, middle 20% = C, next 20% = D, bottom 20% = F
+  function grade(rank, total) {
+    const pct = rank / total;
+    if (pct <= 0.20) return { label: 'A', cls: 'dg-grade-a' };
+    if (pct <= 0.40) return { label: 'B', cls: 'dg-grade-b' };
+    if (pct <= 0.60) return { label: 'C', cls: 'dg-grade-c' };
+    if (pct <= 0.80) return { label: 'D', cls: 'dg-grade-d' };
+    return { label: 'F', cls: 'dg-grade-f' };
+  }
+
+  // Build rows — show top 5, bottom 5, and always include player
+  const showSet = new Set();
+  ranked.slice(0, 5).forEach(r => showSet.add(r.rank));
+  ranked.slice(-5).forEach(r => showSet.add(r.rank));
+  showSet.add(playerRank);
+
+  let lastShownRank = 0;
+  const rows = ranked.map(({ teamId, rank }) => {
+    const show = showSet.has(rank);
+    if (!show) return '';
+
+    const gap = lastShownRank > 0 && rank > lastShownRank + 1;
+    lastShownRank = rank;
+
+    const team = state.teams[teamId];
+    if (!team) return '';
+    const isMe = teamId === state.playerTeamId;
+    const g = grade(rank, total);
+    const best = (teamBest[teamId] || []).sort((a, b) => b.ovr - a.ovr)[0];
+    const bestStr = best ? `${best.pos} ${best.name} (${best.ovr})` : '—';
+
+    const ellipsisRow = gap ? `<tr class="dg-ellipsis"><td colspan="4">···</td></tr>` : '';
+    return ellipsisRow + `<tr class="${isMe ? 'dg-me-row' : ''}">
+      <td class="dg-rank">${rank}</td>
+      <td class="dg-team">${isMe ? '★ ' : ''}${team.city} ${team.name}</td>
+      <td class="dg-best">${bestStr}</td>
+      <td><span class="dg-grade ${g.cls}">${g.label}</span></td>
+    </tr>`;
+  }).join('');
+
+  const playerGrade = grade(playerRank, total);
+  const verdict = playerRank <= Math.ceil(total * 0.2) ? '🔥 One of the best drafts in the league.' :
+                  playerRank <= Math.ceil(total * 0.4) ? '👍 Solid draft — above average.' :
+                  playerRank <= Math.ceil(total * 0.6) ? '😐 Middle of the pack.' :
+                  playerRank <= Math.ceil(total * 0.8) ? '😬 Below average — some tough picks ahead.' :
+                  '💀 Rough one. Hope the scouts are wrong.';
+
+  return `
+    <div class="draft-grades">
+      <div class="panel-label" style="margin-top:1.5rem">Draft grades — Year ${latestYear} · all ${total} teams</div>
+      <p class="dg-verdict">${verdict} You ranked <strong>#${playerRank}</strong> of ${total} — Grade <span class="dg-grade ${playerGrade.cls}">${playerGrade.label}</span></p>
+      <table class="standings-table dg-table">
+        <thead><tr><th>#</th><th>Team</th><th>Best pick</th><th>Grade</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
     </div>
   `;
 }

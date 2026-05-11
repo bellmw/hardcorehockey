@@ -1157,6 +1157,43 @@ tr:hover td { background: var(--bg-2); }
   font-style: normal;
 }
 
+/* ── Draft grades ── */
+.draft-grades { margin-top: 0.5rem; }
+
+.dg-verdict {
+  font-size: 12px;
+  color: var(--text-2);
+  margin: 0.4rem 0 0.75rem;
+  line-height: 1.5;
+}
+.dg-verdict strong { color: var(--ice); }
+
+.dg-table td { font-size: 11px; padding: 4px 6px; }
+.dg-table th { font-size: 10px; }
+
+.dg-me-row { background: rgba(0,255,255,0.06); }
+.dg-me-row td { color: var(--ice) !important; font-weight: 600; }
+
+.dg-rank { color: var(--text-3); width: 24px; text-align: center; }
+.dg-team { color: var(--text-1); }
+.dg-best { color: var(--text-3); font-size: 10px !important; }
+
+.dg-ellipsis td { text-align: center; color: var(--text-3); padding: 0; font-size: 10px; }
+
+.dg-grade {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  width: 22px;
+  text-align: center;
+}
+.dg-grade-a { color: var(--neon-green); }
+.dg-grade-b { color: #7fff7f; }
+.dg-grade-c { color: var(--gold); }
+.dg-grade-d { color: #ff9900; }
+.dg-grade-f { color: var(--neon-red); }
+
 .draft-prospect-card {
   background: var(--bg-2);
   border: 1px solid var(--border);
