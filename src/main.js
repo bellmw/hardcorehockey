@@ -800,17 +800,8 @@ export async function simMyNextFiveGames() {
     }
   }
 
-  saveGame();
-  renderCurrentScreen();
-
-  if (multiResults.length > 0) {
-    document.dispatchEvent(new CustomEvent('multi-game-result', {
-      detail: { results: multiResults, playerTeamId },
-    }));
-  }
-
-  // If the player has no more games left but the season is still running,
-  // auto-sim all remaining league games so playoffs can start.
+  // If the player has no more games left, auto-sim remaining league games FIRST
+  // so the correct screen (playoffs vs dashboard) is rendered before showing results.
   if (state.phase === 'season') {
     const remainingPlayerGames = state.leagues[playerLeagueId].schedule
       .filter(g => !g.played && (g.homeTeamId === playerTeamId || g.awayTeamId === playerTeamId));
@@ -823,9 +814,17 @@ export async function simMyNextFiveGames() {
         if (!anyLeft) break;
         await simNextGame(true, true);
       }
-      saveGame();
-      renderCurrentScreen();
     }
+  }
+
+  saveGame();
+  renderCurrentScreen(); // renders correct final state (playoffs or dashboard)
+
+  // Show results modal on top of whichever screen is now active
+  if (multiResults.length > 0) {
+    document.dispatchEvent(new CustomEvent('multi-game-result', {
+      detail: { results: multiResults, playerTeamId },
+    }));
   }
 }
 
