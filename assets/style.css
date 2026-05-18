@@ -5630,3 +5630,610 @@ body {
 
 /* ─── OVR tier colors with team accent ───────────────────────────────── */
 .td-ovr { color: var(--team-secondary, #00CCFF) !important; }
+
+/* ==========================================================================
+   GENERATED SEGA RASTER ASSETS
+   Wires assets/ui/*.png into the existing 16-bit UI treatment.
+========================================================================== */
+:root {
+  --sega-arena-image: url('../assets/ui/sega-arena-bg.png?v=2');
+  --sega-scoreboard-image: url('../assets/ui/sega-scoreboard-header.png?v=2');
+  --sega-nav-sprite: url('../assets/ui/sega-nav-icons.png?v=2');
+  --sega-player-sprite: url('../assets/ui/sega-player-silhouettes.png?v=2');
+  --sega-ice-image: url('../assets/ui/sega-ice-texture.jpg');
+  --sega-panel-frame: url('../assets/ui/sega-panel-frame.png?v=1');
+  --sega-modal-frame: url('../assets/ui/sega-modal-frame.png?v=1');
+  --sega-card-frame: url('../assets/ui/sega-card-frame.png?v=1');
+  --sega-gamecast-rink: url('../assets/ui/sega-gamecast-rink.png?v=1');
+}
+
+body {
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.12) 0px,
+      rgba(0, 0, 0, 0.12) 2px,
+      rgba(255, 255, 255, 0.025) 2px,
+      rgba(255, 255, 255, 0.025) 4px
+    ),
+    radial-gradient(ellipse 90% 55% at 50% 20%, rgba(0, 90, 190, 0.28), transparent 70%),
+    linear-gradient(rgba(1, 1, 10, 0.38), rgba(1, 1, 10, 0.74)),
+    var(--sega-arena-image) !important;
+  background-size: auto, 100% 100%, 100% 100%, cover !important;
+  background-position: 0 0, center, center, center top !important;
+  background-attachment: fixed !important;
+}
+
+#screen-team-select {
+  background-image:
+    linear-gradient(rgba(0, 0, 12, 0.28), rgba(0, 0, 12, 0.78)),
+    var(--sega-arena-image) !important;
+  background-size: cover !important;
+  background-position: center top !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+}
+
+#screen-team-select::before {
+  background:
+    radial-gradient(ellipse 70% 36% at 50% 18%, rgba(0, 220, 255, 0.16), transparent 70%),
+    rgba(0, 0, 8, 0.34) !important;
+}
+
+.app-header {
+  min-height: 96px !important;
+  padding: 14px 22px 14px 50px !important;
+  background-image:
+    linear-gradient(90deg, rgba(2, 3, 18, 0.94), rgba(2, 3, 18, 0.58), rgba(2, 3, 18, 0.94)),
+    var(--sega-scoreboard-image) !important;
+  background-size: 100% 100%, cover !important;
+  background-position: center, center 43% !important;
+  background-repeat: no-repeat !important;
+  border-bottom-width: 4px !important;
+}
+
+.app-header::after {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 42%),
+    rgba(1, 1, 20, 0.48) !important;
+}
+
+.dashboard-main {
+  height: calc(100vh - 96px) !important;
+  background:
+    linear-gradient(90deg, rgba(0, 85, 204, 0.9), rgba(0, 204, 255, 0.5), rgba(0, 85, 204, 0.9)) !important;
+}
+
+.screen-header {
+  background-image:
+    linear-gradient(90deg, rgba(2, 3, 18, 0.93), rgba(2, 3, 18, 0.64), rgba(2, 3, 18, 0.93)),
+    var(--sega-scoreboard-image) !important;
+  background-size: 100% 100%, cover !important;
+  background-position: center, center 44% !important;
+}
+
+.panel {
+  background-image:
+    linear-gradient(rgba(3, 3, 18, 0.94), rgba(3, 3, 18, 0.94)),
+    var(--sega-ice-image) !important;
+  background-size: 100% 100%, cover !important;
+  background-position: center !important;
+}
+
+.panel-left {
+  background-image:
+    linear-gradient(rgba(2, 2, 15, 0.80), rgba(2, 2, 15, 0.92)),
+    var(--sega-arena-image) !important;
+  background-size: 100% 100%, cover !important;
+  background-position: center, center top !important;
+}
+
+.panel-left::before {
+  background:
+    radial-gradient(ellipse 70% 22% at 50% 18%, rgba(0, 220, 255, 0.17), transparent 70%),
+    rgba(2, 2, 15, 0.28) !important;
+}
+
+.gr-scoreboard {
+  background-image:
+    linear-gradient(rgba(1, 1, 20, 0.50), rgba(1, 1, 20, 0.78)),
+    var(--sega-scoreboard-image) !important;
+  background-size: 100% 100%, cover !important;
+  background-position: center, center 43% !important;
+}
+
+.gr-scoreboard::after {
+  background: rgba(1, 1, 20, 0.32) !important;
+}
+
+.header-nav button {
+  display: inline-flex !important;
+  align-items: center !important;
+  min-height: 50px !important;
+  padding: 7px 14px !important;
+  font-size: 8px !important;
+}
+
+.header-nav button::before {
+  content: '' !important;
+  display: inline-block !important;
+  width: 38px !important;
+  height: 38px !important;
+  margin-right: 9px !important;
+  flex: 0 0 38px !important;
+  vertical-align: middle !important;
+  background-image: var(--sega-nav-sprite) !important;
+  background-repeat: no-repeat !important;
+  background-size: 500% auto !important;
+  background-color: #050816 !important;
+  background-blend-mode: normal !important;
+  border: 1px solid rgba(0, 204, 255, 0.45) !important;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.16),
+    0 0 7px rgba(0, 204, 255, 0.22) !important;
+  image-rendering: pixelated !important;
+}
+
+.header-nav button[onclick*="roster"]::before,
+.header-nav button[onclick*="standings"]::before,
+.header-nav button[onclick*="trade"]::before,
+.header-nav button[onclick*="draft"]::before,
+.header-nav button[onclick*="news"]::before {
+  display: inline-block !important;
+  width: 42px !important;
+  height: 42px !important;
+  margin-right: 10px !important;
+  flex: 0 0 42px !important;
+  background-image: var(--sega-nav-sprite) !important;
+  background-repeat: no-repeat !important;
+  background-size: 500% auto !important;
+}
+
+.header-nav button[onclick*="roster"]::before { background-position: 0% center !important; }
+.header-nav button[onclick*="standings"]::before { background-position: 25% center !important; }
+.header-nav button[onclick*="trade"]::before { background-position: 50% center !important; }
+.header-nav button[onclick*="draft"]::before { background-position: 75% center !important; }
+.header-nav button[onclick*="news"]::before { background-position: 100% center !important; }
+
+.sega-lineup-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: end;
+  min-height: 104px;
+  margin: 0 0 10px;
+  overflow: hidden;
+  border: 2px solid var(--team-primary, #0055CC);
+  background:
+    linear-gradient(rgba(0, 8, 26, 0.34), rgba(0, 8, 26, 0.76)),
+    var(--sega-arena-image);
+  background-size: 100% 100%, cover;
+  background-position: center, center 34%;
+  box-shadow:
+    inset 2px 2px 0 rgba(255, 255, 255, 0.10),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.70),
+    0 0 16px var(--team-glow, rgba(0, 150, 255, 0.35));
+}
+
+.sega-lineup-card::before {
+  content: '';
+  position: absolute;
+  inset: auto 8px 6px;
+  height: 20px;
+  border: 1px solid rgba(0, 204, 255, 0.45);
+  background:
+    linear-gradient(90deg, transparent, rgba(0, 204, 255, 0.18), transparent),
+    repeating-linear-gradient(90deg, rgba(0, 204, 255, 0.3) 0 1px, transparent 1px 12px);
+}
+
+.sega-lineup-player {
+  position: relative;
+  z-index: 1;
+  display: block;
+  height: 102px;
+  background-image: var(--sega-player-sprite);
+  background-repeat: no-repeat;
+  background-size: 310% auto;
+  background-color: transparent;
+  filter:
+    drop-shadow(0 0 7px rgba(0, 204, 255, 0.36))
+    drop-shadow(2px 3px 0 rgba(0, 0, 0, 0.82));
+  image-rendering: pixelated;
+}
+
+.sega-lineup-player--fwd {
+  background-position: 3% 50%;
+  transform: translateX(8px) scale(1.02);
+}
+
+.sega-lineup-player--def {
+  background-position: 50% 50%;
+  transform: scale(1.06);
+}
+
+.sega-lineup-player--goal {
+  background-position: 98% 50%;
+  transform: translateX(-8px) scale(1.03);
+}
+
+.roster-player-cell {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.roster-player-copy {
+  min-width: 0;
+}
+
+.roster-player-name {
+  display: block;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.player-sprite {
+  display: inline-block;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(0, 204, 255, 0.42);
+  background-image: var(--sega-player-sprite);
+  background-repeat: no-repeat;
+  background-size: 330% auto;
+  background-color: #030712;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.16),
+    0 0 7px rgba(0, 204, 255, 0.22);
+  image-rendering: pixelated;
+}
+
+.player-sprite--fwd { background-position: 2% 44%; }
+.player-sprite--def { background-position: 50% 44%; }
+.player-sprite--goal { background-position: 99% 44%; }
+
+.roster-table {
+  min-width: 980px !important;
+  table-layout: auto !important;
+}
+
+.roster-table th:nth-child(1),
+.roster-table td:nth-child(1) {
+  width: 44px !important;
+  min-width: 44px !important;
+}
+
+.roster-table th:nth-child(2),
+.roster-table td:nth-child(2) {
+  width: 260px !important;
+  min-width: 260px !important;
+  max-width: 260px !important;
+}
+
+.roster-table td {
+  background-color: rgba(3, 3, 15, 0.96) !important;
+}
+
+.roster-table tr:hover td {
+  background-color: #000033 !important;
+}
+
+.td-name {
+  white-space: normal !important;
+}
+
+.roster-player-name {
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  line-height: 1.25 !important;
+}
+
+/* ─── Generated arcade frames ───────────────────────────────────────── */
+.panel-section,
+.sim-controls,
+#game-mode-toggle,
+.this-week-zone {
+  border: 14px solid transparent !important;
+  border-image-source: var(--sega-panel-frame) !important;
+  border-image-slice: 126 145 106 145 fill !important;
+  border-image-width: 14px !important;
+  border-image-outset: 3px !important;
+  background:
+    linear-gradient(rgba(3, 5, 22, 0.93), rgba(3, 5, 22, 0.93)),
+    var(--sega-ice-image) !important;
+  background-size: 100% 100%, cover !important;
+  background-position: center !important;
+  box-shadow:
+    inset 0 0 18px rgba(0, 204, 255, 0.09),
+    0 0 18px rgba(0, 82, 190, 0.22) !important;
+}
+
+.panel-section {
+  padding: 4px 8px 12px !important;
+  overflow: visible !important;
+}
+
+.panel-section .panel-label {
+  margin: -4px -8px 10px !important;
+}
+
+.modal-box {
+  position: relative !important;
+  border: 24px solid transparent !important;
+  border-image-source: var(--sega-modal-frame) !important;
+  border-image-slice: 126 126 126 126 fill !important;
+  border-image-width: 24px !important;
+  border-image-outset: 8px !important;
+  background:
+    radial-gradient(ellipse at 50% 15%, rgba(0, 204, 255, 0.12), transparent 55%),
+    linear-gradient(rgba(2, 4, 18, 0.96), rgba(1, 2, 12, 0.98)) !important;
+  box-shadow:
+    0 0 42px rgba(0, 204, 255, 0.22),
+    0 18px 80px rgba(0, 0, 0, 0.82) !important;
+}
+
+.team-card,
+.trade-card,
+.draft-prospect-card,
+.prospect-card,
+.news-trade-widget {
+  position: relative !important;
+  isolation: isolate !important;
+  border-color: transparent !important;
+  background: rgba(3, 5, 20, 0.86) !important;
+  box-shadow:
+    inset 0 0 18px rgba(0, 204, 255, 0.06),
+    0 0 14px rgba(0, 80, 180, 0.16) !important;
+  overflow: hidden !important;
+}
+
+.team-card > *,
+.trade-card > *,
+.draft-prospect-card > *,
+.prospect-card > *,
+.news-trade-widget > * {
+  position: relative;
+  z-index: 1;
+}
+
+.team-card::before,
+.trade-card::before,
+.draft-prospect-card::before,
+.prospect-card::before,
+.news-trade-widget::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  background-image: var(--sega-card-frame) !important;
+  background-repeat: no-repeat !important;
+  background-size: 300% 100% !important;
+  opacity: 0.9 !important;
+}
+
+.team-card::before { background-position: left center !important; }
+.draft-prospect-card::before,
+.prospect-card::before { background-position: center center !important; }
+.trade-card::before,
+.news-trade-widget::before { background-position: right center !important; }
+
+.team-card {
+  padding: 22px 24px !important;
+}
+
+.trade-card,
+.draft-prospect-card,
+.prospect-card,
+.news-trade-widget {
+  padding: 18px 20px !important;
+}
+
+.team-card:hover,
+.trade-card:hover,
+.draft-prospect-card:hover,
+.prospect-card:hover,
+.news-trade-widget:hover {
+  box-shadow:
+    inset 0 0 20px rgba(0, 204, 255, 0.10),
+    0 0 24px var(--team-glow, rgba(0, 160, 255, 0.38)) !important;
+}
+
+#game-watch-modal {
+  width: min(94vw, 940px) !important;
+  max-width: 940px !important;
+}
+
+#game-watch-content {
+  overflow: visible;
+}
+
+.gw-content {
+  gap: 16px !important;
+  padding: 18px 20px 20px !important;
+}
+
+.gw-rink {
+  position: relative;
+  isolation: isolate;
+  min-height: 240px;
+  aspect-ratio: 1698 / 926;
+  overflow: hidden;
+  border: 3px solid var(--team-primary, #0055CC);
+  background-image:
+    linear-gradient(rgba(1, 4, 18, 0.12), rgba(1, 4, 18, 0.22)),
+    var(--sega-gamecast-rink);
+  background-size: 100% 100%, cover;
+  background-position: center;
+  box-shadow:
+    inset 0 0 32px rgba(0, 0, 0, 0.45),
+    0 0 26px rgba(0, 204, 255, 0.25);
+}
+
+.gw-rink::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.12) 0 2px,
+      rgba(255, 255, 255, 0.025) 2px 4px
+    ),
+    radial-gradient(ellipse at 50% 50%, transparent 52%, rgba(0, 0, 20, 0.34) 100%);
+}
+
+.gw-rink-scorebug,
+.gw-rink-period-chip,
+.gw-goal-layer {
+  position: absolute;
+  z-index: 1;
+}
+
+.gw-rink-scorebug {
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: auto auto auto auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border: 2px solid rgba(0, 204, 255, 0.72);
+  background: rgba(1, 3, 16, 0.84);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 18px rgba(0, 204, 255, 0.28);
+}
+
+.gw-rink-scorebug strong {
+  min-width: 22px;
+  color: #FFFF00;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 13px;
+  line-height: 1;
+  text-align: center;
+  text-shadow: 0 0 10px rgba(255, 255, 0, 0.7);
+}
+
+.gw-rink-team,
+.gw-rink-period {
+  font-family: 'Share Tech Mono', monospace;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.gw-rink-team--away { color: #00CCFF; }
+.gw-rink-team--home { color: #FF4466; }
+.gw-rink-period { color: #d6e8ff; font-size: 10px; }
+
+.gw-goal-layer {
+  inset: 0;
+  pointer-events: none;
+}
+
+.gw-goal-marker {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--team-secondary);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, #ffffff 0 15%, var(--team-primary) 16% 45%, rgba(0, 0, 0, 0.92) 46% 100%);
+  box-shadow:
+    0 0 0 2px rgba(0, 0, 0, 0.55),
+    0 0 16px var(--team-primary);
+  animation: gw-goal-pop 540ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  animation-delay: var(--delay);
+}
+
+.gw-goal-marker::after {
+  content: '';
+  position: absolute;
+  inset: -9px;
+  border: 1px solid var(--team-secondary);
+  border-radius: 50%;
+  opacity: 0.5;
+  animation: gw-goal-ring 1.2s ease-out infinite;
+}
+
+.gw-rink-period-chip {
+  right: 12px;
+  bottom: 12px;
+  max-width: calc(100% - 24px);
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 0, 0.58);
+  background: rgba(1, 3, 16, 0.78);
+  color: #FFFF00;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: 0 0 8px rgba(255, 255, 0, 0.45);
+}
+
+.gw-score-display {
+  max-width: 560px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+@keyframes gw-goal-pop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.15);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes gw-goal-ring {
+  from {
+    transform: scale(0.6);
+    opacity: 0.75;
+  }
+  to {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 980px) {
+  .app-header {
+    min-height: 132px !important;
+    align-items: stretch !important;
+    flex-wrap: wrap !important;
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+  }
+
+  .dashboard-main {
+    height: auto !important;
+  }
+
+  .header-nav {
+    order: 4;
+    width: 100%;
+    overflow-x: auto !important;
+  }
+
+  .sega-lineup-card {
+    min-height: 92px;
+  }
+
+  .sega-lineup-player {
+    height: 92px;
+  }
+}

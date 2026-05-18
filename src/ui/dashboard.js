@@ -141,6 +141,11 @@ function renderTeamSummary(team, state) {
   }
 
   container.innerHTML = `
+    <div class="sega-lineup-card" aria-hidden="true">
+      <span class="sega-lineup-player sega-lineup-player--fwd"></span>
+      <span class="sega-lineup-player sega-lineup-player--def"></span>
+      <span class="sega-lineup-player sega-lineup-player--goal"></span>
+    </div>
     ${narrative ? `<div class="team-narrative">${narrative}</div>` : ''}
     <div class="team-record-bar">
       <div class="team-record-stat">

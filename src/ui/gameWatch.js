@@ -53,6 +53,12 @@ function renderGameWatchPeriod(periodNum) {
 
   const awayLogo = teamLogoEl(away.id, away.abbrev, away.primaryColor || '#0055CC', away.secondaryColor || '#FFFFFF', 44);
   const homeLogo = teamLogoEl(home.id, home.abbrev, home.primaryColor || '#0055CC', home.secondaryColor || '#FFFFFF', 44);
+  const awayPrimary = safeHexColor(away.primaryColor, '#00CCFF');
+  const awaySecondary = safeHexColor(away.secondaryColor, '#FFFFFF');
+  const homePrimary = safeHexColor(home.primaryColor, '#FF2255');
+  const homeSecondary = safeHexColor(home.secondaryColor, '#FFFFFF');
+  const awayMarkers = goalMarkers('away', awayThisPeriod, awayPrimary, awaySecondary);
+  const homeMarkers = goalMarkers('home', homeThisPeriod, homePrimary, homeSecondary);
 
   const html = `
     <div class="gw-header">
@@ -70,6 +76,23 @@ function renderGameWatchPeriod(periodNum) {
     </div>
 
     <div class="gw-content">
+      <div class="gw-rink" aria-label="Gamecast rink">
+        <div class="gw-rink-scorebug">
+          <span class="gw-rink-team gw-rink-team--away">${away.abbrev}</span>
+          <strong>${awayTotal}</strong>
+          <span class="gw-rink-period">${periodLabel}</span>
+          <strong>${homeTotal}</strong>
+          <span class="gw-rink-team gw-rink-team--home">${home.abbrev}</span>
+        </div>
+        <div class="gw-goal-layer" aria-hidden="true">
+          ${awayMarkers}
+          ${homeMarkers}
+        </div>
+        <div class="gw-rink-period-chip">
+          This period: ${away.abbrev} ${awayThisPeriod} - ${homeThisPeriod} ${home.abbrev}
+        </div>
+      </div>
+
       <div class="gw-score-display">
         <div class="gw-score-column gw-away">
           <div class="gw-team-abbrev">${away.abbrev}</div>
@@ -104,6 +127,31 @@ function renderGameWatchPeriod(periodNum) {
   `;
 
   watchContent.innerHTML = html;
+}
+
+function safeHexColor(value, fallback) {
+  return /^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/.test(value || '') ? value : fallback;
+}
+
+function goalMarkers(side, count, primary, secondary) {
+  const awaySpots = [
+    [20, 30], [28, 58], [38, 43], [48, 66], [34, 24], [44, 53],
+  ];
+  const homeSpots = [
+    [80, 30], [72, 58], [62, 43], [52, 66], [66, 24], [56, 53],
+  ];
+  const spots = side === 'away' ? awaySpots : homeSpots;
+  const visibleCount = Math.min(count, spots.length);
+
+  return Array.from({ length: visibleCount }, (_, idx) => {
+    const [x, y] = spots[idx];
+    return `
+      <span
+        class="gw-goal-marker gw-goal-marker--${side}"
+        style="--x:${x}%;--y:${y}%;--delay:${idx * 90}ms;--team-primary:${primary};--team-secondary:${secondary};">
+      </span>
+    `;
+  }).join('');
 }
 
 // ─── Game Watch State ────────────────────────────────────────────────────────

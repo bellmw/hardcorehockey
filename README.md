@@ -1,6 +1,6 @@
 # Hockey GM — Personal Hockey Management Sim
 
-Current version: v1.3.3
+Current version: v1.3.4
 
 A stripped-down, goofy hockey GM game. You manage a team, sim seasons, survive
 relegation, and watch Claude-powered AI make absurd trade offers at you.
@@ -15,6 +15,22 @@ npx live-server .
 
 You will need a Claude API key for the in-game AI agents (trade offers, headlines,
 random events, draft classes). See **API Setup** below.
+
+---
+
+## Features (v1.3.4)
+
+### New in v1.3.4 — Sega Raster Asset Integration
+
+- **Generated pixel-art UI backgrounds** — Raster images in `assets/ui/` are now wired into the Sega Genesis reskin via CSS custom properties (`--sega-arena-image`, `--sega-scoreboard-image`, `--sega-nav-sprite`, etc.)
+- **Gamecast rink view** — Game Watch now shows a visual rink during each period with:
+  - Live scorebug overlay (teams, score, period label)
+  - Animated goal markers plotted on the rink surface (team-colored, per side)
+  - Period chip showing per-period score
+- **Lineup silhouette card on dashboard** — Team summary panel now displays a `.sega-lineup-card` with forward, defenseman, and goalie pixel-art player silhouettes
+- **Roster player sprites** — Each roster row shows a position-appropriate pixel-art sprite icon next to the player name using a new grid layout
+- **New team logo** — `cd_tr.png` added for Trois-Rivières Renegades
+- **Arcade frame borders** — Panel sections, modals, and cards now use border-image frames from generated `sega-panel-frame.png`, `sega-modal-frame.png`, and `sega-card-frame.png`
 
 ---
 

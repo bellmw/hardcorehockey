@@ -163,11 +163,20 @@ function playerRow(player, posClass, dressedIds) {
   const canExtend = canRenegotiate(player);
   const extendTitle = canExtend ? 'Renegotiate' : 'Only available in the last year of the deal';
   const tradeBlockLabel = player.tradeBlock ? 'Unblock' : 'Shop';
+  const spriteClass = posClass === 'goal' ? 'goal' : posClass === 'def' ? 'def' : 'fwd';
 
   return `
-    <tr>
+    <tr class="roster-row roster-row--${spriteClass}">
       <td><span class="pos-badge ${posClass}">${player.position}</span></td>
-      <td class="td-name">${player.fullName}${injFlag}${susFlag}<div class="roster-player-flags">${lineupBadge}${tradeBlockBadge}${extensionBadge}</div></td>
+      <td class="td-name">
+        <span class="roster-player-cell">
+          <span class="player-sprite player-sprite--${spriteClass}" aria-hidden="true"></span>
+          <span class="roster-player-copy">
+            <span class="roster-player-name">${player.fullName}${injFlag}${susFlag}</span>
+            <div class="roster-player-flags">${lineupBadge}${tradeBlockBadge}${extensionBadge}</div>
+          </span>
+        </span>
+      </td>
       <td class="td-num">${player.age}</td>
       <td class="td-num ${ovrClass}">
         ${player.overall}
